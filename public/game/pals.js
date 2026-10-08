@@ -42,10 +42,39 @@ export const PALS = [
       </g>
     `,
   },
+  // Flo: influenza A, a round virus covered in two kinds of spikes. The
+  // lollipop-shaped HA spikes grab a cell's sialic acid to get in; the
+  // mushroom-shaped NA spikes snip it to let new copies go. Here they're
+  // simplified to teal and gold knobs, taking turns around her.
+  {
+    id: 'flo',
+    name: 'Flo',
+    looks: 'a round coral influenza A virus covered in teal and gold spikes',
+    motion: 'bob',
+    art: `
+      <!-- 16 spike stalks, poking out from under her envelope -->
+      <circle cx="100" cy="104" r="66" fill="none" stroke="#be185d" stroke-width="14" stroke-dasharray="3 22.92" />
+      <!-- spike tips, taking turns: teal HA, then gold NA -->
+      <circle cx="100" cy="104" r="76" fill="none" stroke="#14b8a6" stroke-width="12" stroke-linecap="round" stroke-dasharray="0.01 59.69" />
+      <circle cx="100" cy="104" r="76" fill="none" stroke="#f59e0b" stroke-width="12" stroke-linecap="round" stroke-dasharray="0.01 59.69" stroke-dashoffset="-29.85" />
+      <!-- her round envelope -->
+      <circle cx="100" cy="104" r="60" fill="#fb7185" />
+      <ellipse cx="76" cy="78" rx="13" ry="7" fill="#ffffff" opacity="0.45" />
+      <g class="face">
+        <circle cx="84" cy="102" r="7" fill="#3b0d2e" />
+        <circle cx="116" cy="102" r="7" fill="#3b0d2e" />
+        <circle cx="82" cy="100" r="2.4" fill="#ffffff" />
+        <circle cx="114" cy="100" r="2.4" fill="#ffffff" />
+        <ellipse cx="72" cy="115" rx="6" ry="3.6" fill="#fda4af" opacity="0.9" />
+        <ellipse cx="128" cy="115" rx="6" ry="3.6" fill="#fda4af" opacity="0.9" />
+        <path d="M89 118 Q100 128 111 118" fill="none" stroke="#3b0d2e" stroke-width="4" stroke-linecap="round" />
+      </g>
+    `,
+  },
 ];
 
 // The pals on the home page, in order.
-const HOME = ['tess'];
+const HOME = ['tess', 'flo'];
 export const HOME_PALS = PALS.filter((pal) => HOME.includes(pal.id));
 
 export function palById(id) {
