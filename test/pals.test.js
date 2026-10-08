@@ -46,17 +46,42 @@ describe('her drawing on the home page', () => {
   });
 });
 
+describe('Flo', () => {
+  const flo = palById('flo');
+
+  it('is on the home page and says who she is', () => {
+    const svg = homePal(flo);
+    expect(svg.getAttribute('class')).toBe('pal bob');
+    expect(svg.getAttribute('aria-label')).toBe(`Flo, ${flo.looks}`);
+  });
+
+  it('has 16 spikes, teal and gold tips taking turns', () => {
+    const rings = [...homePal(flo).querySelectorAll('circle[stroke-dasharray]')];
+    const around = (r) => 2 * Math.PI * r;
+    const [stalks, teal, gold] = rings;
+    // One dash (a spike) per gap, so the circle's length over the dash
+    // pattern's length is how many spikes there are.
+    const per = (ring) => ring.getAttribute('stroke-dasharray').split(' ').map(Number).reduce((a, b) => a + b);
+    expect(around(66) / per(stalks)).toBeCloseTo(16, 1);
+    expect(around(76) / per(teal)).toBeCloseTo(8, 1);
+    expect(around(76) / per(gold)).toBeCloseTo(8, 1);
+    // The gold tips sit halfway between the teal ones.
+    expect(-Number(gold.getAttribute('stroke-dashoffset'))).toBeCloseTo(per(teal) / 2, 1);
+    expect([teal.getAttribute('stroke'), gold.getAttribute('stroke')]).toEqual(['#14b8a6', '#f59e0b']);
+  });
+});
+
 describe('the home page', () => {
   // (jsdom changes import.meta.url to a web address, so find files from the project folder.)
   const page = readFileSync(resolve(process.cwd(), 'public/index.html'), 'utf8');
 
-  it('shows Tess in its row of pals', async () => {
+  it('shows Tess and Flo in its row of pals', async () => {
     document.body.outerHTML = page.slice(page.indexOf('<body'), page.indexOf('</body>'));
     vi.resetModules();
     await import('../public/script.js');
     const labels = [...document.querySelectorAll('.friends svg')].map((s) => s.getAttribute('aria-label'));
     expect(labels).toEqual(HOME_PALS.map((pal) => `${pal.name}, ${pal.looks}`));
-    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['tess']);
+    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['tess', 'flo']);
   });
 
   it('loads the script that draws them', () => {

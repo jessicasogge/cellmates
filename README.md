@@ -29,7 +29,7 @@ The tests use [Vitest](https://vitest.dev/), and most run in [jsdom](https://git
 | Path | What's there |
 |---|---|
 | `public/index.html` | Home page (a placeholder for now), with its row of pals drawn by `script.js` |
-| `public/game/pals.js` | Every pal's name and drawing, in one place. So far: Tess, phage T4 |
+| `public/game/pals.js` | Every pal's name and drawing, in one place. So far: Tess (phage T4) and Flo (influenza A) |
 | `public/game/` | Game code carried over from PetriPals: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the fun-fact pop-up (`facts.js`, with italics for scientific names from `italics.js`), and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `docs/design.md` | The design doc |
 | `test/` | Tests |
