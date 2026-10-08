@@ -1,0 +1,68 @@
+/* The title and tagline fonts: Fredoka and Nunito, both under the SIL Open
+   Font License (public/fonts/*-OFL.txt). They're kept here rather than loaded
+   from Google Fonts, so the page doesn't wait on, or tell, another site. */
+@font-face {
+  font-family: Fredoka;
+  font-weight: 600;
+  font-display: swap;
+  src: url(./fonts/fredoka-600.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: Fredoka;
+  font-weight: 700;
+  font-display: swap;
+  src: url(./fonts/fredoka-700.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: Nunito;
+  font-weight: 700;
+  font-display: swap;
+  src: url(./fonts/nunito-700.woff2) format('woff2');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The pale pink of cell culture medium (it has a pH dye, phenol red). */
+body {
+  margin: 0;
+  background: #ffe4e6;
+  color: #4a044e;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+}
+
+a {
+  color: #0f766e;
+}
+
+.logo {
+  margin: 0;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 3.75rem;
+  color: #be185d;
+}
+
+.tagline {
+  font-family: Nunito, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.about,
+.sister-game,
+.signature {
+  max-width: 22rem;
+  margin: 1rem auto;
+  line-height: 1.5;
+  color: #6b2149;
+}
+
+.signature {
+  font-size: 0.85rem;
+}
