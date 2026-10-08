@@ -40,6 +40,41 @@ a {
   color: #0f766e;
 }
 
+/* The row of pals at the top of the home page. */
+.friends {
+  display: flex;
+  flex-wrap: wrap; /* on narrow screens, pals wrap onto a second row */
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.pal {
+  width: 140px;
+}
+
+.bob {
+  animation: bob 2.4s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pals hold still for anyone who'd rather not have motion. */
+@media (prefers-reduced-motion: reduce) {
+  .bob {
+    animation: none;
+  }
+}
+
 .logo {
   margin: 0;
   font-family: Fredoka, system-ui, sans-serif;
