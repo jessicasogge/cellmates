@@ -7,8 +7,8 @@
 // with her lock and she slips inside; the cell copies her for a
 // moment, then bursts. Her copies take over the matching cells next door,
 // which burst in turn, but those don't spread any further, so she has to
-// keep finding fresh cells. Small antibody clouds spread out from a few drops
-// and wander slowly through the maze too; touch one and she's neutralized. Burst enough cells to clear the level.
+// keep finding fresh cells. Little antibodies wander slowly through the maze
+// too; touch one and she's neutralized. Burst enough cells to clear the level.
 
 import { cellAt, hexGrid } from './hexgrid.js';
 
@@ -20,11 +20,14 @@ export const PLAYER_RADIUS = 11; // small enough to glide along her paths
 
 export const LEVELS = 5;
 export const COPY_TIME = 1.5; // seconds a cell takes to copy her and burst
-export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
 export const WANDER_SPEED = 8; // how fast they drift about, per second
 export const WANDER_TURN = 2; // how sharply they can turn, per second
-export const ANTIBODY_REACH = 8; // how close to a wall a drop's middle can get
+export const ANTIBODY_RADIUS = 11; // how big each antibody is
+export const ANTIBODY_REACH = 8; // how close to a wall its middle can get
 export const ANTIBODY_EDGE = 16; // how close to the flask's sides it can get
+
+// Antibodies on each level: 3, 5, 7, 9, then 11.
+export const antibodiesFor = (level) => 1 + 2 * level;
 export const MATCH_SHARE = 0.7; // how many cells have her receptor
 
 // The locks on the other cells: receptors for other viruses, which her key
@@ -38,8 +41,8 @@ export const targetFor = (level) => 6 + 6 * level;
 
 const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
 
-// A fresh level: every cell healthy, the mate in the middle, and one antibody
-// drop per level.
+// A fresh level: every cell healthy, the mate in the middle, and a few more
+// antibodies each level.
 export function newGame({ level = 1, random = Math.random } = {}) {
   const cells = hexGrid(WIDTH, HEIGHT, CELL_SIZE).map((cell) => {
     const match = random() < MATCH_SHARE;
@@ -62,7 +65,7 @@ export function newGame({ level = 1, random = Math.random } = {}) {
     target: targetFor(level),
     cells,
     player,
-    antibodies: placeAntibodies(level, player, random, (x, y) => !blocked(cells, x, y, ANTIBODY_REACH)),
+    antibodies: placeAntibodies(antibodiesFor(level), player, random, (x, y) => !blocked(cells, x, y, ANTIBODY_REACH)),
     random, // for the antibodies' wandering
     bursts: 0, // cells burst so far
     time: 0,
@@ -70,20 +73,19 @@ export function newGame({ level = 1, random = Math.random } = {}) {
   };
 }
 
-// Up to `count` antibody drops, each somewhere `isOpen(x, y)` (not in a
-// wall), well clear of the mate's starting spot and of each other. Gives up
-// on a drop that can't find room.
+// Up to `count` antibodies, each somewhere `isOpen(x, y)` (not in a wall),
+// well clear of the mate's starting spot and of each other. Gives up on one
+// that can't find room.
 export function placeAntibodies(count, player, random, isOpen) {
   const drops = [];
   for (let tries = 0; drops.length < count && tries < 500; tries++) {
-    const max = 20 + random() * 8; // how far its cloud spreads: about a cell
     const x = ANTIBODY_EDGE + random() * (WIDTH - 2 * ANTIBODY_EDGE);
     const y = ANTIBODY_EDGE + random() * (HEIGHT - 2 * ANTIBODY_EDGE);
-    const clearOfPlayer = Math.hypot(x - player.x, y - player.y) > max + 60;
-    const clearOfOthers = drops.every((drop) => Math.hypot(drop.x - x, drop.y - y) > drop.max + max);
+    const clearOfPlayer = Math.hypot(x - player.x, y - player.y) > 90;
+    const clearOfOthers = drops.every((drop) => Math.hypot(drop.x - x, drop.y - y) > 4 * ANTIBODY_RADIUS);
     // Each drifts off in its own direction (`heading`, in radians).
     if (clearOfPlayer && clearOfOthers && isOpen(x, y)) {
-      drops.push({ x, y, max, r: 0, heading: random() * 2 * Math.PI });
+      drops.push({ x, y, heading: random() * 2 * Math.PI });
     }
   }
   return drops;
@@ -111,7 +113,7 @@ export function slide(from, [dx, dy], isBlocked) {
   return [from.x, from.y];
 }
 
-// Drift an antibody drop along for `dt` seconds, turning a little at random,
+// Drift an antibody along for `dt` seconds, turning a little at random,
 // like something carried about in the liquid. It bounces off the sides of
 // the flask, and like the mate it can't go through walls (`isBlocked(x, y)`):
 // when it meets one it turns to try another way.
@@ -148,10 +150,7 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
   if (game.over) return events;
   game.time += dt;
 
-  // Antibodies diffuse out quickly at first, then slow down.
-  const spread = 1 - (1 - Math.min(1, game.time / GROW_TIME)) ** 2;
   for (const drop of game.antibodies) {
-    drop.r = drop.max * spread;
     wander(drop, dt, game.random, (x, y) => blocked(game.cells, x, y, ANTIBODY_REACH));
   }
 
@@ -163,7 +162,7 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
     const y = clamp(player.y + dy, PLAYER_RADIUS, HEIGHT - PLAYER_RADIUS);
     [player.x, player.y] = slide(player, [x - player.x, y - player.y], (px, py) => blocked(game.cells, px, py, PLAYER_RADIUS * 0.6));
     const touching = game.antibodies.some(
-      (drop) => Math.hypot(drop.x - player.x, drop.y - player.y) < drop.r + PLAYER_RADIUS * 0.6,
+      (drop) => Math.hypot(drop.x - player.x, drop.y - player.y) < ANTIBODY_RADIUS + PLAYER_RADIUS * 0.6,
     );
     if (touching) {
       game.over = 'neutralized';

@@ -423,25 +423,59 @@ a {
   transition: opacity 0.4s;
 }
 
-.antibody-cloud {
-  fill: rgba(59, 130, 246, 0.22);
-  stroke: rgba(29, 78, 216, 0.55);
-  stroke-width: 2;
-  stroke-dasharray: 6 5;
-}
-
-.antibody circle {
-  fill: #fff;
-  stroke: #1d4ed8;
-  stroke-width: 2;
-}
-
-.antibody path {
+/* The little antibodies: blue Ys with faces, wobbling as they wander. */
+.antibody-arms {
   fill: none;
-  stroke: #1d4ed8;
-  stroke-width: 2.5;
+  stroke: #2563eb;
+  stroke-width: 4.5;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.antibody-tip {
+  fill: #60a5fa;
+  stroke: #2563eb;
+  stroke-width: 1.5;
+}
+
+.antibody-face {
+  fill: #dbeafe;
+  stroke: #2563eb;
+  stroke-width: 2;
+}
+
+.antibody-eye {
+  fill: #1e3a8a;
+}
+
+.antibody-mouth {
+  fill: none;
+  stroke: #1e3a8a;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.flask .antibody-body {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: antibody-wobble 1.4s ease-in-out infinite;
+}
+
+@keyframes antibody-wobble {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flask .antibody-body {
+    animation: none;
+  }
 }
 
 /* Inside a cell, she shows faintly through it. */

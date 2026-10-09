@@ -41,7 +41,25 @@ const LOCKS = {
   diamond: (x, y) => svgEl('polygon', { points: `${x},${y - 4} ${x + 4},${y} ${x},${y + 4} ${x - 4},${y}`, class: 'badge wrong diamond' }),
 };
 
-// Draw the flask: every cell with its lock, the antibody drops and the mate
+// A little antibody: a Y with grabby tips on its arms (where real antibodies
+// latch on), and a face where the arms meet. Drawn around (0, 0).
+function antibody() {
+  const dude = svgEl('g', { class: 'antibody' });
+  const body = svgEl('g', { class: 'antibody-body' });
+  body.append(
+    svgEl('path', { class: 'antibody-arms', d: 'M-8 -10 L0 -1 L8 -10 M0 -1 V11' }),
+    svgEl('circle', { class: 'antibody-tip', cx: -8, cy: -10, r: 3.4 }),
+    svgEl('circle', { class: 'antibody-tip', cx: 8, cy: -10, r: 3.4 }),
+    svgEl('circle', { class: 'antibody-face', r: 6.5 }),
+    svgEl('circle', { class: 'antibody-eye', cx: -2.3, cy: -0.8, r: 1.2 }),
+    svgEl('circle', { class: 'antibody-eye', cx: 2.3, cy: -0.8, r: 1.2 }),
+    svgEl('path', { class: 'antibody-mouth', d: 'M-2 2.2 Q0 3.8 2 2.2' }),
+  );
+  dude.append(body);
+  return dude;
+}
+
+// Draw the flask: every cell with its lock, the antibodies and the mate
 // herself.
 function drawFlask(game, mate, flask) {
   const svg = svgEl('svg', { viewBox: `0 0 ${WIDTH} ${HEIGHT}`, class: 'flask-svg' });
@@ -55,15 +73,10 @@ function drawFlask(game, mate, flask) {
     svg.append(g);
     return g;
   });
-  const clouds = game.antibodies.map((drop) => {
-    const cloud = svgEl('circle', { cx: drop.x, cy: drop.y, r: 0, class: 'antibody-cloud' });
-    const icon = svgEl('g', { class: 'antibody' });
-    icon.append(
-      svgEl('circle', { r: 9 }),
-      svgEl('path', { d: 'M0 5.5 V0 L-4 -5 M0 0 L4 -5' }),
-    );
-    svg.append(cloud, icon);
-    return { cloud, icon };
+  const antibodies = game.antibodies.map(() => {
+    const dude = antibody();
+    svg.append(dude);
+    return dude;
   });
   const player = svgEl('g', { class: 'player' });
   const art = mateArt(mate);
@@ -73,7 +86,7 @@ function drawFlask(game, mate, flask) {
   player.append(art);
   svg.append(player);
   flask.append(svg);
-  return { svg, cells, clouds, player };
+  return { svg, cells, antibodies, player };
 }
 
 // Start the level the page was opened for. `frame` schedules the next
@@ -93,12 +106,7 @@ export function startGame({
   const render = () => {
     game.cells.forEach((cell, i) => drawn.cells[i].setAttribute('class', `cell ${cell.state}${cell.match ? '' : ' wall'}`));
     game.antibodies.forEach((drop, i) => {
-      const { cloud, icon } = drawn.clouds[i];
-      const [x, y] = [drop.x.toFixed(1), drop.y.toFixed(1)];
-      cloud.setAttribute('cx', x);
-      cloud.setAttribute('cy', y);
-      cloud.setAttribute('r', drop.r.toFixed(1));
-      icon.setAttribute('transform', `translate(${x} ${y})`);
+      drawn.antibodies[i].setAttribute('transform', `translate(${drop.x.toFixed(1)} ${drop.y.toFixed(1)})`);
     });
     const { player } = game;
     drawn.player.setAttribute('transform', `translate(${player.x.toFixed(1)} ${player.y.toFixed(1)})`);
@@ -113,7 +121,7 @@ export function startGame({
       const last = level === LEVELS;
       $('.banner-title').textContent = last ? 'You cleared every level!' : `Level ${level} cleared!`;
       $('.banner-text').textContent = `${mate.name} burst ${game.bursts} cells.`;
-      next.textContent = last ? 'Play again' : `Level ${level + 1}: one more antibody`;
+      next.textContent = last ? 'Play again' : `Level ${level + 1}: more antibodies`;
       next.href = levelLink(mate, last ? 1 : level + 1);
       sporeBurst($('.flask'), { big: last });
     } else {

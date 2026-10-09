@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GROW_TIME } from '../public/game/flask.js';
+import { antibodiesFor } from '../public/game/flask.js';
 import { sporeBurst } from '../public/game/spores.js';
 
 // No real confetti: jsdom can't draw on a canvas, so the confetti library's
@@ -85,20 +85,21 @@ describe('the flask', () => {
       expect(drawn(`.badge.${kind}`), kind).toBe(game.cells.filter((c) => c.lock === kind).length);
     }
     expect(drawn('.cell.wall')).toBe(game.cells.filter((c) => !c.match).length);
-    expect(document.querySelectorAll('.antibody-cloud')).toHaveLength(2);
+    expect(document.querySelectorAll('.flask .antibody')).toHaveLength(antibodiesFor(2));
+    expect(document.querySelectorAll('.flask .antibody-face')).toHaveLength(antibodiesFor(2)); // little faces
+    expect(document.querySelector('.antibody-cloud')).toBeNull(); // no clouds around them
     expect($('.player svg').getAttribute('width')).toBe('38');
   });
 
-  it('spreads the antibody clouds as time goes on, and moves them as they drift', () => {
+  it('moves the antibodies as they wander', () => {
     const { game } = open();
-    const startX = $('.antibody-cloud').getAttribute('cx');
+    const dude = $('.flask .antibody');
+    const start = dude.getAttribute('transform');
     run(0);
     run(1000);
-    expect(Number($('.antibody-cloud').getAttribute('r'))).toBeGreaterThan(0);
     const [drop] = game.antibodies;
-    expect($('.antibody-cloud').getAttribute('cx')).not.toBe(startX);
-    expect($('.antibody-cloud').getAttribute('cx')).toBe(drop.x.toFixed(1));
-    expect($('.antibody').getAttribute('transform')).toBe(`translate(${drop.x.toFixed(1)} ${drop.y.toFixed(1)})`);
+    expect(dude.getAttribute('transform')).not.toBe(start);
+    expect(dude.getAttribute('transform')).toBe(`translate(${drop.x.toFixed(1)} ${drop.y.toFixed(1)})`);
   });
 });
 
@@ -182,7 +183,7 @@ describe('the end of a level', () => {
     expect($('.win-banner').hidden).toBe(false);
     expect($('.banner-title').textContent).toBe('Level 2 cleared!');
     expect($('.banner-text').textContent).toBe('Flo burst 19 cells.');
-    expect($('.banner-next').textContent).toBe('Level 3: one more antibody');
+    expect($('.banner-next').textContent).toBe('Level 3: more antibodies');
     expect($('.banner-next').getAttribute('href')).toBe('./flask.html?mate=flo&level=3');
     expect($('.fun-fact').hidden).toBe(false);
     expect($('.cell-count').textContent).toBe('Level 2 · 19 / 18 cells burst');
@@ -201,8 +202,7 @@ describe('the end of a level', () => {
 
   it('ends when an antibody gets her, offering the same level again', () => {
     const { game } = open();
-    game.antibodies[0] = { x: game.player.x, y: game.player.y, max: 60, r: 0, heading: 0 };
-    game.time = GROW_TIME;
+    game.antibodies[0] = { x: game.player.x, y: game.player.y, heading: 0 };
     run(0);
     expect(game.over).toBe('neutralized');
     expect($('.banner-title').textContent).toBe('Flo was neutralized!');
