@@ -50,7 +50,9 @@ a {
 }
 
 .pal {
-  width: 112px; /* three to a row on a phone */
+  /* All four in one row, shrinking to fit on a phone. */
+  width: calc((100% - 1.5rem) / 4);
+  max-width: 112px;
 }
 
 .bob {
