@@ -324,7 +324,7 @@ a {
 }
 
 .cell .nucleus {
-  fill: #d8b4fe;
+  fill: #ede9fe;
 }
 
 .cell .badge.match {
@@ -343,7 +343,7 @@ a {
 .cell.copying .nucleus {
   fill: #fdf2f8;
   stroke: #be185d;
-  stroke-width: 3;
+  stroke-width: 2.5;
 }
 
 .cell.copying .badge {

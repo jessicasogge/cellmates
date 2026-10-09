@@ -39,7 +39,7 @@ function drawFlask(game, pal, flask) {
     const g = svgEl('g', { class: 'cell healthy' });
     g.append(
       svgEl('polygon', { points: hexPoints(cell.x, cell.y, CELL_SIZE - 1), class: 'cell-body' }),
-      svgEl('circle', { cx: cell.x, cy: cell.y, r: 6, class: 'nucleus' }),
+      svgEl('circle', { cx: cell.x, cy: cell.y, r: 4, class: 'nucleus' }),
       cell.match
         ? svgEl('circle', { cx: cell.x, cy: cell.y - 11, r: 3.5, class: 'badge match' })
         : svgEl('rect', { x: cell.x - 3, y: cell.y - 14, width: 6, height: 6, rx: 1, class: 'badge wrong' }),
