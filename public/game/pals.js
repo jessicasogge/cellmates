@@ -1,5 +1,5 @@
 // Every pal's name and drawing, in one place. The pages draw the pals from
-// here, in the order listed.
+// here.
 //
 // Each pal has:
 //   id      her key, used in links and to look her up
@@ -103,9 +103,9 @@ export const PALS = [
   },
 ];
 
-// The pals on the home page, in order.
-const HOME = ['tess', 'flo', 'rota'];
-export const HOME_PALS = PALS.filter((pal) => HOME.includes(pal.id));
+// The pals on the home page, in order, with Tess the phage in the middle.
+const HOME = ['flo', 'tess', 'rota'];
+export const HOME_PALS = HOME.map(palById);
 
 export function palById(id) {
   return PALS.find((pal) => pal.id === id);

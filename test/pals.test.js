@@ -97,13 +97,13 @@ describe('the home page', () => {
   // (jsdom changes import.meta.url to a web address, so find files from the project folder.)
   const page = readFileSync(resolve(process.cwd(), 'public/index.html'), 'utf8');
 
-  it('shows Tess, Flo and Rota in its row of pals', async () => {
+  it('shows Flo, Tess and Rota in its row of pals, with Tess in the middle', async () => {
     document.body.outerHTML = page.slice(page.indexOf('<body'), page.indexOf('</body>'));
     vi.resetModules();
     await import('../public/script.js');
     const labels = [...document.querySelectorAll('.friends svg')].map((s) => s.getAttribute('aria-label'));
     expect(labels).toEqual(HOME_PALS.map((pal) => `${pal.name}, ${pal.looks}`));
-    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['tess', 'flo', 'rota']);
+    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['flo', 'tess', 'rota']);
   });
 
   it('loads the script that draws them', () => {
