@@ -5,6 +5,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GROW_TIME } from '../public/game/flask.js';
+import { sporeBurst } from '../public/game/spores.js';
+
+// No real confetti: jsdom can't draw on a canvas, so the confetti library's
+// animation would crash on a later frame, after the test had finished.
+vi.mock('../public/game/spores.js', () => ({ sporeBurst: vi.fn() }));
 
 // (jsdom changes import.meta.url to a web address, so find files from the project folder.)
 const page = readFileSync(resolve(process.cwd(), 'public/flask.html'), 'utf8');
@@ -36,6 +41,7 @@ const pointer = (type, { kind = 'touch', x = 0, y = 0 } = {}) =>
   }));
 
 beforeEach(async () => {
+  sporeBurst.mockClear();
   document.body.innerHTML = ''; // no flask, so importing doesn't start a game
   vi.resetModules();
   ({ startGame, readParams } = await import('../public/game/main.js'));
@@ -151,6 +157,7 @@ describe('the end of a level', () => {
     expect($('.popup-pal svg')).not.toBeNull();
     expect($('.copies').textContent).toBe('160 / 150');
     expect($('.progress-fill').style.width).toBe('100%');
+    expect(sporeBurst).toHaveBeenLastCalledWith($('.popup-pal'), { big: false });
   });
 
   it('starts over from level 1 after the last level', () => {
@@ -160,6 +167,7 @@ describe('the end of a level', () => {
     expect($('.popup-title').textContent).toBe('You cleared every level!');
     expect($('.popup-next').textContent).toBe('Play again');
     expect($('.popup-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=1');
+    expect(sporeBurst).toHaveBeenLastCalledWith($('.popup-pal'), { big: true });
   });
 
   it('ends when an antibody gets her, offering the same level again', () => {
@@ -172,6 +180,7 @@ describe('the end of a level', () => {
     expect($('.popup-text').textContent).toContain('Antibodies stuck to her');
     expect($('.popup-next').textContent).toBe('Try level 2 again');
     expect($('.popup-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=2');
+    expect(sporeBurst).not.toHaveBeenCalled(); // no confetti for losing
   });
 });
 
