@@ -93,17 +93,38 @@ describe('Rota', () => {
   });
 });
 
+describe('Cora', () => {
+  const cora = palById('cora');
+
+  it('is on the home page and says who she is', () => {
+    const svg = homePal(cora);
+    expect(svg.getAttribute('class')).toBe('pal bob');
+    expect(svg.getAttribute('aria-label')).toBe(`Cora, ${cora.looks}`);
+  });
+
+  it('has a crown of 14 spikes, each stalk with a club-shaped tip', () => {
+    const [stalks, tips] = homePal(cora).querySelectorAll('circle[stroke-dasharray]');
+    const count = (ring) => {
+      const [dash, gap] = ring.getAttribute('stroke-dasharray').split(' ').map(Number);
+      return (2 * Math.PI * Number(ring.getAttribute('r'))) / (dash + gap);
+    };
+    expect(count(stalks)).toBeCloseTo(14, 1);
+    expect(count(tips)).toBeCloseTo(14, 1);
+    expect(tips.getAttribute('stroke-linecap')).toBe('round'); // round club ends
+  });
+});
+
 describe('the home page', () => {
   // (jsdom changes import.meta.url to a web address, so find files from the project folder.)
   const page = readFileSync(resolve(process.cwd(), 'public/index.html'), 'utf8');
 
-  it('shows Flo, Tess and Rota in its row of pals, with Tess in the middle', async () => {
+  it('shows Flo, Tess, Rota and Cora in its row of pals', async () => {
     document.body.outerHTML = page.slice(page.indexOf('<body'), page.indexOf('</body>'));
     vi.resetModules();
     await import('../public/script.js');
     const labels = [...document.querySelectorAll('.friends svg')].map((s) => s.getAttribute('aria-label'));
     expect(labels).toEqual(HOME_PALS.map((pal) => `${pal.name}, ${pal.looks}`));
-    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['flo', 'tess', 'rota']);
+    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['flo', 'tess', 'rota', 'cora']);
   });
 
   it('loads the script that draws them', () => {

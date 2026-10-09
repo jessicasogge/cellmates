@@ -95,10 +95,36 @@ export const PALS = [
       </g>
     `,
   },
+  // Cora: coronavirus, named for her crown (corona) of club-shaped spike
+  // proteins, which latch onto a cell's receptors to get in.
+  {
+    id: 'cora',
+    name: 'Cora',
+    looks: 'a round magenta coronavirus with a crown of club-shaped golden spikes',
+    motion: 'bob',
+    art: `
+      <!-- 14 spike stalks -->
+      <circle cx="100" cy="104" r="64" fill="none" stroke="#a16207" stroke-width="12" stroke-dasharray="3 25.72" />
+      <!-- their club-shaped tips -->
+      <circle cx="100" cy="104" r="73" fill="none" stroke="#facc15" stroke-width="15" stroke-linecap="round" stroke-dasharray="0.01 32.76" />
+      <!-- her round envelope -->
+      <circle cx="100" cy="104" r="58" fill="#e879f9" />
+      <ellipse cx="77" cy="80" rx="12" ry="7" fill="#ffffff" opacity="0.45" />
+      <g class="face">
+        <circle cx="84" cy="102" r="7" fill="#3b0d2e" />
+        <circle cx="116" cy="102" r="7" fill="#3b0d2e" />
+        <circle cx="82" cy="100" r="2.4" fill="#ffffff" />
+        <circle cx="114" cy="100" r="2.4" fill="#ffffff" />
+        <ellipse cx="72" cy="115" rx="6" ry="3.6" fill="#fbcfe8" opacity="0.9" />
+        <ellipse cx="128" cy="115" rx="6" ry="3.6" fill="#fbcfe8" opacity="0.9" />
+        <path d="M89 118 Q100 128 111 118" fill="none" stroke="#3b0d2e" stroke-width="4" stroke-linecap="round" />
+      </g>
+    `,
+  },
 ];
 
 // The pals on the home page
-const HOME = ['flo', 'tess', 'rota'];
+const HOME = ['flo', 'tess', 'rota', 'cora'];
 export const HOME_PALS = HOME.map(palById);
 
 export function palById(id) {
