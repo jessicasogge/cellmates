@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The flask · CellMates</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="page game-page">
+    <header class="hud">
+      <a class="back" href="./pick.html" aria-label="Back to the pals">←</a>
+      <div class="hud-who">
+        <span class="hud-name"></span>
+        <span class="hud-species"></span>
+      </div>
+      <div class="hud-count">
+        <span class="copies" aria-live="polite"></span>
+        <span class="copies-label">copies made</span>
+      </div>
+    </header>
+    <div class="progress" role="progressbar" aria-label="Copies made"><div class="progress-fill"></div></div>
+
+    <!-- The flask and everything in it, drawn by game/main.js -->
+    <div class="flask"></div>
+
+    <p class="directions">
+      <span class="for-keys">Use the arrow keys to drift.</span>
+      <span class="for-touch">Touch the flask and slide your finger to drift.</span>
+      Find cells with your dot!
+    </p>
+
+    <div class="popup" hidden>
+      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="popup-title">
+        <div class="popup-pal"></div>
+        <h2 class="popup-title" id="popup-title"></h2>
+        <p class="popup-text"></p>
+        <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+        <a class="popup-next"></a>
+        <a class="popup-pick" href="./pick.html">Pick another pal</a>
+      </div>
+    </div>
+    <script type="module" src="./game/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pick a pal · CellMates</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="page">
+    <header class="page-header">
+      <a class="back" href="./index.html" aria-label="Back to the home page">←</a>
+      <h1>Pick a pal</h1>
+    </header>
+
+    <!-- A card for each pal you can play as, drawn by game/pick.js -->
+    <div class="pal-cards"></div>
+
+    <section class="how-to" aria-labelledby="how-to-title">
+      <h2 id="how-to-title">How to play</h2>
+      <ol>
+        <li>Drift to a cell with <b>your dot</b> <span class="dot" aria-hidden="true"></span>. That’s the lock your key fits.</li>
+        <li>The cell makes copies of you, then <b>bursts</b>. The copies take over the cells next door.</li>
+        <li>Don’t touch the <b>antibodies</b>. They stick to you and stop you for good.</li>
+      </ol>
+    </section>
+    <script type="module" src="./game/pick.js"></script>
+  </body>
+</html>

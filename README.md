@@ -2,7 +2,17 @@
 
 A cute virology game for the browser, and the sister game to [PetriPals](https://github.com/jessicasogge/petripals) and [FunGals](https://jessicasogge.github.io/fungals/). Bacteria and fungi grow on agar in a petri dish, but viruses can't: they need a living cell. Pick a real virus, find the cells with your receptor, take them over and burst out to spread across a cell culture flask.
 
-**Status:** just getting started. See the [design doc](docs/design.md) for the plan.
+**Status:** v1, with one pal and one mode. See the [design doc](docs/design.md) for the plan.
+
+## How to play
+
+1. **Press Start**, then pick a pal. For now that's Flo, an influenza A virus.
+2. **Drift around the flask** with the arrow keys, or on a touch screen, by touching the flask and sliding your finger.
+3. **Find cells with your dot.** That's the receptor Flo's spikes fit, like a key in a lock. Cells with a square have the wrong lock.
+4. **Copy and burst.** Drift onto a cell and Flo slips inside. The cell makes copies of her, then bursts, and the copies take over the matching cells next door. Each cell makes 6 copies.
+5. **Dodge the antibodies.** Their clouds spread out from a few drops. Touch one and Flo is neutralized.
+
+Make enough copies to clear the level: 100, then 150, 200, 250 and 300. Each level adds another antibody.
 
 ## Running it locally
 
@@ -28,8 +38,10 @@ The tests use [Vitest](https://vitest.dev/), and most run in [jsdom](https://git
 
 | Path | What's there |
 |---|---|
-| `public/index.html` | Home page (a placeholder for now), with its row of pals drawn by `script.js` |
-| `public/game/pals.js` | Every pal's name and drawing, in one place. So far: Tess (phage T4), Flo (influenza A), Rota (rotavirus) and Cora (coronavirus) |
+| `public/index.html` | Home page, with its row of pals drawn by `script.js` and the Press Start to Play button |
+| `public/pick.html` | Pick a pal (just Flo so far), drawn by `game/pick.js`, with how to play |
+| `public/flask.html` | The game: the flask (`game/main.js`), with the rules in `game/flask.js` and the sheet of cells in `game/hexgrid.js` |
+| `public/game/pals.js` | Every pal's name, drawing and details, in one place; `PLAYABLE` lists who you can play as. So far: Tess (phage T4), Flo (influenza A), Rota (rotavirus) and Cora (coronavirus) |
 | `public/game/` | Game code carried over from PetriPals: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the fun-fact pop-up (`facts.js`, with italics for scientific names from `italics.js`), and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `docs/design.md` | The design doc |
 | `test/` | Tests |

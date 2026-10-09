@@ -1,11 +1,17 @@
 // Every pal's name and drawing.
 //
 // Each pal has:
-//   id      her key, used in links and to look her up
-//   name    display name
-//   looks   screen-reader description after her name
-//   motion  idle animation in styles.css: bob
-//   art     200 x 200 drawing; the face is wrapped in <g class="face">
+//   id       her key, used in links and to look her up
+//   name     display name
+//   species  which virus she is
+//   host     the cells she gets into, for the pick page
+//   looks    screen-reader description after her name
+//   motion   idle animation in styles.css: bob
+//   art      200 x 200 drawing; the face is wrapped in <g class="face">
+//
+// Pals you can play as also have:
+//   burst    how many copies of her each cell makes before it bursts
+//   facts    fun facts for the end-of-level pop-up (game/facts.js)
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -15,6 +21,8 @@ export const PALS = [
   {
     id: 'tess',
     name: 'Tess',
+    species: 'Phage T4',
+    host: 'bacteria',
     looks: 'a lavender T4 phage with a many-sided head, a striped tail and six spidery legs',
     motion: 'bob',
     art: `
@@ -45,8 +53,19 @@ export const PALS = [
   {
     id: 'flo',
     name: 'Flo',
+    species: 'Influenza A virus',
+    host: 'airway cells',
     looks: 'a round coral influenza A virus covered in teal and gold spikes',
     motion: 'bob',
+    burst: 6,
+    facts: [
+      'Flo changes her spikes a little every year, so the flu vaccine changes too.',
+      "Flo's teal spikes grab onto sugars on your airway cells to get inside.",
+      "Flo's gold spikes snip her copies free so they can leave the cell.",
+      'Flo keeps her genes in eight separate pieces, like a recipe on eight cards.',
+      'Flo is so small that a thousand of her would fit across one hair.',
+      "Flo can't make anything by herself. She needs a cell to make every copy.",
+    ],
     art: `
       <!-- 16 spike stalks, poking out from under her envelope -->
       <circle cx="100" cy="104" r="66" fill="none" stroke="#be185d" stroke-width="14" stroke-dasharray="3 22.92" />
@@ -72,6 +91,8 @@ export const PALS = [
   {
     id: 'rota',
     name: 'Rota',
+    species: 'Rotavirus',
+    host: 'gut cells',
     looks: 'an amber rotavirus shaped like a wheel, with spokes and a bumpy rim',
     motion: 'bob',
     art: `
@@ -100,6 +121,8 @@ export const PALS = [
   {
     id: 'cora',
     name: 'Cora',
+    species: 'Coronavirus',
+    host: 'airway cells',
     looks: 'a round magenta coronavirus with a crown of club-shaped golden spikes',
     motion: 'bob',
     art: `
@@ -127,14 +150,27 @@ export const PALS = [
 const HOME = ['flo', 'tess', 'rota', 'cora'];
 export const HOME_PALS = HOME.map(palById);
 
+// The pals you can play as so far, on the pick page.
+const PLAYABLE = ['flo'];
+export const PLAYABLE_PALS = PLAYABLE.map(palById);
+
 export function palById(id) {
   return PALS.find((pal) => pal.id === id);
 }
 
-export function homePal(pal) {
+// Her drawing as an <svg>, hidden from screen readers (for when the words
+// next to it already say who she is).
+export function palArt(pal) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '0 0 200 200');
   svg.innerHTML = pal.art;
+  svg.setAttribute('aria-hidden', 'true');
+  return svg;
+}
+
+export function homePal(pal) {
+  const svg = palArt(pal);
+  svg.removeAttribute('aria-hidden');
   svg.setAttribute('class', `pal ${pal.motion}`);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `${pal.name}, ${pal.looks}`);

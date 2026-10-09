@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { HOME_PALS, homePal, palById, PALS } from '../public/game/pals.js';
+import { HOME_PALS, homePal, palArt, palById, PALS, PLAYABLE_PALS } from '../public/game/pals.js';
 
 describe('the pals', () => {
   it('each have a different id and everything a page needs to draw them', () => {
@@ -14,7 +14,29 @@ describe('the pals', () => {
       expect(pal.looks.length).toBeGreaterThan(10);
       expect(pal.motion).toBe('bob');
       expect(pal.art).toContain('<g class="face">');
+      expect(pal.species.length).toBeGreaterThan(3);
+      expect(pal.host).toMatch(/cells|bacteria/);
     }
+  });
+
+  it('you can play as Flo, with a burst size and fun facts about her', () => {
+    expect(PLAYABLE_PALS.map((pal) => pal.id)).toEqual(['flo']);
+    for (const pal of PLAYABLE_PALS) {
+      expect(pal.burst).toBeGreaterThan(0);
+      expect(pal.facts.length).toBeGreaterThanOrEqual(5);
+      expect(new Set(pal.facts).size).toBe(pal.facts.length);
+      for (const fact of pal.facts) {
+        expect(fact, fact).toContain(pal.name); // says whose fact it is
+        expect(fact.length, fact).toBeLessThanOrEqual(90); // fits the pop-up
+        expect(fact, fact).toMatch(/^[A-Z].*\.$/); // a full sentence
+      }
+    }
+  });
+
+  it('her plain drawing is hidden from screen readers', () => {
+    const svg = palArt(palById('flo'));
+    expect(svg.getAttribute('aria-hidden')).toBe('true');
+    expect(svg.getAttribute('class')).toBeNull();
   });
 
   it('can be looked up by id', () => {
@@ -125,6 +147,10 @@ describe('the home page', () => {
     const labels = [...document.querySelectorAll('.friends svg')].map((s) => s.getAttribute('aria-label'));
     expect(labels).toEqual(HOME_PALS.map((pal) => `${pal.name}, ${pal.looks}`));
     expect(HOME_PALS.map((pal) => pal.id)).toEqual(['flo', 'tess', 'rota', 'cora']);
+  });
+
+  it('has a Press Start to Play button that opens the pick page', () => {
+    expect(page).toContain('<a class="start-btn" href="./pick.html">Press Start to Play</a>');
   });
 
   it('loads the script that draws them', () => {
