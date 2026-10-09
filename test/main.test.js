@@ -98,30 +98,24 @@ describe('the flask', () => {
   });
 });
 
-describe('the quick tips', () => {
-  it('show over the flask on level 1, and the game waits for them', () => {
+describe('how to play', () => {
+  it('sits under the flask, with her name, her dot, the other locks and the antibodies', () => {
     open('?pal=flo&level=1');
-    expect($('.intro').hidden).toBe(false);
-    expect($('.intro .pal-name').textContent).toBe('Flo');
-    expect(document.activeElement).toBe($('.intro-go'));
-    expect(frames).toHaveLength(0);
-    $('.intro-go').click();
-    expect($('.intro').hidden).toBe(true);
-    expect(frames).toHaveLength(1);
-  });
-
-  it('skip straight to the game on later levels', () => {
-    open('?pal=flo&level=2');
-    expect($('.intro').hidden).toBe(true);
-    expect(frames).toHaveLength(1);
-  });
-
-  it("show her dot, the other viruses' locks and the antibodies", () => {
-    open('?pal=flo&level=1');
+    const tips = $('.flask + .tips');
+    expect(tips).not.toBeNull();
+    expect(tips.querySelector('.pal-name').textContent).toBe('Flo');
     for (const kind of ['match', 'square', 'ring', 'triangle', 'diamond']) {
-      expect($(`.intro .badge.${kind}`), kind).not.toBeNull();
+      expect(tips.querySelector(`.badge.${kind}`), kind).not.toBeNull();
     }
-    expect($('.intro .antibody')).not.toBeNull();
+    expect(tips.querySelector('.antibody')).not.toBeNull();
+    expect(tips.textContent).toContain('Arrow keys to drift!');
+    expect(tips.textContent).toContain('Slide your finger on the flask to drift!');
+  });
+
+  it("doesn't hold up the game, on any level", () => {
+    open('?pal=flo&level=1');
+    expect(frames).toHaveLength(1);
+    expect($('.popup').hidden).toBe(true);
   });
 });
 
@@ -224,8 +218,6 @@ describe('the page', () => {
     vi.resetModules();
     await import('../public/game/main.js');
     expect(document.querySelectorAll('.flask-svg')).toHaveLength(1);
-    expect(callbacks).toHaveLength(0); // level 1 waits for the quick tips
-    $('.intro-go').click();
     expect(callbacks).toHaveLength(1);
   });
 });

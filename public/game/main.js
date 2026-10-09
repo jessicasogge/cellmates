@@ -153,21 +153,9 @@ export function startGame({
     frame(tick);
   };
 
-  // Level 1 opens with quick tips over the flask; the game waits for them.
-  const intro = $('.intro');
-  const begin = () => {
-    intro.hidden = true;
-    frame(tick);
-  };
+  for (const name of document.querySelectorAll('.pal-name')) name.textContent = pal.name;
   render();
-  if (level === 1) {
-    for (const name of document.querySelectorAll('.pal-name')) name.textContent = pal.name;
-    intro.hidden = false;
-    $('.intro-go').addEventListener('click', begin, { once: true });
-    $('.intro-go').focus();
-  } else {
-    begin();
-  }
+  frame(tick);
   return { game, tick };
 }
 

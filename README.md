@@ -40,7 +40,7 @@ The tests use [Vitest](https://vitest.dev/), and most run in [jsdom](https://git
 |---|---|
 | `public/index.html` | Home page, with its row of pals drawn by `script.js` and the Press Start to Play button |
 | `public/pick.html` | Pick a pal (just Flo so far), drawn by `game/pick.js` |
-| `public/flask.html` | The game, with quick tips over the flask before level 1: the flask (`game/main.js`), with the rules in `game/flask.js` and the sheet of cells in `game/hexgrid.js` |
+| `public/flask.html` | The game, with how to play under the flask: the flask (`game/main.js`), with the rules in `game/flask.js` and the sheet of cells in `game/hexgrid.js` |
 | `public/game/pals.js` | Every pal's name, drawing and details, in one place; `PLAYABLE` lists who you can play as. So far: Tess (phage T4), Flo (influenza A), Rota (rotavirus) and Cora (coronavirus) |
 | `public/game/` | Game code carried over from PetriPals: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the fun-fact pop-up (`facts.js`, with italics for scientific names from `italics.js`), and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `docs/design.md` | The design doc |
