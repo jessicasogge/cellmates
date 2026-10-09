@@ -68,12 +68,13 @@ describe('which pal and level', () => {
 });
 
 describe('the flask', () => {
-  it('shows who you are, the level and the copies to make', () => {
+  it('shows who you are, the level and the cells to burst', () => {
     open();
     expect($('.hud-name').textContent).toBe('Flo · Level 2');
     expect($('.hud-species').textContent).toBe('Influenza A virus');
-    expect($('.copies').textContent).toBe('0 / 150');
-    expect($('.progress').getAttribute('aria-valuemax')).toBe('150');
+    expect($('.count').textContent).toBe('0 / 15');
+    expect($('.count-label').textContent).toBe('cells burst');
+    expect($('.progress').getAttribute('aria-valuemax')).toBe('15');
   });
 
   it('draws every cell, with a dot or a square for her receptor, plus the antibodies and her', () => {
@@ -145,24 +146,24 @@ describe('steering', () => {
 describe('the end of a level', () => {
   it('clears it, offering the next level and a fun fact', () => {
     const { game } = open();
-    game.copies = 160;
+    game.bursts = 16;
     run(0);
     expect(frames).toHaveLength(0); // the game stops
     expect($('.popup').hidden).toBe(false);
     expect($('.popup-title').textContent).toBe('Level 2 cleared!');
-    expect($('.popup-text').textContent).toBe('Flo made 160 copies of herself.');
+    expect($('.popup-text').textContent).toBe('Flo burst 16 cells.');
     expect($('.popup-next').textContent).toBe('Level 3: one more antibody');
     expect($('.popup-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=3');
     expect($('.fun-fact').hidden).toBe(false);
     expect($('.popup-pal svg')).not.toBeNull();
-    expect($('.copies').textContent).toBe('160 / 150');
+    expect($('.count').textContent).toBe('16 / 15');
     expect($('.progress-fill').style.width).toBe('100%');
     expect(sporeBurst).toHaveBeenLastCalledWith($('.popup-pal'), { big: false });
   });
 
   it('starts over from level 1 after the last level', () => {
     const { game } = open('?pal=flo&level=5');
-    game.copies = 300;
+    game.bursts = 30;
     run(0);
     expect($('.popup-title').textContent).toBe('You cleared every level!');
     expect($('.popup-next').textContent).toBe('Play again');

@@ -12,7 +12,7 @@ const seeded = (seed = 1) => () => {
 
 // A game with no antibodies, where every cell has her receptor.
 function openFlask(overrides = {}) {
-  const game = newGame({ level: 1, burst: 6, random: seeded() });
+  const game = newGame({ level: 1, random: seeded() });
   game.antibodies = [];
   for (const cell of game.cells) cell.match = true;
   return Object.assign(game, overrides);
@@ -27,17 +27,17 @@ function driftOnto(game, id) {
 }
 
 describe('the levels', () => {
-  it('need more copies each time', () => {
-    expect([1, 2, 3, 4, 5].map(targetFor)).toEqual([100, 150, 200, 250, 300]);
+  it('need more cells burst each time', () => {
+    expect([1, 2, 3, 4, 5].map(targetFor)).toEqual([10, 15, 20, 25, 30]);
     expect(LEVELS).toBe(5);
   });
 
   it('start with every cell healthy and the pal in the middle', () => {
-    const game = newGame({ level: 2, burst: 6, random: seeded() });
-    expect(game.target).toBe(150);
+    const game = newGame({ level: 2, random: seeded() });
+    expect(game.target).toBe(15);
     expect(game.cells.every((cell) => cell.state === 'healthy')).toBe(true);
     expect(game.player).toEqual({ x: WIDTH / 2, y: HEIGHT / 2, inside: null });
-    expect(game.copies).toBe(0);
+    expect(game.bursts).toBe(0);
     expect(game.over).toBeNull();
   });
 
@@ -69,7 +69,7 @@ describe('the levels', () => {
   it('use Math.random and level 1 by default', () => {
     const game = newGame();
     expect(game.level).toBe(1);
-    expect(game.burst).toBe(6);
+    expect(game.target).toBe(10);
   });
 });
 
@@ -122,13 +122,13 @@ describe('getting into a cell', () => {
 });
 
 describe('bursting', () => {
-  it('happens after the copy time, adding her burst size and letting her out', () => {
+  it('happens after the copy time, counting the cell and letting her out', () => {
     const game = openFlask();
     driftOnto(game, 40);
     expect(step(game, COPY_TIME - 0.1)).toEqual([]);
     expect(step(game, 0.2)).toEqual(['burst']);
     expect(game.cells[40].state).toBe('burst');
-    expect(game.copies).toBe(6);
+    expect(game.bursts).toBe(1);
     expect(game.player.inside).toBeNull();
   });
 
@@ -144,7 +144,7 @@ describe('bursting', () => {
     const events = step(game, COPY_TIME);
     expect(events.filter((e) => e === 'burst')).toHaveLength(copying.length);
     expect(game.cells.filter((c) => c.state === 'copying')).toHaveLength(0);
-    expect(game.copies).toBe(6 * (1 + copying.length));
+    expect(game.bursts).toBe(1 + copying.length);
   });
 
   it("doesn't pop her out when some other cell bursts", () => {
@@ -158,8 +158,8 @@ describe('bursting', () => {
 });
 
 describe('the end of a level', () => {
-  it('clears it once she has made enough copies', () => {
-    const game = openFlask({ copies: 96 });
+  it('clears it once she has burst enough cells', () => {
+    const game = openFlask({ bursts: 9 });
     driftOnto(game, 40);
     expect(step(game, COPY_TIME)).toEqual(['burst', 'cleared']);
     expect(game.over).toBe('cleared');

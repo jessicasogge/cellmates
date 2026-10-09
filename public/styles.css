@@ -264,7 +264,7 @@ a {
 }
 
 .hud-species,
-.copies-label {
+.count-label {
   font-size: 0.8rem;
   color: #6b2149;
 }
@@ -275,7 +275,7 @@ a {
   align-items: flex-end;
 }
 
-.copies {
+.count {
   font-family: Fredoka, system-ui, sans-serif;
   font-weight: 700;
   font-size: 1.6rem;

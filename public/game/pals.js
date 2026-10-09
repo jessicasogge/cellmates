@@ -10,7 +10,6 @@
 //   art      200 x 200 drawing; the face is wrapped in <g class="face">
 //
 // Pals you can play as also have:
-//   burst    how many copies of her each cell makes before it bursts
 //   facts    fun facts for the end-of-level pop-up (game/facts.js)
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -57,7 +56,6 @@ export const PALS = [
     host: 'airway cells',
     looks: 'a round coral influenza A virus covered in teal and gold spikes',
     motion: 'bob',
-    burst: 6,
     facts: [
       'Flo changes her spikes a little every year, so the flu vaccine changes too.',
       "Flo's teal spikes grab onto sugars on your airway cells to get inside.",

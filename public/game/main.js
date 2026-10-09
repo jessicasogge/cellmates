@@ -76,7 +76,7 @@ export function startGame({
   frame = (callback) => window.requestAnimationFrame(callback),
 } = {}) {
   const { pal, level } = readParams(search);
-  const game = newGame({ level, burst: pal.burst, random });
+  const game = newGame({ level, random });
   const $ = (selector) => document.querySelector(selector);
 
   $('.hud-name').textContent = `${pal.name} · Level ${level}`;
@@ -90,10 +90,10 @@ export function startGame({
     const { player } = game;
     drawn.player.setAttribute('transform', `translate(${player.x.toFixed(1)} ${player.y.toFixed(1)})`);
     drawn.player.setAttribute('class', player.inside === null ? 'player' : 'player inside');
-    const made = Math.min(game.copies, game.target);
-    $('.copies').textContent = `${game.copies} / ${game.target}`;
-    $('.progress').setAttribute('aria-valuenow', made);
-    $('.progress-fill').style.width = `${(100 * made) / game.target}%`;
+    const done = Math.min(game.bursts, game.target);
+    $('.count').textContent = `${game.bursts} / ${game.target}`;
+    $('.progress').setAttribute('aria-valuenow', done);
+    $('.progress-fill').style.width = `${(100 * done) / game.target}%`;
   };
 
   const showEnd = () => {
@@ -103,7 +103,7 @@ export function startGame({
     if (game.over === 'cleared') {
       const last = level === LEVELS;
       $('.popup-title').textContent = last ? 'You cleared every level!' : `Level ${level} cleared!`;
-      $('.popup-text').textContent = `${pal.name} made ${game.copies} copies of herself.`;
+      $('.popup-text').textContent = `${pal.name} burst ${game.bursts} cells.`;
       next.textContent = last ? 'Play again' : `Level ${level + 1}: one more antibody`;
       next.href = levelLink(pal, last ? 1 : level + 1);
       sporeBurst($('.popup-pal'), { big: last });

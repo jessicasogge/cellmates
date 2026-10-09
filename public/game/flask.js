@@ -3,11 +3,10 @@
 //
 // The player's pal drifts over a sheet of cells. Touch a cell with her
 // receptor (her "lock") and she slips inside; the cell copies her for a
-// moment, then bursts, adding her burst size to the copies made. The new
-// copies take over the matching cells next door, which burst in turn, but
-// those don't spread any further, so she has to keep finding fresh cells.
-// Antibody clouds spread out from a few drops; touch one and she's
-// neutralized. Make enough copies to clear the level.
+// moment, then bursts. Her copies take over the matching cells next door,
+// which burst in turn, but those don't spread any further, so she has to
+// keep finding fresh cells. Antibody clouds spread out from a few drops;
+// touch one and she's neutralized. Burst enough cells to clear the level.
 
 import { cellAt, hexGrid } from './hexgrid.js';
 
@@ -22,15 +21,15 @@ export const COPY_TIME = 1.5; // seconds a cell takes to copy her and burst
 export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
 export const MATCH_SHARE = 0.8; // how many cells have her receptor
 
-// Copies needed to clear a level: 100, 150, 200, 250, then 300. One cell and
-// the ones next door make about 30, so level 1 takes a few cells.
-export const targetFor = (level) => 50 + 50 * level;
+// Cells to burst to clear a level: 10, 15, 20, 25, then 30. One cell and the
+// ones next door make about 5, so level 1 takes a couple of tries.
+export const targetFor = (level) => 5 + 5 * level;
 
 const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
 
 // A fresh level: every cell healthy, the pal in the middle, and one antibody
-// drop per level. `burst` is how many copies each cell makes.
-export function newGame({ level = 1, burst = 6, random = Math.random } = {}) {
+// drop per level.
+export function newGame({ level = 1, random = Math.random } = {}) {
   const cells = hexGrid(WIDTH, HEIGHT, CELL_SIZE).map((cell) => ({
     ...cell,
     match: random() < MATCH_SHARE,
@@ -41,12 +40,11 @@ export function newGame({ level = 1, burst = 6, random = Math.random } = {}) {
   const player = { x: WIDTH / 2, y: HEIGHT / 2, inside: null };
   return {
     level,
-    burst,
     target: targetFor(level),
     cells,
     player,
     antibodies: placeAntibodies(level, player, random),
-    copies: 0,
+    bursts: 0, // cells burst so far
     time: 0,
     over: null, // 'cleared' or 'neutralized' once the level ends
   };
@@ -113,7 +111,7 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
   const bursting = game.cells.filter((cell) => cell.state === 'copying' && (cell.timer -= dt) <= 0);
   for (const cell of bursting) {
     cell.state = 'burst';
-    game.copies += game.burst;
+    game.bursts += 1;
     events.push('burst');
     if (cell.spreads) {
       for (const id of cell.neighbors) {
@@ -124,7 +122,7 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
     if (player.inside === cell.id) player.inside = null; // out she pops
   }
 
-  if (game.copies >= game.target) {
+  if (game.bursts >= game.target) {
     game.over = 'cleared';
     events.push('cleared');
   }

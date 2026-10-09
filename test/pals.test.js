@@ -19,10 +19,9 @@ describe('the pals', () => {
     }
   });
 
-  it('you can play as Flo, with a burst size and fun facts about her', () => {
+  it('you can play as Flo, with fun facts about her', () => {
     expect(PLAYABLE_PALS.map((pal) => pal.id)).toEqual(['flo']);
     for (const pal of PLAYABLE_PALS) {
-      expect(pal.burst).toBeGreaterThan(0);
       expect(pal.facts.length).toBeGreaterThanOrEqual(5);
       expect(new Set(pal.facts).size).toBe(pal.facts.length);
       for (const fact of pal.facts) {
