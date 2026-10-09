@@ -86,10 +86,10 @@ describe('the flask', () => {
     }
     expect(drawn('.cell.wall')).toBe(game.cells.filter((c) => !c.match).length);
     expect(document.querySelectorAll('.antibody-cloud')).toHaveLength(2);
-    expect($('.player svg').getAttribute('width')).toBe('48');
+    expect($('.player svg').getAttribute('width')).toBe('38');
   });
 
-  it('spreads the antibody clouds as time goes on, and moves them as they chase her', () => {
+  it('spreads the antibody clouds as time goes on, and moves them as they drift', () => {
     const { game } = open();
     const startX = $('.antibody-cloud').getAttribute('cx');
     run(0);
@@ -201,7 +201,7 @@ describe('the end of a level', () => {
 
   it('ends when an antibody gets her, offering the same level again', () => {
     const { game } = open();
-    game.antibodies[0] = { x: game.player.x, y: game.player.y, max: 60, r: 0 };
+    game.antibodies[0] = { x: game.player.x, y: game.player.y, max: 60, r: 0, heading: 0 };
     game.time = GROW_TIME;
     run(0);
     expect(game.over).toBe('neutralized');

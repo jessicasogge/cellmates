@@ -8,7 +8,7 @@
 // moment, then bursts. Her copies take over the matching cells next door,
 // which burst in turn, but those don't spread any further, so she has to
 // keep finding fresh cells. Antibody clouds spread out from a few drops and
-// creep slowly after her; touch one and she's neutralized. Burst enough cells to clear the level.
+// wander slowly around the flask; touch one and she's neutralized. Burst enough cells to clear the level.
 
 import { cellAt, hexGrid } from './hexgrid.js';
 
@@ -16,12 +16,13 @@ import { cellAt, hexGrid } from './hexgrid.js';
 export const WIDTH = 340;
 export const HEIGHT = 500;
 export const CELL_SIZE = 21; // center to corner
-export const PLAYER_RADIUS = 14;
+export const PLAYER_RADIUS = 11; // small enough to glide along her paths
 
 export const LEVELS = 5;
 export const COPY_TIME = 1.5; // seconds a cell takes to copy her and burst
 export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
-export const CHASE_SPEED = 6; // how fast they creep after her, per second
+export const WANDER_SPEED = 8; // how fast they drift about, per second
+export const WANDER_TURN = 2; // how sharply they can turn, per second
 export const MATCH_SHARE = 0.7; // how many cells have her receptor
 
 // The locks on the other cells: receptors for other viruses, which her key
@@ -60,6 +61,7 @@ export function newGame({ level = 1, random = Math.random } = {}) {
     cells,
     player,
     antibodies: placeAntibodies(level, player, random),
+    random, // for the antibodies' wandering
     bursts: 0, // cells burst so far
     time: 0,
     over: null, // 'cleared' or 'neutralized' once the level ends
@@ -76,7 +78,8 @@ export function placeAntibodies(count, player, random) {
     const y = random() * HEIGHT;
     const clearOfPlayer = Math.hypot(x - player.x, y - player.y) > max + 60;
     const clearOfOthers = drops.every((drop) => Math.hypot(drop.x - x, drop.y - y) > drop.max + max);
-    if (clearOfPlayer && clearOfOthers) drops.push({ x, y, max, r: 0 });
+    // Each drifts off in its own direction (`heading`, in radians).
+    if (clearOfPlayer && clearOfOthers) drops.push({ x, y, max, r: 0, heading: random() * 2 * Math.PI });
   }
   return drops;
 }
@@ -103,6 +106,23 @@ export function slide(from, [dx, dy], isBlocked) {
   return [from.x, from.y];
 }
 
+// Drift an antibody drop along for `dt` seconds, turning a little at random,
+// like something carried about in the liquid. It bounces off the sides of
+// the flask, so it never wanders out of it.
+export function wander(drop, dt, random) {
+  drop.heading += (random() - 0.5) * 2 * WANDER_TURN * dt;
+  drop.x += Math.cos(drop.heading) * WANDER_SPEED * dt;
+  drop.y += Math.sin(drop.heading) * WANDER_SPEED * dt;
+  if (drop.x < 0 || drop.x > WIDTH) {
+    drop.x = clamp(drop.x, 0, WIDTH);
+    drop.heading = Math.PI - drop.heading; // bounce back sideways
+  }
+  if (drop.y < 0 || drop.y > HEIGHT) {
+    drop.y = clamp(drop.y, 0, HEIGHT);
+    drop.heading = -drop.heading; // bounce back up or down
+  }
+}
+
 function infect(cell, spreads) {
   cell.state = 'copying';
   cell.timer = COPY_TIME;
@@ -119,17 +139,12 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
 
   // Antibodies diffuse out quickly at first, then slow down.
   const spread = 1 - (1 - Math.min(1, game.time / GROW_TIME)) ** 2;
-  const { player } = game;
   for (const drop of game.antibodies) {
     drop.r = drop.max * spread;
-    // Creep toward her, very slowly, like antibodies finding a virus.
-    const distance = Math.hypot(player.x - drop.x, player.y - drop.y);
-    const move = Math.min(distance, CHASE_SPEED * dt);
-    if (distance > 0) {
-      drop.x += ((player.x - drop.x) / distance) * move;
-      drop.y += ((player.y - drop.y) / distance) * move;
-    }
+    wander(drop, dt, game.random);
   }
+
+  const { player } = game;
 
   if (player.inside === null) {
     // Move if she can; if a wall's in the way, slide along it.

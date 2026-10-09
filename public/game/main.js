@@ -12,7 +12,7 @@ import { steer, touchSteering, watchInputMode } from './touch.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const SPEED = 140; // flask units per second
-const PLAYER_SIZE = 48; // how big she's drawn, in flask units
+const PLAYER_SIZE = 38; // how big she's drawn, in flask units
 
 const svgEl = (name, attributes = {}) => {
   const el = document.createElementNS(SVG, name);

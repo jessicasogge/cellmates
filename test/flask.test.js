@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { cellAt } from '../public/game/hexgrid.js';
 import {
-  CELL_SIZE, CHASE_SPEED, COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, slide, step, targetFor, WIDTH,
+  CELL_SIZE, COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, slide, step, targetFor, wander, WANDER_SPEED, WANDER_TURN, WIDTH,
 } from '../public/game/flask.js';
 
 // Random numbers that repeat a pattern, so every game is the same.
@@ -150,6 +150,47 @@ describe('the maze', () => {
   });
 });
 
+describe('wandering antibodies', () => {
+  const drop = (props) => ({ x: 100, y: 100, max: 50, r: 0, heading: 0, ...props });
+
+  it('keep going the same way when the dice say so', () => {
+    const d = drop();
+    wander(d, 1, () => 0.5);
+    expect(d).toMatchObject({ x: 100 + WANDER_SPEED, y: 100, heading: 0 });
+  });
+
+  it('turn a little at random, never more than WANDER_TURN a second', () => {
+    const left = drop();
+    const right = drop();
+    wander(left, 0.5, () => 0);
+    wander(right, 0.5, () => 1);
+    expect(left.heading).toBeCloseTo(-WANDER_TURN * 0.5);
+    expect(right.heading).toBeCloseTo(WANDER_TURN * 0.5);
+  });
+
+  it('bounce off the left and right sides', () => {
+    const d = drop({ x: WIDTH - 1, heading: 0 });
+    wander(d, 1, () => 0.5);
+    expect(d.x).toBe(WIDTH);
+    expect(Math.cos(d.heading)).toBeCloseTo(-1); // now heading back left
+    const e = drop({ x: 1, heading: Math.PI });
+    wander(e, 1, () => 0.5);
+    expect(e.x).toBe(0);
+    expect(Math.cos(e.heading)).toBeCloseTo(1);
+  });
+
+  it('bounce off the top and bottom', () => {
+    const d = drop({ y: HEIGHT - 1, heading: Math.PI / 2 });
+    wander(d, 1, () => 0.5);
+    expect(d.y).toBe(HEIGHT);
+    expect(Math.sin(d.heading)).toBeCloseTo(-1); // now heading back up
+    const e = drop({ y: 1, heading: -Math.PI / 2 });
+    wander(e, 1, () => 0.5);
+    expect(e.y).toBe(0);
+    expect(Math.sin(e.heading)).toBeCloseTo(1);
+  });
+});
+
 describe('sliding along a wall', () => {
   const from = { x: 0, y: 0 };
 
@@ -249,52 +290,43 @@ describe('the end of a level', () => {
 
   it('neutralizes her if she touches an antibody cloud', () => {
     const game = openFlask();
-    game.antibodies = [{ x: 100, y: 100, max: 60, r: 0 }];
+    game.antibodies = [{ x: 100, y: 100, max: 60, r: 0, heading: 0 }];
     step(game, GROW_TIME); // the cloud spreads out fully
-    expect(game.antibodies[0].r).toBe(60);
-    game.player.x = 100 + 60 + 10; // just outside, then drifts in
-    game.player.y = 100;
+    const [drop] = game.antibodies;
+    expect(drop.r).toBe(60);
+    game.player.x = drop.x + 60 + 10; // just outside, then drifts in
+    game.player.y = drop.y;
     expect(step(game, 0.01, [-5, 0])).toEqual(['neutralized']);
     expect(game.over).toBe('neutralized');
   });
 
   it('spreads the clouds fast at first, then slowly', () => {
     const game = openFlask();
-    game.antibodies = [{ x: 20, y: 20, max: 60, r: 0 }];
+    game.antibodies = [{ x: 20, y: 20, max: 60, r: 0, heading: 0 }];
     step(game, GROW_TIME / 2);
     expect(game.antibodies[0].r).toBeCloseTo(45); // 3/4 of the way at half time
   });
 
-  it('creeps the antibodies slowly toward her', () => {
-    const game = openFlask();
+  it('starts each antibody drifting its own way', () => {
+    const { antibodies } = newGame({ level: 5, random: seeded(4) });
+    const headings = antibodies.map((drop) => drop.heading);
+    for (const heading of headings) {
+      expect(heading).toBeGreaterThanOrEqual(0);
+      expect(heading).toBeLessThan(2 * Math.PI);
+    }
+    expect(new Set(headings).size).toBe(headings.length);
+  });
+
+  it("drifts the antibodies about, whether or not that's toward her", () => {
+    const game = openFlask({ random: () => 0.5 }); // no turning
     const { x, y } = game.player;
-    game.antibodies = [{ x: x - 100, y, max: 50, r: 0 }];
+    // Heading straight away from her.
+    game.antibodies = [{ x: x - 100, y, max: 50, r: 0, heading: Math.PI }];
     step(game, 1);
-    expect(game.antibodies[0].x).toBeCloseTo(x - 100 + CHASE_SPEED);
-    expect(game.antibodies[0].y).toBe(y);
-    expect(CHASE_SPEED).toBeLessThan(10); // much slower than she drifts
+    expect(game.antibodies[0].x).toBeCloseTo(x - 100 - WANDER_SPEED);
+    expect(game.antibodies[0].y).toBeCloseTo(y);
+    expect(WANDER_SPEED).toBeLessThan(10); // much slower than she drifts
   });
-
-  it("chases her even while she's inside a cell", () => {
-    const game = openFlask();
-    game.antibodies = [{ x: 20, y: 20, max: 50, r: 0 }];
-    driftOnto(game, 40);
-    const before = Math.hypot(game.player.x - 20, game.player.y - 20);
-    step(game, 1);
-    const [drop] = game.antibodies;
-    expect(Math.hypot(game.player.x - drop.x, game.player.y - drop.y)).toBeCloseTo(before - CHASE_SPEED);
-  });
-
-  it("stops on top of her instead of overshooting", () => {
-    const game = openFlask();
-    const { x, y } = game.player;
-    game.antibodies = [{ x: x + 1, y, max: 50, r: 0 }];
-    step(game, 10);
-    expect(game.antibodies[0]).toMatchObject({ x, y });
-    step(game, 1); // already there: stays put
-    expect(game.antibodies[0]).toMatchObject({ x, y });
-  });
-
   it('stops everything once the level is over', () => {
     const game = openFlask({ over: 'cleared' });
     expect(step(game, 1, [10, 10])).toEqual([]);
