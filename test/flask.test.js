@@ -1,7 +1,7 @@
 // flask.js: the rules of the game, with no drawing.
 import { describe, expect, it } from 'vitest';
 import {
-  COPY_TIME, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
+  COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
 } from '../public/game/flask.js';
 
 // Random numbers that repeat a pattern, so every game is the same.
@@ -44,8 +44,18 @@ describe('the levels', () => {
   it('give most cells her receptor, but not all', () => {
     const { cells } = newGame({ random: seeded(7) });
     const share = cells.filter((cell) => cell.match).length / cells.length;
-    expect(share).toBeGreaterThan(0.65);
-    expect(share).toBeLessThan(0.95);
+    expect(share).toBeGreaterThan(0.55);
+    expect(share).toBeLessThan(0.85);
+  });
+
+  it("put other viruses' locks on the rest, of every kind", () => {
+    const { cells } = newGame({ random: seeded(7) });
+    for (const cell of cells) {
+      if (cell.match) expect(cell.lock).toBe('match');
+      else expect(DECOYS).toContain(cell.lock);
+    }
+    const kinds = new Set(cells.filter((cell) => !cell.match).map((cell) => cell.lock));
+    expect([...kinds].sort()).toEqual([...DECOYS].sort());
   });
 
   it('add one antibody drop per level, none on top of her or each other', () => {

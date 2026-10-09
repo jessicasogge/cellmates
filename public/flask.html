@@ -21,12 +21,42 @@
     <div class="progress" role="progressbar" aria-label="Cells burst"><div class="progress-fill"></div></div>
 
     <!-- The flask and everything in it, drawn by game/main.js -->
-    <div class="flask"></div>
+    <div class="flask">
+      <!-- Quick tips, over the flask before level 1 starts -->
+      <div class="intro" hidden>
+        <div class="intro-card" role="dialog" aria-labelledby="intro-title">
+          <h2 id="intro-title">Quick tips!</h2>
+          <ul>
+            <li>
+              <svg class="intro-icon" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="5" class="badge match" /></svg>
+              <span>Look for cells with this <b>teal dot</b>. That’s the lock <span class="pal-name">Flo</span>’s key fits!</span>
+            </li>
+            <li>
+              <svg class="intro-icon wide" viewBox="-26 -8 52 16" aria-hidden="true">
+                <rect x="-24" y="-4" width="8" height="8" rx="1.5" class="badge square" />
+                <circle cx="-7" r="3.8" class="badge ring" />
+                <polygon points="7,-5 12,4 2,4" class="badge triangle" />
+                <polygon points="20,-5 25,0 20,5 15,0" class="badge diamond" />
+              </svg>
+              <span>Nope, not these. They’re locks for other viruses, so she can’t get in.</span>
+            </li>
+            <li>
+              <span class="intro-num" aria-hidden="true">!</span>
+              <span>Drift onto a cell and it makes more of her, then <b>pops</b>. Her copies grab the cells next door too.</span>
+            </li>
+            <li>
+              <svg class="intro-icon" viewBox="-14 -14 28 28" aria-hidden="true"><g class="antibody"><circle r="12" /><path d="M0 7 V0 L-5 -6 M0 0 L5 -6" /></g></svg>
+              <span>Stay away from the blue <b>antibody</b> clouds. They’re super sticky!</span>
+            </li>
+          </ul>
+          <button type="button" class="intro-go">Let’s go!</button>
+        </div>
+      </div>
+    </div>
 
     <p class="directions">
-      <span class="for-keys">Use the arrow keys to drift.</span>
-      <span class="for-touch">Touch the flask and slide your finger to drift.</span>
-      Find cells with your dot!
+      <span class="for-keys">Arrow keys to drift!</span>
+      <span class="for-touch">Slide your finger on the flask to drift!</span>
     </p>
 
     <div class="popup" hidden>

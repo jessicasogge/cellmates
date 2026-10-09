@@ -210,38 +210,6 @@ a {
   font-weight: 800;
 }
 
-.how-to {
-  padding: 0.9rem 1rem;
-  border-radius: 1.25rem;
-  background: #fff;
-  text-align: left;
-}
-
-.how-to h2 {
-  margin: 0 0 0.5rem;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 1.15rem;
-}
-
-.how-to ol {
-  margin: 0;
-  padding-left: 1.3rem;
-  line-height: 1.45;
-}
-
-.how-to li + li {
-  margin-top: 0.4rem;
-}
-
-.dot {
-  display: inline-block;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: #0f766e;
-}
-
 /* The game page. */
 .hud {
   display: flex;
@@ -327,12 +295,27 @@ a {
   fill: #ede9fe;
 }
 
-.cell .badge.match {
+.badge.match {
   fill: #0f766e;
 }
 
-.cell .badge.wrong {
-  fill: #c2a68c;
+/* Other viruses' locks: some teal like hers, to keep you looking closely. */
+.badge.square {
+  fill: #0f766e;
+}
+
+.badge.ring {
+  fill: none;
+  stroke: #0f766e;
+  stroke-width: 1.6;
+}
+
+.badge.triangle {
+  fill: #7c3aed;
+}
+
+.badge.diamond {
+  fill: #ea580c;
 }
 
 /* Copying her: glowing pink, with a thick ring around the nucleus. */
@@ -375,6 +358,92 @@ a {
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Quick tips, over the flask before level 1. */
+.intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 228, 230, 0.8);
+}
+
+.intro[hidden] {
+  display: none;
+}
+
+.intro-card {
+  padding: 1.1rem 1.1rem 1rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  text-align: left;
+  box-shadow: 0 8px 28px rgba(74, 4, 78, 0.25);
+}
+
+.intro-card h2 {
+  margin: 0 0 0.6rem;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #be185d;
+  text-align: center;
+}
+
+.intro-card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  line-height: 1.4;
+}
+
+.intro-card li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.intro-icon,
+.intro-num {
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.intro-icon.wide {
+  width: 4.2rem;
+}
+
+.intro-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fbcfe8;
+  color: #be185d;
+  font-weight: 800;
+}
+
+.intro-go {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: #be185d;
+  color: #fff;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #831843;
 }
 
 /* Inside a cell, she shows faintly through it. */

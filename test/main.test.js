@@ -80,8 +80,12 @@ describe('the flask', () => {
   it('draws every cell, with a dot or a square for her receptor, plus the antibodies and her', () => {
     const { game } = open();
     expect(document.querySelectorAll('.cell')).toHaveLength(game.cells.length);
-    expect(document.querySelectorAll('.badge.match')).toHaveLength(game.cells.filter((c) => c.match).length);
-    expect(document.querySelectorAll('.badge.wrong')).toHaveLength(game.cells.filter((c) => !c.match).length);
+    const drawn = (selector) => document.querySelectorAll(`.flask-svg ${selector}`).length;
+    expect(drawn('.badge.match')).toBe(game.cells.filter((c) => c.match).length);
+    expect(drawn('.badge.wrong')).toBe(game.cells.filter((c) => !c.match).length);
+    for (const kind of ['square', 'ring', 'triangle', 'diamond']) {
+      expect(drawn(`.badge.${kind}`), kind).toBe(game.cells.filter((c) => c.lock === kind).length);
+    }
     expect(document.querySelectorAll('.antibody-cloud')).toHaveLength(2);
     expect($('.player svg').getAttribute('width')).toBe('48');
   });
@@ -91,6 +95,33 @@ describe('the flask', () => {
     run(0);
     run(1000);
     expect(Number($('.antibody-cloud').getAttribute('r'))).toBeGreaterThan(0);
+  });
+});
+
+describe('the quick tips', () => {
+  it('show over the flask on level 1, and the game waits for them', () => {
+    open('?pal=flo&level=1');
+    expect($('.intro').hidden).toBe(false);
+    expect($('.intro .pal-name').textContent).toBe('Flo');
+    expect(document.activeElement).toBe($('.intro-go'));
+    expect(frames).toHaveLength(0);
+    $('.intro-go').click();
+    expect($('.intro').hidden).toBe(true);
+    expect(frames).toHaveLength(1);
+  });
+
+  it('skip straight to the game on later levels', () => {
+    open('?pal=flo&level=2');
+    expect($('.intro').hidden).toBe(true);
+    expect(frames).toHaveLength(1);
+  });
+
+  it("show her dot, the other viruses' locks and the antibodies", () => {
+    open('?pal=flo&level=1');
+    for (const kind of ['match', 'square', 'ring', 'triangle', 'diamond']) {
+      expect($(`.intro .badge.${kind}`), kind).not.toBeNull();
+    }
+    expect($('.intro .antibody')).not.toBeNull();
   });
 });
 
@@ -193,6 +224,8 @@ describe('the page', () => {
     vi.resetModules();
     await import('../public/game/main.js');
     expect(document.querySelectorAll('.flask-svg')).toHaveLength(1);
+    expect(callbacks).toHaveLength(0); // level 1 waits for the quick tips
+    $('.intro-go').click();
     expect(callbacks).toHaveLength(1);
   });
 });

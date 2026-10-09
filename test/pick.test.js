@@ -25,11 +25,6 @@ describe('the pick page', () => {
     expect(flo.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('explains how to play', () => {
-    expect(page).toContain('How to play');
-    expect(page.match(/<li>/g)).toHaveLength(3);
-  });
-
   it("doesn't break on a page without cards", async () => {
     await expect(open('')).resolves.toBeUndefined();
   });

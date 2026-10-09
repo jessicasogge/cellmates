@@ -31,8 +31,18 @@ export function readParams(search) {
 
 const levelLink = (pal, level) => `./flask.html?pal=${pal.id}&level=${level}`;
 
-// Draw the flask: every cell (with a dot if it has her receptor, a square
-// if not), the antibody drops and the pal herself.
+// The little lock drawn on each cell, by its kind (flask.js): her teal dot,
+// or one of the other viruses' locks.
+const LOCKS = {
+  match: (x, y) => svgEl('circle', { cx: x, cy: y, r: 3.5, class: 'badge match' }),
+  square: (x, y) => svgEl('rect', { x: x - 3, y: y - 3, width: 6, height: 6, rx: 1, class: 'badge wrong square' }),
+  ring: (x, y) => svgEl('circle', { cx: x, cy: y, r: 2.8, class: 'badge wrong ring' }),
+  triangle: (x, y) => svgEl('polygon', { points: `${x},${y - 4} ${x + 4},${y + 3} ${x - 4},${y + 3}`, class: 'badge wrong triangle' }),
+  diamond: (x, y) => svgEl('polygon', { points: `${x},${y - 4} ${x + 4},${y} ${x},${y + 4} ${x - 4},${y}`, class: 'badge wrong diamond' }),
+};
+
+// Draw the flask: every cell with its lock, the antibody drops and the pal
+// herself.
 function drawFlask(game, pal, flask) {
   const svg = svgEl('svg', { viewBox: `0 0 ${WIDTH} ${HEIGHT}`, class: 'flask-svg' });
   const cells = game.cells.map((cell) => {
@@ -40,9 +50,7 @@ function drawFlask(game, pal, flask) {
     g.append(
       svgEl('polygon', { points: hexPoints(cell.x, cell.y, CELL_SIZE - 1), class: 'cell-body' }),
       svgEl('circle', { cx: cell.x, cy: cell.y, r: 4, class: 'nucleus' }),
-      cell.match
-        ? svgEl('circle', { cx: cell.x, cy: cell.y - 11, r: 3.5, class: 'badge match' })
-        : svgEl('rect', { x: cell.x - 3, y: cell.y - 14, width: 6, height: 6, rx: 1, class: 'badge wrong' }),
+      LOCKS[cell.lock](cell.x, cell.y - 11),
     );
     svg.append(g);
     return g;
@@ -145,8 +153,21 @@ export function startGame({
     frame(tick);
   };
 
+  // Level 1 opens with quick tips over the flask; the game waits for them.
+  const intro = $('.intro');
+  const begin = () => {
+    intro.hidden = true;
+    frame(tick);
+  };
   render();
-  frame(tick);
+  if (level === 1) {
+    for (const name of document.querySelectorAll('.pal-name')) name.textContent = pal.name;
+    intro.hidden = false;
+    $('.intro-go').addEventListener('click', begin, { once: true });
+    $('.intro-go').focus();
+  } else {
+    begin();
+  }
   return { game, tick };
 }
 

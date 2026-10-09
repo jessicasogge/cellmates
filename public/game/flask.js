@@ -19,7 +19,12 @@ export const PLAYER_RADIUS = 14;
 export const LEVELS = 5;
 export const COPY_TIME = 1.5; // seconds a cell takes to copy her and burst
 export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
-export const MATCH_SHARE = 0.8; // how many cells have her receptor
+export const MATCH_SHARE = 0.7; // how many cells have her receptor
+
+// The locks on the other cells: receptors for other viruses, which her key
+// doesn't fit. Some look a lot like hers (a teal square, a teal ring) to
+// keep her guessing; main.js draws each one.
+export const DECOYS = ['square', 'ring', 'triangle', 'diamond'];
 
 // Cells to burst to clear a level: 10, 15, 20, 25, then 30. One cell and the
 // ones next door make about 5, so level 1 takes a couple of tries.
@@ -30,13 +35,17 @@ const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
 // A fresh level: every cell healthy, the pal in the middle, and one antibody
 // drop per level.
 export function newGame({ level = 1, random = Math.random } = {}) {
-  const cells = hexGrid(WIDTH, HEIGHT, CELL_SIZE).map((cell) => ({
-    ...cell,
-    match: random() < MATCH_SHARE,
-    state: 'healthy', // then 'copying', then 'burst'
-    timer: 0,
-    spreads: false, // whether her copies take over the cells next door
-  }));
+  const cells = hexGrid(WIDTH, HEIGHT, CELL_SIZE).map((cell) => {
+    const match = random() < MATCH_SHARE;
+    return {
+      ...cell,
+      match,
+      lock: match ? 'match' : DECOYS[Math.floor(random() * DECOYS.length)],
+      state: 'healthy', // then 'copying', then 'burst'
+      timer: 0,
+      spreads: false, // whether her copies take over the cells next door
+    };
+  });
   const player = { x: WIDTH / 2, y: HEIGHT / 2, inside: null };
   return {
     level,
