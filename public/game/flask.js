@@ -22,8 +22,8 @@ export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
 export const MATCH_SHARE = 0.7; // how many cells have her receptor
 
 // The locks on the other cells: receptors for other viruses, which her key
-// doesn't fit. Some look a lot like hers (a teal square, a teal ring) to
-// keep her guessing; main.js draws each one.
+// doesn't fit. main.js draws each one in its own shape and color; only hers
+// is teal.
 export const DECOYS = ['square', 'ring', 'triangle', 'diamond'];
 
 // Cells to burst to clear a level: 10, 15, 20, 25, then 30. One cell and the

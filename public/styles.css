@@ -299,14 +299,15 @@ a {
   fill: #0f766e;
 }
 
-/* Other viruses' locks: some teal like hers, to keep you looking closely. */
+/* Other viruses' locks. Only hers is teal; the rest differ in shape and
+   color, though the ring is round like her dot. */
 .badge.square {
-  fill: #0f766e;
+  fill: #475569;
 }
 
 .badge.ring {
   fill: none;
-  stroke: #0f766e;
+  stroke: #ca8a04;
   stroke-width: 1.6;
 }
 

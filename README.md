@@ -8,7 +8,7 @@ A cute virology game for the browser, and the sister game to [PetriPals](https:/
 
 1. **Press Start**, then pick a pal. For now that's Flo, an influenza A virus.
 2. **Drift around the flask** with the arrow keys, or on a touch screen, by touching the flask and sliding your finger.
-3. **Find cells with the teal dot.** That's the receptor Flo's spikes fit, like a key in a lock. The other cells have locks for other viruses (a teal square, a teal ring, a purple triangle or an orange diamond), and some look a lot like hers.
+3. **Find cells with the teal dot.** That's the receptor Flo's spikes fit, like a key in a lock. The other cells have locks for other viruses: a gray square, a gold ring, a purple triangle or an orange diamond.
 4. **Copy and burst.** Drift onto a cell and Flo slips inside. The cell makes copies of her, then bursts, and the copies take over the matching cells next door, which burst too.
 5. **Dodge the antibodies.** Their clouds spread out from a few drops. Touch one and Flo is neutralized.
 
