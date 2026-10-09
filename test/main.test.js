@@ -70,11 +70,9 @@ describe('which pal and level', () => {
 describe('the flask', () => {
   it('shows who you are, the level and the cells to burst', () => {
     open();
-    expect($('.hud-name').textContent).toBe('Flo · Level 2');
-    expect($('.hud-species').textContent).toBe('Influenza A virus');
-    expect($('.count').textContent).toBe('0 / 15');
-    expect($('.count-label').textContent).toBe('cells burst');
-    expect($('.progress').getAttribute('aria-valuemax')).toBe('15');
+    expect($('.dish-title h1').textContent).toBe('Flo');
+    expect($('.dish-title .species').textContent).toBe('Influenza A virus');
+    expect($('.cell-count').textContent).toBe('Level 2 · 0 / 15 cells burst');
   });
 
   it('draws every cell, with a dot or a square for her receptor, plus the antibodies and her', () => {
@@ -102,7 +100,7 @@ describe('the flask', () => {
 describe('how to play', () => {
   it('sits under the flask, with her name, her dot, the other locks and the antibodies', () => {
     open('?pal=flo&level=1');
-    const tips = $('.flask + .tips');
+    const tips = $('.tips');
     expect(tips).not.toBeNull();
     expect(tips.querySelector('.pal-name').textContent).toBe('Flo');
     for (const kind of ['match', 'square', 'ring', 'triangle', 'diamond']) {
@@ -116,7 +114,7 @@ describe('how to play', () => {
   it("doesn't hold up the game, on any level", () => {
     open('?pal=flo&level=1');
     expect(frames).toHaveLength(1);
-    expect($('.popup').hidden).toBe(true);
+    expect($('.win-banner').hidden).toBe(true);
   });
 });
 
@@ -176,26 +174,24 @@ describe('the end of a level', () => {
     game.bursts = 16;
     run(0);
     expect(frames).toHaveLength(0); // the game stops
-    expect($('.popup').hidden).toBe(false);
-    expect($('.popup-title').textContent).toBe('Level 2 cleared!');
-    expect($('.popup-text').textContent).toBe('Flo burst 16 cells.');
-    expect($('.popup-next').textContent).toBe('Level 3: one more antibody');
-    expect($('.popup-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=3');
+    expect($('.win-banner').hidden).toBe(false);
+    expect($('.banner-title').textContent).toBe('Level 2 cleared!');
+    expect($('.banner-text').textContent).toBe('Flo burst 16 cells.');
+    expect($('.banner-next').textContent).toBe('Level 3: one more antibody');
+    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=3');
     expect($('.fun-fact').hidden).toBe(false);
-    expect($('.popup-pal svg')).not.toBeNull();
-    expect($('.count').textContent).toBe('16 / 15');
-    expect($('.progress-fill').style.width).toBe('100%');
-    expect(sporeBurst).toHaveBeenLastCalledWith($('.popup-pal'), { big: false });
+    expect($('.cell-count').textContent).toBe('Level 2 · 16 / 15 cells burst');
+    expect(sporeBurst).toHaveBeenLastCalledWith($('.flask'), { big: false });
   });
 
   it('starts over from level 1 after the last level', () => {
     const { game } = open('?pal=flo&level=5');
     game.bursts = 30;
     run(0);
-    expect($('.popup-title').textContent).toBe('You cleared every level!');
-    expect($('.popup-next').textContent).toBe('Play again');
-    expect($('.popup-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=1');
-    expect(sporeBurst).toHaveBeenLastCalledWith($('.popup-pal'), { big: true });
+    expect($('.banner-title').textContent).toBe('You cleared every level!');
+    expect($('.banner-next').textContent).toBe('Play again');
+    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=1');
+    expect(sporeBurst).toHaveBeenLastCalledWith($('.flask'), { big: true });
   });
 
   it('ends when an antibody gets her, offering the same level again', () => {
@@ -204,10 +200,10 @@ describe('the end of a level', () => {
     game.time = GROW_TIME;
     run(0);
     expect(game.over).toBe('neutralized');
-    expect($('.popup-title').textContent).toBe('Flo was neutralized!');
-    expect($('.popup-text').textContent).toContain('Antibodies stuck to her');
-    expect($('.popup-next').textContent).toBe('Try level 2 again');
-    expect($('.popup-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=2');
+    expect($('.banner-title').textContent).toBe('Flo was neutralized!');
+    expect($('.banner-text').textContent).toContain('Antibodies stuck to her');
+    expect($('.banner-next').textContent).toBe('Try level 2 again');
+    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=2');
     expect(sporeBurst).not.toHaveBeenCalled(); // no confetti for losing
   });
 });

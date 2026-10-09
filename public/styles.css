@@ -26,18 +26,20 @@
   box-sizing: border-box;
 }
 
-/* The pale pink of cell culture medium (it has a pH dye, phenol red). */
+/* Laid out like PetriPals and FunGals, its sister games, in CellMates' own
+   colors: the pale pink of cell culture medium (it has a pH dye, phenol
+   red), with plum text and deep pink buttons where PetriPals has teal. */
 body {
   margin: 0;
   background: #ffe4e6;
   color: #4a044e;
   font-family: system-ui, sans-serif;
   text-align: center;
-  padding: 3rem 1rem 2rem;
+  padding-top: 3rem;
 }
 
 a {
-  color: #0f766e;
+  color: #be185d;
 }
 
 /* The row of pals at the top of the home page. */
@@ -47,6 +49,7 @@ a {
   justify-content: center;
   align-items: flex-end;
   gap: 0.5rem;
+  padding: 0 1rem;
 }
 
 .pal {
@@ -77,193 +80,268 @@ a {
   }
 }
 
+/* The game's name on the home page, big and round like a game logo. */
 .logo {
-  margin: 0;
+  margin: 1.6rem 0 0.4rem;
   font-family: Fredoka, system-ui, sans-serif;
+  font-size: clamp(3.2rem, 15vw, 5.2rem);
   font-weight: 700;
-  font-size: 3.75rem;
-  color: #be185d;
+  line-height: 1;
+  letter-spacing: 0.01em;
 }
 
+/* What the game is, in a few words, under its name. */
 .tagline {
+  margin: 0 0 1.4rem;
+  padding: 0 1rem;
   font-family: Nunito, system-ui, sans-serif;
+  font-size: clamp(1.05rem, 4.6vw, 1.3rem);
   font-weight: 700;
-  font-size: 1.2rem;
-}
-
-.about,
-.sister-game,
-.signature {
-  max-width: 22rem;
-  margin: 1rem auto;
-  line-height: 1.5;
-  color: #6b2149;
-}
-
-.signature {
-  font-size: 0.85rem;
-}
-
-/* Press Start to Play. */
-.start-btn,
-.popup-next {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3.5rem;
-  margin: 0.75rem auto 0;
-  padding: 0 2.1rem;
-  border-radius: 999px;
-  background: #be185d;
-  color: #fff;
-  text-decoration: none;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 1.3rem;
-  box-shadow: 0 4px 0 #831843;
-}
-
-.start-btn:hover,
-.popup-next:hover {
-  background: #9d174d;
-}
-
-/* The pick page and the game page: a phone-width column. */
-.page {
-  max-width: 26rem;
-  margin: 0 auto;
-  padding: 1.25rem 1rem 1.5rem;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.9rem;
+  letter-spacing: 0.01em;
   color: #be185d;
 }
 
-.back {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 999px;
-  background: #fff;
-  color: #4a044e;
-  text-decoration: none;
-  font-size: 1.3rem;
+/* A sentence or two under the Start button saying what the game is. */
+.about {
+  max-width: 34rem;
+  margin: 2rem auto 0;
+  padding: 0 1.25rem;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+/* The links to PetriPals and FunGals, the sister games. */
+.sister-game {
+  margin: 0.75rem auto 0;
+  padding: 0 1.25rem;
+  opacity: 0.85;
+}
+
+.sister-game a {
   font-weight: 700;
 }
 
-.pal-cards {
+.start-btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.8rem 2rem;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: white;
+  background: #be185d;
+  border-radius: 999px;
+  box-shadow: 0 4px 0 #831843;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.start-btn:hover {
+  background: #db2777;
+}
+
+.start-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #831843;
+}
+
+.signature {
+  margin: 2rem 0 1.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+/* The pick page and the game page: a frosted card in the middle. */
+.picker-page {
+  min-height: 100vh;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
-  margin: 1rem 0;
+  place-items: center;
+  align-content: center;
+  padding: 2rem 1rem;
+}
+
+.picker-shell {
+  width: min(760px, 100%);
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(74, 4, 78, 0.15);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(74, 4, 78, 0.08);
+}
+
+/* The pick page is wider, to fit four pals across. */
+.picker-wide {
+  width: min(1000px, 100%);
+}
+
+.picker-shell > h1:first-child {
+  margin-top: 0;
+}
+
+/* Four cards across on a computer, two on a tablet, one on a phone. Flex
+   instead of grid so a row with fewer pals (like now, with just Flo) keeps
+   them in the middle. */
+.picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.picker-grid > .pal-card {
+  flex: 0 0 calc((100% - 3rem) / 4);
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .picker-grid > .pal-card {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+}
+
+@media (max-width: 520px) {
+  .picker-grid > .pal-card {
+    flex-basis: 100%;
+  }
 }
 
 .pal-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.6rem 0.4rem 0.75rem;
-  border: 3px solid #be185d;
-  border-radius: 1.25rem;
-  background: #fff;
-  color: #4a044e;
-  text-decoration: none;
-}
-
-.pal-card svg {
-  width: 6rem;
-  height: 6rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(190, 24, 93, 0.2);
+  border-radius: 18px;
+  padding: 1rem;
 }
 
 .pal-card h2 {
-  margin: 0;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 1.3rem;
+  margin: 0.35rem 0 0.2rem;
+  line-height: 1.2;
 }
 
+/* Her species, then the cells she gets into. */
 .pal-card .species {
-  font-size: 0.85rem;
-  color: #6b2149;
+  margin: 0;
+  line-height: 1.3;
 }
 
 .pal-card .host {
-  margin-top: 0.3rem;
-  padding: 0.2rem 0.6rem;
+  margin: 0.2rem 0 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Line the Select buttons up along the bottom. */
+.pal-card .pick-btn {
+  margin-top: auto;
+  white-space: nowrap;
+}
+
+/* Her picture, on a rounded tile in her color. */
+.pal-icon {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 0.75rem;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 2px rgba(74, 4, 78, 0.06);
+}
+
+.pal-icon svg {
+  width: 90px;
+  height: 90px;
+  display: block;
+}
+
+.pal-icon.flo {
+  background: rgba(251, 113, 133, 0.25);
+}
+
+.pal-icon.tess {
+  background: rgba(167, 139, 250, 0.3);
+}
+
+.pal-icon.rota {
+  background: rgba(251, 191, 36, 0.3);
+}
+
+.pal-icon.cora {
+  background: rgba(232, 121, 249, 0.25);
+}
+
+.pick-btn {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.7rem 1rem;
+  border: none;
   border-radius: 999px;
-  background: #fff1f2;
-  font-size: 0.75rem;
-  font-weight: 800;
+  background: #be185d;
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.pick-btn:hover {
+  background: #db2777;
+}
+
+/* A second choice next to a pick button: outlined instead of filled. */
+.pick-btn.outline {
+  background: white;
+  color: #be185d;
+  box-shadow: inset 0 0 0 2px #be185d;
+}
+
+.pick-btn.outline:hover {
+  background: #ffe4e6;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
 }
 
 /* The game page. */
-.hud {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-align: left;
+.dish-shell {
+  width: min(520px, 100%);
+  /* A finger that slips off the flask onto the words around it shouldn't
+     select them or bring up the text magnifier mid-game. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
-.hud-who {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+/* Her name and species above the flask. */
+.dish-title {
+  margin-bottom: 1.25rem;
 }
 
-.hud-name {
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 1.35rem;
-  color: #be185d;
+.dish-title h1 {
+  margin: 0;
+  font-size: 2rem;
 }
 
-.hud-species,
-.count-label {
-  font-size: 0.8rem;
-  color: #6b2149;
+.dish-title .species {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
 }
 
-.hud-count {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.count {
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.6rem;
-  line-height: 1;
-}
-
-.progress {
-  height: 0.6rem;
-  margin: 0.6rem 0 0.9rem;
-  border-radius: 999px;
-  background: #fff;
-  overflow: hidden;
-}
-
-.progress-fill {
-  width: 0;
-  height: 100%;
-  border-radius: 999px;
-  background: #be185d;
-  transition: width 0.3s;
+/* The flask, with the end-of-level banner over it. */
+.flask-wrap {
+  position: relative;
 }
 
 /* The culture flask: a rounded box of pink medium, with cells on the floor.
@@ -271,9 +349,10 @@ a {
 .flask {
   position: relative;
   border: 3px solid #f9a8d4;
-  border-radius: 1.75rem;
+  border-radius: 24px;
   background: #f4b0bf;
   padding: 0.4rem;
+  box-shadow: 0 12px 28px rgba(74, 4, 78, 0.12);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -370,21 +449,23 @@ a {
   opacity: 0.45;
 }
 
-/* How to play, under the flask. */
+/* The level and how many cells have burst, under the flask. */
+.cell-count {
+  margin: 1rem 0 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* How to play, under the count. */
 .tips {
   margin-top: 0.75rem;
-  padding: 0.8rem 1rem 0.9rem;
-  border-radius: 1.25rem;
-  background: #fff;
   text-align: left;
+  color: #6b2149;
 }
 
 .tips h2 {
-  margin: 0 0 0.55rem;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 1.15rem;
-  color: #be185d;
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
   text-align: center;
 }
 
@@ -394,9 +475,8 @@ a {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  font-size: 0.92rem;
-  line-height: 1.4;
+  gap: 0.5rem;
+  line-height: 1.45;
 }
 
 .tips li {
@@ -425,84 +505,123 @@ a {
   font-weight: 800;
 }
 
-/* Directions for the device: touch wording on a touch screen, arrow-key
-   wording otherwise (game/touch.js switches if the player does). */
-.for-touch,
-.input-touch .for-keys {
+/* Arrow-key directions on a computer, touch directions on a phone or tablet.
+   The media query picks from the device before any script runs (a finger is
+   a "coarse" pointer); then game/touch.js switches them to match whatever
+   the player actually uses, for devices with both. */
+.for-touch {
   display: none;
 }
 
-.input-touch .for-touch,
-.input-keys .for-keys {
+@media (pointer: coarse) {
+  .for-keys {
+    display: none;
+  }
+
+  .for-touch {
+    display: inline;
+  }
+}
+
+html.input-touch .for-keys,
+html.input-keys .for-touch {
+  display: none;
+}
+
+html.input-touch .for-touch,
+html.input-keys .for-keys {
   display: inline;
 }
 
-.input-keys .for-touch {
+/* The banner over the flask when a level ends, cleared or neutralized. */
+.win-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: min(320px, 88%);
+  padding: 1.25rem 1.5rem 1.5rem;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid rgba(190, 24, 93, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(74, 4, 78, 0.2);
+  animation: pop-in 0.35s ease-out;
+}
+
+.win-banner[hidden] {
   display: none;
 }
 
-/* The end-of-level pop-up. */
-.popup {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  background: rgba(74, 4, 78, 0.55);
+.win-banner h2 {
+  margin: 0 0 0.5rem;
 }
 
-.popup[hidden] {
-  display: none;
-}
-
-.popup-card {
-  width: 100%;
-  max-width: 21rem;
-  padding: 1.5rem 1.5rem 1.25rem;
-  border-radius: 1.75rem;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.popup-pal svg {
-  width: 7rem;
-  height: 7rem;
-}
-
-.popup-title {
+.win-banner p {
   margin: 0;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.8rem;
-  line-height: 1.15;
+  line-height: 1.4;
+}
+
+/* The "Did you know?" fact about your pal. */
+.win-banner .fun-fact {
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(190, 24, 93, 0.08);
+  font-size: 0.92rem;
+  text-align: left;
+}
+
+.win-banner .fun-fact[hidden] {
+  display: none;
+}
+
+.win-banner .fun-fact strong {
   color: #be185d;
 }
 
-.popup-text {
-  margin: 0;
-  line-height: 1.45;
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
-.fun-fact {
-  margin: 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: 1rem;
-  background: #fff1f2;
-  text-align: left;
-  line-height: 1.45;
+@media (prefers-reduced-motion: reduce) {
+  .win-banner {
+    animation: none;
+  }
 }
 
-.popup-next {
-  width: 100%;
-  font-size: 1.15rem;
-  padding: 0 1rem;
+.banner-buttons {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.popup-pick {
-  padding: 0.6rem;
-  font-weight: 800;
+.banner-buttons .pick-btn {
+  margin-top: 0;
+}
+
+/* On a phone the flask is small, so the banner tightens up to fit on it. */
+@media (max-width: 520px) {
+  .win-banner {
+    padding: 1rem 1.1rem 1.1rem;
+    font-size: 0.92rem;
+  }
+
+  .win-banner h2 {
+    font-size: 1.3rem;
+  }
+
+  .win-banner .fun-fact {
+    font-size: 0.85rem;
+  }
 }

@@ -3,67 +3,66 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>The flask · CellMates</title>
+    <title>CellMates | The Flask</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="page game-page">
-    <header class="hud">
-      <a class="back" href="./pick.html" aria-label="Back to the pals">←</a>
-      <div class="hud-who">
-        <span class="hud-name"></span>
-        <span class="hud-species"></span>
-      </div>
-      <div class="hud-count">
-        <span class="count" aria-live="polite"></span>
-        <span class="count-label">cells burst</span>
-      </div>
-    </header>
-    <div class="progress" role="progressbar" aria-label="Cells burst"><div class="progress-fill"></div></div>
+  <body class="picker-page">
+    <main class="picker-shell dish-shell">
+      <header class="dish-title">
+        <h1 class="pal-name"></h1>
+        <p class="species"></p>
+      </header>
 
-    <!-- The flask and everything in it, drawn by game/main.js -->
-    <div class="flask"></div>
-
-    <!-- How to play, under the flask -->
-    <section class="tips" aria-labelledby="tips-title">
-      <h2 id="tips-title">
-        <span class="for-keys">Arrow keys to drift!</span>
-        <span class="for-touch">Slide your finger on the flask to drift!</span>
-      </h2>
-      <ul>
-        <li>
-          <svg class="tip-icon" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="5" class="badge match" /></svg>
-          <span>Look for cells with the <b>teal dot</b>. That’s the lock <span class="pal-name">Flo</span>’s key fits!</span>
-        </li>
-        <li>
-          <svg class="tip-icon wide" viewBox="-26 -8 52 16" aria-hidden="true">
-            <rect x="-24" y="-4" width="8" height="8" rx="1.5" class="badge square" />
-            <circle cx="-7" r="3.8" class="badge ring" />
-            <polygon points="7,-5 12,4 2,4" class="badge triangle" />
-            <polygon points="20,-5 25,0 20,5 15,0" class="badge diamond" />
-          </svg>
-          <span>These are walls! They’re locks for other viruses, so find a way around.</span>
-        </li>
-        <li>
-          <span class="tip-icon tip-pop" aria-hidden="true">!</span>
-          <span>Drift onto a cell and it makes more of her, then <b>pops</b>. Her copies grab the cells next door too.</span>
-        </li>
-        <li>
-          <svg class="tip-icon" viewBox="-14 -14 28 28" aria-hidden="true"><g class="antibody"><circle r="12" /><path d="M0 7 V0 L-5 -6 M0 0 L5 -6" /></g></svg>
-          <span>Stay away from the blue <b>antibody</b> clouds. They’re super sticky!</span>
-        </li>
-      </ul>
-    </section>
-
-    <div class="popup" hidden>
-      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="popup-title">
-        <div class="popup-pal"></div>
-        <h2 class="popup-title" id="popup-title"></h2>
-        <p class="popup-text"></p>
-        <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
-        <a class="popup-next"></a>
-        <a class="popup-pick" href="./pick.html">Pick another pal</a>
+      <div class="flask-wrap">
+        <!-- The flask and everything in it, drawn by game/main.js -->
+        <div class="flask"></div>
+        <div class="win-banner" role="status" hidden>
+          <h2 class="banner-title"></h2>
+          <p class="banner-text"></p>
+          <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+          <div class="banner-buttons">
+            <a class="pick-btn banner-next"></a>
+            <a class="pick-btn outline" href="./pick.html">Pick a different pal</a>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <p class="cell-count" aria-live="polite"></p>
+
+      <!-- How to play, under the count -->
+      <section class="tips" aria-labelledby="tips-title">
+        <h2 id="tips-title">
+          <span class="for-keys">Arrow keys to drift!</span>
+          <span class="for-touch">Slide your finger on the flask to drift!</span>
+        </h2>
+        <ul>
+          <li>
+            <svg class="tip-icon" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="5" class="badge match" /></svg>
+            <span>Look for cells with the <b>teal dot</b>. That’s the lock <span class="pal-name">Flo</span>’s key fits!</span>
+          </li>
+          <li>
+            <svg class="tip-icon wide" viewBox="-26 -8 52 16" aria-hidden="true">
+              <rect x="-24" y="-4" width="8" height="8" rx="1.5" class="badge square" />
+              <circle cx="-7" r="3.8" class="badge ring" />
+              <polygon points="7,-5 12,4 2,4" class="badge triangle" />
+              <polygon points="20,-5 25,0 20,5 15,0" class="badge diamond" />
+            </svg>
+            <span>These are walls! They’re locks for other viruses, so find a way around.</span>
+          </li>
+          <li>
+            <span class="tip-icon tip-pop" aria-hidden="true">!</span>
+            <span>Drift onto a cell and it makes more of her, then <b>pops</b>. Her copies grab the cells next door too.</span>
+          </li>
+          <li>
+            <svg class="tip-icon" viewBox="-14 -14 28 28" aria-hidden="true"><g class="antibody"><circle r="12" /><path d="M0 7 V0 L-5 -6 M0 0 L5 -6" /></g></svg>
+            <span>Stay away from the blue <b>antibody</b> clouds. They’re super sticky!</span>
+          </li>
+        </ul>
+      </section>
+
+      <a class="back-link" href="./pick.html">Pick a different pal</a>
+    </main>
+    <footer class="signature">jsogge 2026</footer>
     <script type="module" src="./game/main.js"></script>
   </body>
 </html>

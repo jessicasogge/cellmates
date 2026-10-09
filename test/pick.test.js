@@ -13,16 +13,22 @@ async function open(html) {
 }
 
 describe('the pick page', () => {
-  it('has just Flo for now, linking to her game', async () => {
+  it('has just Flo for now, with a button to pick her', async () => {
     await open(page.slice(page.indexOf('<body'), page.indexOf('</body>')));
-    const cards = [...document.querySelectorAll('.pal-card')];
+    const cards = [...document.querySelectorAll('.picker-grid .pal-card')];
     expect(cards).toHaveLength(1);
     const [flo] = cards;
-    expect(flo.getAttribute('href')).toBe('./flask.html?pal=flo');
+    expect(flo.querySelector('.pal-icon.flo svg').getAttribute('aria-hidden')).toBe('true');
     expect(flo.querySelector('h2').textContent).toBe('Flo');
     expect(flo.querySelector('.species').textContent).toBe('Influenza A virus');
     expect(flo.querySelector('.host').textContent).toBe('Gets into airway cells');
-    expect(flo.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
+    const pick = flo.querySelector('.pick-btn');
+    expect(pick.textContent).toBe('Select Flo');
+    expect(pick.getAttribute('href')).toBe('./flask.html?pal=flo');
+  });
+
+  it('has a way back home', () => {
+    expect(page).toContain('<a class="back-link" href="./index.html">Back to home</a>');
   });
 
   it("doesn't break on a page without cards", async () => {

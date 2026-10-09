@@ -3,18 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pick a pal · CellMates</title>
+    <title>CellMates | Pick a Pal</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="page">
-    <header class="page-header">
-      <a class="back" href="./index.html" aria-label="Back to the home page">←</a>
-      <h1>Pick a pal</h1>
-    </header>
+  <body class="picker-page">
+    <main class="picker-shell picker-wide">
+      <h1>Pick a Pal</h1>
 
-    <!-- A card for each pal you can play as, drawn by game/pick.js -->
-    <div class="pal-cards"></div>
+      <!-- A card for each pal you can play as, made by game/pick.js -->
+      <div class="picker-grid"></div>
 
+      <a class="back-link" href="./index.html">Back to home</a>
+    </main>
+    <footer class="signature">jsogge 2026</footer>
     <script type="module" src="./game/pick.js"></script>
   </body>
 </html>

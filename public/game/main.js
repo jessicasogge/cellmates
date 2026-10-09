@@ -87,9 +87,7 @@ export function startGame({
   const game = newGame({ level, random });
   const $ = (selector) => document.querySelector(selector);
 
-  $('.hud-name').textContent = `${pal.name} · Level ${level}`;
-  $('.hud-species').textContent = pal.species;
-  $('.progress').setAttribute('aria-valuemax', game.target);
+  $('.dish-title .species').textContent = pal.species;
   const drawn = drawFlask(game, pal, $('.flask'));
 
   const render = () => {
@@ -98,32 +96,28 @@ export function startGame({
     const { player } = game;
     drawn.player.setAttribute('transform', `translate(${player.x.toFixed(1)} ${player.y.toFixed(1)})`);
     drawn.player.setAttribute('class', player.inside === null ? 'player' : 'player inside');
-    const done = Math.min(game.bursts, game.target);
-    $('.count').textContent = `${game.bursts} / ${game.target}`;
-    $('.progress').setAttribute('aria-valuenow', done);
-    $('.progress-fill').style.width = `${(100 * done) / game.target}%`;
+    $('.cell-count').textContent = `Level ${level} · ${game.bursts} / ${game.target} cells burst`;
   };
 
   const showEnd = () => {
-    const popup = $('.popup');
-    const next = $('.popup-next');
-    $('.popup-pal').replaceChildren(palArt(pal));
+    const banner = $('.win-banner');
+    const next = $('.banner-next');
     if (game.over === 'cleared') {
       const last = level === LEVELS;
-      $('.popup-title').textContent = last ? 'You cleared every level!' : `Level ${level} cleared!`;
-      $('.popup-text').textContent = `${pal.name} burst ${game.bursts} cells.`;
+      $('.banner-title').textContent = last ? 'You cleared every level!' : `Level ${level} cleared!`;
+      $('.banner-text').textContent = `${pal.name} burst ${game.bursts} cells.`;
       next.textContent = last ? 'Play again' : `Level ${level + 1}: one more antibody`;
       next.href = levelLink(pal, last ? 1 : level + 1);
-      sporeBurst($('.popup-pal'), { big: last });
+      sporeBurst($('.flask'), { big: last });
     } else {
-      $('.popup-title').textContent = `${pal.name} was neutralized!`;
-      $('.popup-text').textContent =
+      $('.banner-title').textContent = `${pal.name} was neutralized!`;
+      $('.banner-text').textContent =
         'Antibodies stuck to her, so she can’t get into cells anymore. That’s how your body fights off a virus.';
       next.textContent = `Try level ${level} again`;
       next.href = levelLink(pal, level);
     }
     showFact(pal.id, pal);
-    popup.hidden = false;
+    banner.hidden = false;
     next.focus();
   };
 
@@ -153,6 +147,7 @@ export function startGame({
     frame(tick);
   };
 
+  // Her name over the flask, and in the tips.
   for (const name of document.querySelectorAll('.pal-name')) name.textContent = pal.name;
   render();
   frame(tick);
