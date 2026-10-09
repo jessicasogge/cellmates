@@ -71,17 +71,39 @@ describe('Flo', () => {
   });
 });
 
+describe('Rota', () => {
+  const rota = palById('rota');
+  const ring = (r) => homePal(rota).querySelector(`circle[r="${r}"][stroke-dasharray]`);
+  const count = (r) => {
+    const pattern = ring(r).getAttribute('stroke-dasharray').split(' ').map(Number);
+    return (2 * Math.PI * r) / (pattern[0] + pattern[1]);
+  };
+
+  it('is on the home page and says who she is', () => {
+    const svg = homePal(rota);
+    expect(svg.getAttribute('class')).toBe('pal bob');
+    expect(svg.getAttribute('aria-label')).toBe(`Rota, ${rota.looks}`);
+  });
+
+  it('is a wheel: three layers, with ten spokes and a bumpy rim', () => {
+    const layers = [...homePal(rota).querySelectorAll('circle[cx="100"][fill^="#"]')];
+    expect(layers.map((c) => c.getAttribute('r'))).toEqual(['70', '46']); // the spokes ring is the third
+    expect(count(58)).toBeCloseTo(10, 1);
+    expect(count(72)).toBeCloseTo(34, 0);
+  });
+});
+
 describe('the home page', () => {
   // (jsdom changes import.meta.url to a web address, so find files from the project folder.)
   const page = readFileSync(resolve(process.cwd(), 'public/index.html'), 'utf8');
 
-  it('shows Tess and Flo in its row of pals', async () => {
+  it('shows Flo, Tess and Rota in its row of pals, with Tess in the middle', async () => {
     document.body.outerHTML = page.slice(page.indexOf('<body'), page.indexOf('</body>'));
     vi.resetModules();
     await import('../public/script.js');
     const labels = [...document.querySelectorAll('.friends svg')].map((s) => s.getAttribute('aria-label'));
     expect(labels).toEqual(HOME_PALS.map((pal) => `${pal.name}, ${pal.looks}`));
-    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['tess', 'flo']);
+    expect(HOME_PALS.map((pal) => pal.id)).toEqual(['flo', 'tess', 'rota']);
   });
 
   it('loads the script that draws them', () => {

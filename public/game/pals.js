@@ -1,5 +1,4 @@
-// Every pal's name and drawing, in one place. The pages draw the pals from
-// here, in the order listed.
+// Every pal's name and drawing.
 //
 // Each pal has:
 //   id      her key, used in links and to look her up
@@ -11,9 +10,8 @@
 const SVG = 'http://www.w3.org/2000/svg';
 
 export const PALS = [
-  // Tess: phage T4, a virus that infects bacteria. Her head is a stretched
-  // 20-sided shell holding her DNA, on a striped tail she squeezes like a
-  // syringe to inject it, with six spidery tail fibers to land on a cell.
+  // Tess: T4 phage with a stretched 20-sided DNA head, syringe-like tail,
+  // and six spidery fibers for landing on bacteria.
   {
     id: 'tess',
     name: 'Tess',
@@ -42,10 +40,8 @@ export const PALS = [
       </g>
     `,
   },
-  // Flo: influenza A, a round virus covered in two kinds of spikes. The
-  // lollipop-shaped HA spikes grab a cell's sialic acid to get in; the
-  // mushroom-shaped NA spikes snip it to let new copies go. Here they're
-  // simplified to teal and gold knobs, taking turns around her.
+  // Flo: influenza A; HA spikes grab sialic acid, NA spikes snip it for release.
+  // Shown as alternating teal and gold knobs.
   {
     id: 'flo',
     name: 'Flo',
@@ -71,18 +67,44 @@ export const PALS = [
       </g>
     `,
   },
+  // Rota: wheel-like rotavirus with a three-layer shell, short spokes,
+  // and VP4 spikes that help her enter gut cells.
+  {
+    id: 'rota',
+    name: 'Rota',
+    looks: 'an amber rotavirus shaped like a wheel, with spokes and a bumpy rim',
+    motion: 'bob',
+    art: `
+      <!-- spikes around her rim -->
+      <circle cx="100" cy="104" r="72" fill="none" stroke="#d97706" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 7.3" />
+      <!-- outer layer -->
+      <circle cx="100" cy="104" r="70" fill="#fbbf24" />
+      <!-- ten spokes across the middle layer -->
+      <circle cx="100" cy="104" r="58" fill="none" stroke="#d97706" stroke-width="20" stroke-dasharray="5 31.44" />
+      <!-- inner layer, around her genes -->
+      <circle cx="100" cy="104" r="46" fill="#fde68a" />
+      <ellipse cx="72" cy="62" rx="12" ry="6" fill="#ffffff" opacity="0.45" transform="rotate(-30 72 62)" />
+      <g class="face">
+        <circle cx="86" cy="100" r="7" fill="#3b0d2e" />
+        <circle cx="114" cy="100" r="7" fill="#3b0d2e" />
+        <circle cx="84" cy="98" r="2.4" fill="#ffffff" />
+        <circle cx="112" cy="98" r="2.4" fill="#ffffff" />
+        <ellipse cx="75" cy="113" rx="5.5" ry="3.3" fill="#f9a8d4" opacity="0.9" />
+        <ellipse cx="125" cy="113" rx="5.5" ry="3.3" fill="#f9a8d4" opacity="0.9" />
+        <path d="M90 116 Q100 125 110 116" fill="none" stroke="#3b0d2e" stroke-width="4" stroke-linecap="round" />
+      </g>
+    `,
+  },
 ];
 
-// The pals on the home page, in order.
-const HOME = ['tess', 'flo'];
-export const HOME_PALS = PALS.filter((pal) => HOME.includes(pal.id));
+// The pals on the home page
+const HOME = ['flo', 'tess', 'rota'];
+export const HOME_PALS = HOME.map(palById);
 
 export function palById(id) {
   return PALS.find((pal) => pal.id === id);
 }
 
-// For the home page's row of pals: her drawing as an <svg>, gently moving,
-// and labeled for screen readers.
 export function homePal(pal) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '0 0 200 200');
