@@ -71,10 +71,40 @@ export const PALS = [
       </g>
     `,
   },
+  // Rota: rotavirus, named for the wheel (rota in Latin) she looks like
+  // under an electron microscope. Her shell has three layers, with short
+  // spokes running from the middle layer out to the rim, and little spikes
+  // (VP4) around the outside that help her get into gut cells.
+  {
+    id: 'rota',
+    name: 'Rota',
+    looks: 'an amber rotavirus shaped like a wheel, with spokes and a bumpy rim',
+    motion: 'bob',
+    art: `
+      <!-- spikes around her rim -->
+      <circle cx="100" cy="104" r="72" fill="none" stroke="#d97706" stroke-width="10" stroke-linecap="round" stroke-dasharray="6 7.3" />
+      <!-- outer layer -->
+      <circle cx="100" cy="104" r="70" fill="#fbbf24" />
+      <!-- ten spokes across the middle layer -->
+      <circle cx="100" cy="104" r="58" fill="none" stroke="#d97706" stroke-width="20" stroke-dasharray="5 31.44" />
+      <!-- inner layer, around her genes -->
+      <circle cx="100" cy="104" r="46" fill="#fde68a" />
+      <ellipse cx="72" cy="62" rx="12" ry="6" fill="#ffffff" opacity="0.45" transform="rotate(-30 72 62)" />
+      <g class="face">
+        <circle cx="86" cy="100" r="7" fill="#3b0d2e" />
+        <circle cx="114" cy="100" r="7" fill="#3b0d2e" />
+        <circle cx="84" cy="98" r="2.4" fill="#ffffff" />
+        <circle cx="112" cy="98" r="2.4" fill="#ffffff" />
+        <ellipse cx="75" cy="113" rx="5.5" ry="3.3" fill="#f9a8d4" opacity="0.9" />
+        <ellipse cx="125" cy="113" rx="5.5" ry="3.3" fill="#f9a8d4" opacity="0.9" />
+        <path d="M90 116 Q100 125 110 116" fill="none" stroke="#3b0d2e" stroke-width="4" stroke-linecap="round" />
+      </g>
+    `,
+  },
 ];
 
 // The pals on the home page, in order.
-const HOME = ['tess', 'flo'];
+const HOME = ['tess', 'flo', 'rota'];
 export const HOME_PALS = PALS.filter((pal) => HOME.includes(pal.id));
 
 export function palById(id) {
