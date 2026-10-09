@@ -1,4 +1,4 @@
-// The home page: the row of pals.
-import { HOME_PALS, homePal } from './game/pals.js';
+// The home page: the row of mates.
+import { HOME_MATES, homeMate } from './game/mates.js';
 
-document.querySelector('.friends')?.append(...HOME_PALS.map(homePal));
+document.querySelector('.friends')?.append(...HOME_MATES.map(homeMate));

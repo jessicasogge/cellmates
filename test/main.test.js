@@ -25,7 +25,7 @@ let startGame;
 let readParams;
 
 // Open the game page for `search` and start it, with frames run by hand.
-function open(search = '?pal=flo&level=2') {
+function open(search = '?mate=flo&level=2') {
   document.body.outerHTML = body;
   frames = [];
   return startGame({ search, random: seeded(), frame: (callback) => frames.push(callback) });
@@ -52,14 +52,14 @@ afterEach(() => {
   key('keyup', 'ArrowRight');
 });
 
-describe('which pal and level', () => {
+describe('which mate and level', () => {
   it('come from the address', () => {
-    expect(readParams('?pal=flo&level=3')).toMatchObject({ level: 3 });
-    expect(readParams('?pal=flo&level=3').pal.id).toBe('flo');
+    expect(readParams('?mate=flo&level=3')).toMatchObject({ level: 3 });
+    expect(readParams('?mate=flo&level=3').mate.id).toBe('flo');
   });
 
   it("fall back to Flo and level 1 for anyone or anything that isn't playable", () => {
-    expect(readParams('?pal=tess').pal.id).toBe('flo');
+    expect(readParams('?mate=tess').mate.id).toBe('flo');
     expect(readParams('').level).toBe(1);
     expect(readParams('?level=abc').level).toBe(1);
     expect(readParams('?level=0').level).toBe(1);
@@ -99,10 +99,10 @@ describe('the flask', () => {
 
 describe('how to play', () => {
   it('sits under the flask, with her name, her dot, the other locks and the antibodies', () => {
-    open('?pal=flo&level=1');
+    open('?mate=flo&level=1');
     const tips = $('.tips');
     expect(tips).not.toBeNull();
-    expect(tips.querySelector('.pal-name').textContent).toBe('Flo');
+    expect(tips.querySelector('.mate-name').textContent).toBe('Flo');
     for (const kind of ['match', 'square', 'ring', 'triangle', 'diamond']) {
       expect(tips.querySelector(`.badge.${kind}`), kind).not.toBeNull();
     }
@@ -112,7 +112,7 @@ describe('how to play', () => {
   });
 
   it("doesn't hold up the game, on any level", () => {
-    open('?pal=flo&level=1');
+    open('?mate=flo&level=1');
     expect(frames).toHaveLength(1);
     expect($('.win-banner').hidden).toBe(true);
   });
@@ -178,19 +178,19 @@ describe('the end of a level', () => {
     expect($('.banner-title').textContent).toBe('Level 2 cleared!');
     expect($('.banner-text').textContent).toBe('Flo burst 16 cells.');
     expect($('.banner-next').textContent).toBe('Level 3: one more antibody');
-    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=3');
+    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?mate=flo&level=3');
     expect($('.fun-fact').hidden).toBe(false);
     expect($('.cell-count').textContent).toBe('Level 2 · 16 / 15 cells burst');
     expect(sporeBurst).toHaveBeenLastCalledWith($('.flask'), { big: false });
   });
 
   it('starts over from level 1 after the last level', () => {
-    const { game } = open('?pal=flo&level=5');
+    const { game } = open('?mate=flo&level=5');
     game.bursts = 30;
     run(0);
     expect($('.banner-title').textContent).toBe('You cleared every level!');
     expect($('.banner-next').textContent).toBe('Play again');
-    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=1');
+    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?mate=flo&level=1');
     expect(sporeBurst).toHaveBeenLastCalledWith($('.flask'), { big: true });
   });
 
@@ -203,7 +203,7 @@ describe('the end of a level', () => {
     expect($('.banner-title').textContent).toBe('Flo was neutralized!');
     expect($('.banner-text').textContent).toContain('Antibodies stuck to her');
     expect($('.banner-next').textContent).toBe('Try level 2 again');
-    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?pal=flo&level=2');
+    expect($('.banner-next').getAttribute('href')).toBe('./flask.html?mate=flo&level=2');
     expect(sporeBurst).not.toHaveBeenCalled(); // no confetti for losing
   });
 });

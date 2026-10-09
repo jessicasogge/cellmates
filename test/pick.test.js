@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// pick.js: the pick page, with a card for every pal you can play as.
+// pick.js: the pick page, with a card for every mate you can play as.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -15,16 +15,16 @@ async function open(html) {
 describe('the pick page', () => {
   it('has just Flo for now, with a button to pick her', async () => {
     await open(page.slice(page.indexOf('<body'), page.indexOf('</body>')));
-    const cards = [...document.querySelectorAll('.picker-grid .pal-card')];
+    const cards = [...document.querySelectorAll('.picker-grid .mate-card')];
     expect(cards).toHaveLength(1);
     const [flo] = cards;
-    expect(flo.querySelector('.pal-icon.flo svg').getAttribute('aria-hidden')).toBe('true');
+    expect(flo.querySelector('.mate-icon.flo svg').getAttribute('aria-hidden')).toBe('true');
     expect(flo.querySelector('h2').textContent).toBe('Flo');
     expect(flo.querySelector('.species').textContent).toBe('Influenza A virus');
     expect(flo.querySelector('.host').textContent).toBe('Gets into airway cells');
     const pick = flo.querySelector('.pick-btn');
     expect(pick.textContent).toBe('Select Flo');
-    expect(pick.getAttribute('href')).toBe('./flask.html?pal=flo');
+    expect(pick.getAttribute('href')).toBe('./flask.html?mate=flo');
   });
 
   it('has a way back home', () => {

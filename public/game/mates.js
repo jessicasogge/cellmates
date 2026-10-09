@@ -1,6 +1,6 @@
-// Every pal's name and drawing.
+// Every mate's name and drawing.
 //
-// Each pal has:
+// Each mate has:
 //   id       her key, used in links and to look her up
 //   name     display name
 //   species  which virus she is
@@ -9,12 +9,12 @@
 //   motion   idle animation in styles.css: bob
 //   art      200 x 200 drawing; the face is wrapped in <g class="face">
 //
-// Pals you can play as also have:
+// Mates you can play as also have:
 //   facts    fun facts for the end-of-level pop-up (game/facts.js)
 
 const SVG = 'http://www.w3.org/2000/svg';
 
-export const PALS = [
+export const MATES = [
   // Tess: T4 phage with a stretched 20-sided DNA head, syringe-like tail,
   // and six spidery fibers for landing on bacteria.
   {
@@ -144,33 +144,33 @@ export const PALS = [
   },
 ];
 
-// The pals on the home page
+// The mates on the home page
 const HOME = ['flo', 'tess', 'rota', 'cora'];
-export const HOME_PALS = HOME.map(palById);
+export const HOME_MATES = HOME.map(mateById);
 
-// The pals you can play as so far, on the pick page.
+// The mates you can play as so far, on the pick page.
 const PLAYABLE = ['flo'];
-export const PLAYABLE_PALS = PLAYABLE.map(palById);
+export const PLAYABLE_MATES = PLAYABLE.map(mateById);
 
-export function palById(id) {
-  return PALS.find((pal) => pal.id === id);
+export function mateById(id) {
+  return MATES.find((mate) => mate.id === id);
 }
 
 // Her drawing as an <svg>, hidden from screen readers (for when the words
 // next to it already say who she is).
-export function palArt(pal) {
+export function mateArt(mate) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '0 0 200 200');
-  svg.innerHTML = pal.art;
+  svg.innerHTML = mate.art;
   svg.setAttribute('aria-hidden', 'true');
   return svg;
 }
 
-export function homePal(pal) {
-  const svg = palArt(pal);
+export function homeMate(mate) {
+  const svg = mateArt(mate);
   svg.removeAttribute('aria-hidden');
-  svg.setAttribute('class', `pal ${pal.motion}`);
+  svg.setAttribute('class', `mate ${mate.motion}`);
   svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', `${pal.name}, ${pal.looks}`);
+  svg.setAttribute('aria-label', `${mate.name}, ${mate.looks}`);
   return svg;
 }

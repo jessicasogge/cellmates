@@ -1,12 +1,12 @@
-// The game page: draws the flask from flask.js, steers the pal with the
+// The game page: draws the flask from flask.js, steers the mate with the
 // arrow keys or a finger, and shows the pop-up when the level ends.
-// Opened as flask.html?pal=flo&level=2.
+// Opened as flask.html?mate=flo&level=2.
 
 import { showFact } from './facts.js';
 import { CELL_SIZE, HEIGHT, LEVELS, newGame, step, WIDTH } from './flask.js';
 import { hexPoints } from './hexgrid.js';
 import { arrowKeys } from './keyboard.js';
-import { palArt, PLAYABLE_PALS } from './pals.js';
+import { mateArt, PLAYABLE_MATES } from './mates.js';
 import { sporeBurst } from './spores.js';
 import { steer, touchSteering, watchInputMode } from './touch.js';
 
@@ -20,16 +20,16 @@ const svgEl = (name, attributes = {}) => {
   return el;
 };
 
-// Which pal and level the page was opened for. Anyone you can't play as
+// Which mate and level the page was opened for. Anyone you can't play as
 // yet, or a level that doesn't exist, falls back to the first.
 export function readParams(search) {
   const params = new URLSearchParams(search);
-  const pal = PLAYABLE_PALS.find((p) => p.id === params.get('pal')) ?? PLAYABLE_PALS[0];
+  const mate = PLAYABLE_MATES.find((p) => p.id === params.get('mate')) ?? PLAYABLE_MATES[0];
   const level = Math.min(LEVELS, Math.max(1, Number.parseInt(params.get('level'), 10) || 1));
-  return { pal, level };
+  return { mate, level };
 }
 
-const levelLink = (pal, level) => `./flask.html?pal=${pal.id}&level=${level}`;
+const levelLink = (mate, level) => `./flask.html?mate=${mate.id}&level=${level}`;
 
 // The little lock drawn on each cell, by its kind (flask.js): her teal dot,
 // or one of the other viruses' locks.
@@ -41,9 +41,9 @@ const LOCKS = {
   diamond: (x, y) => svgEl('polygon', { points: `${x},${y - 4} ${x + 4},${y} ${x},${y + 4} ${x - 4},${y}`, class: 'badge wrong diamond' }),
 };
 
-// Draw the flask: every cell with its lock, the antibody drops and the pal
+// Draw the flask: every cell with its lock, the antibody drops and the mate
 // herself.
-function drawFlask(game, pal, flask) {
+function drawFlask(game, mate, flask) {
   const svg = svgEl('svg', { viewBox: `0 0 ${WIDTH} ${HEIGHT}`, class: 'flask-svg' });
   const cells = game.cells.map((cell) => {
     const g = svgEl('g', { class: 'cell healthy' });
@@ -66,7 +66,7 @@ function drawFlask(game, pal, flask) {
     return cloud;
   });
   const player = svgEl('g', { class: 'player' });
-  const art = palArt(pal);
+  const art = mateArt(mate);
   for (const [key, value] of Object.entries({
     x: -PLAYER_SIZE / 2, y: -PLAYER_SIZE / 2, width: PLAYER_SIZE, height: PLAYER_SIZE,
   })) art.setAttribute(key, value);
@@ -83,12 +83,12 @@ export function startGame({
   random = Math.random,
   frame = (callback) => window.requestAnimationFrame(callback),
 } = {}) {
-  const { pal, level } = readParams(search);
+  const { mate, level } = readParams(search);
   const game = newGame({ level, random });
   const $ = (selector) => document.querySelector(selector);
 
-  $('.dish-title .species').textContent = pal.species;
-  const drawn = drawFlask(game, pal, $('.flask'));
+  $('.dish-title .species').textContent = mate.species;
+  const drawn = drawFlask(game, mate, $('.flask'));
 
   const render = () => {
     game.cells.forEach((cell, i) => drawn.cells[i].setAttribute('class', `cell ${cell.state}${cell.match ? '' : ' wall'}`));
@@ -105,18 +105,18 @@ export function startGame({
     if (game.over === 'cleared') {
       const last = level === LEVELS;
       $('.banner-title').textContent = last ? 'You cleared every level!' : `Level ${level} cleared!`;
-      $('.banner-text').textContent = `${pal.name} burst ${game.bursts} cells.`;
+      $('.banner-text').textContent = `${mate.name} burst ${game.bursts} cells.`;
       next.textContent = last ? 'Play again' : `Level ${level + 1}: one more antibody`;
-      next.href = levelLink(pal, last ? 1 : level + 1);
+      next.href = levelLink(mate, last ? 1 : level + 1);
       sporeBurst($('.flask'), { big: last });
     } else {
-      $('.banner-title').textContent = `${pal.name} was neutralized!`;
+      $('.banner-title').textContent = `${mate.name} was neutralized!`;
       $('.banner-text').textContent =
         'Antibodies stuck to her, so she can’t get into cells anymore. That’s how your body fights off a virus.';
       next.textContent = `Try level ${level} again`;
-      next.href = levelLink(pal, level);
+      next.href = levelLink(mate, level);
     }
-    showFact(pal.id, pal);
+    showFact(mate.id, mate);
     banner.hidden = false;
     next.focus();
   };
@@ -148,7 +148,7 @@ export function startGame({
   };
 
   // Her name over the flask, and in the tips.
-  for (const name of document.querySelectorAll('.pal-name')) name.textContent = pal.name;
+  for (const name of document.querySelectorAll('.mate-name')) name.textContent = mate.name;
   render();
   frame(tick);
   return { game, tick };

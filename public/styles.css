@@ -42,17 +42,17 @@ a {
   color: #be185d;
 }
 
-/* The row of pals at the top of the home page. */
+/* The row of mates at the top of the home page. */
 .friends {
   display: flex;
-  flex-wrap: wrap; /* on narrow screens, pals wrap onto a second row */
+  flex-wrap: wrap; /* on narrow screens, mates wrap onto a second row */
   justify-content: center;
   align-items: flex-end;
   gap: 0.5rem;
   padding: 0 1rem;
 }
 
-.pal {
+.mate {
   /* All four in one row, shrinking to fit on a phone. */
   width: calc((100% - 1.5rem) / 4);
   max-width: 112px;
@@ -73,7 +73,7 @@ a {
   }
 }
 
-/* Pals hold still for anyone who'd rather not have motion. */
+/* Mates hold still for anyone who'd rather not have motion. */
 @media (prefers-reduced-motion: reduce) {
   .bob {
     animation: none;
@@ -171,7 +171,7 @@ a {
   box-shadow: 0 20px 40px rgba(74, 4, 78, 0.08);
 }
 
-/* The pick page is wider, to fit four pals across. */
+/* The pick page is wider, to fit four mates across. */
 .picker-wide {
   width: min(1000px, 100%);
 }
@@ -181,7 +181,7 @@ a {
 }
 
 /* Four cards across on a computer, two on a tablet, one on a phone. Flex
-   instead of grid so a row with fewer pals (like now, with just Flo) keeps
+   instead of grid so a row with fewer mates (like now, with just Flo) keeps
    them in the middle. */
 .picker-grid {
   display: flex;
@@ -191,24 +191,24 @@ a {
   margin-top: 1.5rem;
 }
 
-.picker-grid > .pal-card {
+.picker-grid > .mate-card {
   flex: 0 0 calc((100% - 3rem) / 4);
   min-width: 0;
 }
 
 @media (max-width: 900px) {
-  .picker-grid > .pal-card {
+  .picker-grid > .mate-card {
     flex-basis: calc((100% - 1rem) / 2);
   }
 }
 
 @media (max-width: 520px) {
-  .picker-grid > .pal-card {
+  .picker-grid > .mate-card {
     flex-basis: 100%;
   }
 }
 
-.pal-card {
+.mate-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -218,31 +218,31 @@ a {
   padding: 1rem;
 }
 
-.pal-card h2 {
+.mate-card h2 {
   margin: 0.35rem 0 0.2rem;
   line-height: 1.2;
 }
 
 /* Her species, then the cells she gets into. */
-.pal-card .species {
+.mate-card .species {
   margin: 0;
   line-height: 1.3;
 }
 
-.pal-card .host {
+.mate-card .host {
   margin: 0.2rem 0 1rem;
   font-size: 0.85rem;
   opacity: 0.8;
 }
 
 /* Line the Select buttons up along the bottom. */
-.pal-card .pick-btn {
+.mate-card .pick-btn {
   margin-top: auto;
   white-space: nowrap;
 }
 
 /* Her picture, on a rounded tile in her color. */
-.pal-icon {
+.mate-icon {
   width: 110px;
   height: 110px;
   margin: 0 auto 0.75rem;
@@ -253,25 +253,25 @@ a {
   box-shadow: inset 0 0 0 2px rgba(74, 4, 78, 0.06);
 }
 
-.pal-icon svg {
+.mate-icon svg {
   width: 90px;
   height: 90px;
   display: block;
 }
 
-.pal-icon.flo {
+.mate-icon.flo {
   background: rgba(251, 113, 133, 0.25);
 }
 
-.pal-icon.tess {
+.mate-icon.tess {
   background: rgba(167, 139, 250, 0.3);
 }
 
-.pal-icon.rota {
+.mate-icon.rota {
   background: rgba(251, 191, 36, 0.3);
 }
 
-.pal-icon.cora {
+.mate-icon.cora {
   background: rgba(232, 121, 249, 0.25);
 }
 
@@ -562,7 +562,7 @@ html.input-keys .for-keys {
   line-height: 1.4;
 }
 
-/* The "Did you know?" fact about your pal. */
+/* The "Did you know?" fact about your mate. */
 .win-banner .fun-fact {
   margin-top: 0.75rem;
   padding: 0.55rem 0.75rem;
