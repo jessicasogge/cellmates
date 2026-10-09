@@ -93,7 +93,7 @@ export function startGame({
   const drawn = drawFlask(game, pal, $('.flask'));
 
   const render = () => {
-    game.cells.forEach((cell, i) => drawn.cells[i].setAttribute('class', `cell ${cell.state}`));
+    game.cells.forEach((cell, i) => drawn.cells[i].setAttribute('class', `cell ${cell.state}${cell.match ? '' : ' wall'}`));
     game.antibodies.forEach((drop, i) => drawn.clouds[i].setAttribute('r', drop.r.toFixed(1)));
     const { player } = game;
     drawn.player.setAttribute('transform', `translate(${player.x.toFixed(1)} ${player.y.toFixed(1)})`);

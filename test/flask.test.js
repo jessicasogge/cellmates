@@ -1,7 +1,8 @@
 // flask.js: the rules of the game, with no drawing.
 import { describe, expect, it } from 'vitest';
+import { cellAt } from '../public/game/hexgrid.js';
 import {
-  COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
+  COPY_TIME, DECOYS, GROW_TIME, slide, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
 } from '../public/game/flask.js';
 
 // Random numbers that repeat a pattern, so every game is the same.
@@ -32,10 +33,13 @@ describe('the levels', () => {
     expect(LEVELS).toBe(5);
   });
 
-  it('start with every cell healthy and the pal in the middle', () => {
+  it('start with every cell healthy, and the pal in a clear patch in the middle', () => {
     const game = newGame({ level: 2, random: seeded() });
     expect(game.target).toBe(15);
-    expect(game.cells.every((cell) => cell.state === 'healthy')).toBe(true);
+    const start = game.cells.filter((cell) => cell.state !== 'healthy');
+    expect(start).toHaveLength(1);
+    expect(start[0]).toMatchObject({ state: 'burst', match: true, x: WIDTH / 2 });
+    expect(Math.abs(start[0].y - HEIGHT / 2)).toBeLessThan(18);
     expect(game.player).toEqual({ x: WIDTH / 2, y: HEIGHT / 2, inside: null });
     expect(game.bursts).toBe(0);
     expect(game.over).toBeNull();
@@ -91,10 +95,73 @@ describe('drifting', () => {
     expect(game.player.y).toBe(HEIGHT - PLAYER_RADIUS);
   });
 
-  it("doesn't put her in the cell she starts on until she moves", () => {
+  it('never starts her inside a wall', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const game = newGame({ random: seeded(seed) });
+      const start = game.cells.find((cell) => cell.state === 'burst');
+      expect(start.match).toBe(true);
+    }
+  });
+
+  it("doesn't put her in a cell until she moves", () => {
     const game = openFlask();
     expect(step(game, 0.1)).toEqual([]);
     expect(game.player.inside).toBeNull();
+  });
+});
+
+describe('the maze', () => {
+  // A flask of clear floor, with one wall to the right of where she starts.
+  function walled() {
+    const game = openFlask();
+    for (const cell of game.cells) cell.state = 'burst';
+    const wall = game.cells.find((cell) => cell.x > WIDTH / 2 + 20 && Math.abs(cell.y - HEIGHT / 2) < 18);
+    wall.match = false;
+    return { game, wall };
+  }
+
+  it("won't let her drift onto another virus's cell", () => {
+    const { game, wall } = walled();
+    for (let i = 0; i < 20; i++) step(game, 0.05, [3, 0]);
+    expect(game.player.x).toBeLessThan(wall.x - 17);
+    expect(game.player.y).toBe(HEIGHT / 2);
+  });
+
+  it('lets her keep moving along a wall when she heads into it at an angle', () => {
+    const { game, wall } = walled();
+    const start = game.player.y;
+    for (let i = 0; i < 40; i++) {
+      step(game, 0.05, [3, wall.y > start ? -2 : 2]);
+      expect(cellAt(game.cells, game.player.x, game.player.y, 20)).not.toBe(wall); // never on it
+    }
+    expect(Math.abs(game.player.y - start)).toBeGreaterThan(20); // got past it
+  });
+
+  it('keeps her still when walls block every way she tries', () => {
+    const { game } = walled();
+    for (const cell of game.cells) if (cell.state === 'burst' && Math.hypot(cell.x - WIDTH / 2, cell.y - HEIGHT / 2) > 5) cell.match = false;
+    step(game, 0.05, [30, 30]);
+    expect([game.player.x, game.player.y]).toEqual([WIDTH / 2, HEIGHT / 2]);
+  });
+});
+
+describe('sliding along a wall', () => {
+  const from = { x: 0, y: 0 };
+
+  it('moves all the way when nothing is in the way', () => {
+    expect(slide(from, [3, 4], () => false)).toEqual([3, 4]);
+  });
+
+  it('slides sideways along a wall above her', () => {
+    expect(slide(from, [3, -4], (x, y) => y < 0)).toEqual([3, 0]);
+  });
+
+  it('slides up or down along a wall beside her', () => {
+    expect(slide(from, [3, -4], (x) => x > 0)).toEqual([0, -4]);
+  });
+
+  it('stays put in a corner', () => {
+    expect(slide(from, [3, -4], (x, y) => x > 0 || y < 0)).toEqual([0, 0]);
   });
 });
 

@@ -1,8 +1,10 @@
 // The rules of the flask, with no drawing: where everything is, and what
 // happens each frame. main.js draws it and feeds in the player's moves.
 //
-// The player's pal drifts over a sheet of cells. Touch a cell with her
-// receptor (her "lock") and she slips inside; the cell copies her for a
+// The player's pal drifts over a sheet of cells, like a maze: cells with
+// other viruses' locks are walls, so she can only move over cells with her
+// receptor (her "lock") and patches where cells have burst. Touch a cell
+// with her lock and she slips inside; the cell copies her for a
 // moment, then bursts. Her copies take over the matching cells next door,
 // which burst in turn, but those don't spread any further, so she has to
 // keep finding fresh cells. Antibody clouds spread out from a few drops;
@@ -47,6 +49,8 @@ export function newGame({ level = 1, random = Math.random } = {}) {
     };
   });
   const player = { x: WIDTH / 2, y: HEIGHT / 2, inside: null };
+  // She starts in a clear patch, so she's never stuck inside a wall.
+  Object.assign(cellAt(cells, player.x, player.y, CELL_SIZE), { match: true, lock: 'match', state: 'burst' });
   return {
     level,
     target: targetFor(level),
@@ -74,6 +78,28 @@ export function placeAntibodies(count, player, random) {
   return drops;
 }
 
+// Whether she'd overlap a wall (a cell with another virus's lock) with her
+// middle at (x, y). Checks her middle and four points around it, so she
+// can't squeeze halfway into one.
+function blocked(game, x, y) {
+  const reach = PLAYER_RADIUS * 0.6;
+  return [[0, 0], [reach, 0], [-reach, 0], [0, reach], [0, -reach]].some(([ox, oy]) => {
+    const cell = cellAt(game.cells, x + ox, y + oy, CELL_SIZE);
+    return cell !== null && !cell.match;
+  });
+}
+
+// Where she ends up moving by [dx, dy] from `from` ({ x, y }), when
+// `isBlocked(x, y)` says where she can't be: all the way if she can, or
+// sliding along a wall in whichever direction is still free.
+export function slide(from, [dx, dy], isBlocked) {
+  const [x, y] = [from.x + dx, from.y + dy];
+  if (!isBlocked(x, y)) return [x, y];
+  if (!isBlocked(x, from.y)) return [x, from.y];
+  if (!isBlocked(from.x, y)) return [from.x, y];
+  return [from.x, from.y];
+}
+
 function infect(cell, spreads) {
   cell.state = 'copying';
   cell.timer = COPY_TIME;
@@ -94,8 +120,10 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
 
   const { player } = game;
   if (player.inside === null) {
-    player.x = clamp(player.x + dx, PLAYER_RADIUS, WIDTH - PLAYER_RADIUS);
-    player.y = clamp(player.y + dy, PLAYER_RADIUS, HEIGHT - PLAYER_RADIUS);
+    // Move if she can; if a wall's in the way, slide along it.
+    const x = clamp(player.x + dx, PLAYER_RADIUS, WIDTH - PLAYER_RADIUS);
+    const y = clamp(player.y + dy, PLAYER_RADIUS, HEIGHT - PLAYER_RADIUS);
+    [player.x, player.y] = slide(player, [x - player.x, y - player.y], (px, py) => blocked(game, px, py));
     const touching = game.antibodies.some(
       (drop) => Math.hypot(drop.x - player.x, drop.y - player.y) < drop.r + PLAYER_RADIUS * 0.6,
     );

@@ -291,6 +291,10 @@ a {
   transition: fill 0.3s;
 }
 
+.cell.wall .cell-body {
+  fill: #ead9c8; /* other viruses' cells: walls in the maze */
+}
+
 .cell .nucleus {
   fill: #ede9fe;
 }

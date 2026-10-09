@@ -86,6 +86,7 @@ describe('the flask', () => {
     for (const kind of ['square', 'ring', 'triangle', 'diamond']) {
       expect(drawn(`.badge.${kind}`), kind).toBe(game.cells.filter((c) => c.lock === kind).length);
     }
+    expect(drawn('.cell.wall')).toBe(game.cells.filter((c) => !c.match).length);
     expect(document.querySelectorAll('.antibody-cloud')).toHaveLength(2);
     expect($('.player svg').getAttribute('width')).toBe('48');
   });
@@ -120,10 +121,10 @@ describe('how to play', () => {
 });
 
 describe('steering', () => {
-  // No cell fits her, so she drifts freely instead of slipping into one.
+  // Every cell has already burst, so she drifts freely over clear floor.
   const drifting = (search) => {
     const opened = open(search);
-    for (const cell of opened.game.cells) cell.match = false;
+    for (const cell of opened.game.cells) Object.assign(cell, { match: true, state: 'burst' });
     return opened;
   };
 
@@ -159,9 +160,10 @@ describe('steering', () => {
 
   it('shows her faintly inside a cell while it copies her', () => {
     const { game } = open();
+    for (const cell of game.cells) if (cell.state === 'healthy') cell.match = true; // no walls
     key('keydown', 'ArrowRight');
     run(0);
-    run(50);
+    for (let t = 50; game.player.inside === null && t < 1000; t += 50) run(t);
     expect(game.player.inside).not.toBeNull();
     expect($('.player').getAttribute('class')).toBe('player inside');
     expect(document.querySelectorAll('.cell.copying')).toHaveLength(1);
