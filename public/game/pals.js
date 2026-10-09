@@ -1,5 +1,4 @@
-// Every pal's name and drawing, in one place. The pages draw the pals from
-// here.
+// Every pal's name and drawing.
 //
 // Each pal has:
 //   id      her key, used in links and to look her up
@@ -11,9 +10,8 @@
 const SVG = 'http://www.w3.org/2000/svg';
 
 export const PALS = [
-  // Tess: phage T4, a virus that infects bacteria. Her head is a stretched
-  // 20-sided shell holding her DNA, on a striped tail she squeezes like a
-  // syringe to inject it, with six spidery tail fibers to land on a cell.
+  // Tess: T4 phage with a stretched 20-sided DNA head, syringe-like tail,
+  // and six spidery fibers for landing on bacteria.
   {
     id: 'tess',
     name: 'Tess',
@@ -42,10 +40,8 @@ export const PALS = [
       </g>
     `,
   },
-  // Flo: influenza A, a round virus covered in two kinds of spikes. The
-  // lollipop-shaped HA spikes grab a cell's sialic acid to get in; the
-  // mushroom-shaped NA spikes snip it to let new copies go. Here they're
-  // simplified to teal and gold knobs, taking turns around her.
+  // Flo: influenza A; HA spikes grab sialic acid, NA spikes snip it for release.
+  // Shown as alternating teal and gold knobs.
   {
     id: 'flo',
     name: 'Flo',
@@ -71,10 +67,8 @@ export const PALS = [
       </g>
     `,
   },
-  // Rota: rotavirus, named for the wheel (rota in Latin) she looks like
-  // under an electron microscope. Her shell has three layers, with short
-  // spokes running from the middle layer out to the rim, and little spikes
-  // (VP4) around the outside that help her get into gut cells.
+  // Rota: wheel-like rotavirus with a three-layer shell, short spokes,
+  // and VP4 spikes that help her enter gut cells.
   {
     id: 'rota',
     name: 'Rota',
@@ -103,7 +97,7 @@ export const PALS = [
   },
 ];
 
-// The pals on the home page, in order, with Tess the phage in the middle.
+// The pals on the home page
 const HOME = ['flo', 'tess', 'rota'];
 export const HOME_PALS = HOME.map(palById);
 
@@ -111,8 +105,6 @@ export function palById(id) {
   return PALS.find((pal) => pal.id === id);
 }
 
-// For the home page's row of pals: her drawing as an <svg>, gently moving,
-// and labeled for screen readers.
 export function homePal(pal) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '0 0 200 200');
