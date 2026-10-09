@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { cellAt } from '../public/game/hexgrid.js';
 import {
-  CELL_SIZE, COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, slide, step, targetFor, wander, WANDER_SPEED, WANDER_TURN, WIDTH,
+  ANTIBODY_EDGE, CELL_SIZE, COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, slide, step, targetFor, wander, WANDER_SPEED, WANDER_TURN, WIDTH,
 } from '../public/game/flask.js';
 
 // Random numbers that repeat a pattern, so every game is the same.
@@ -75,9 +75,27 @@ describe('the levels', () => {
     }
   });
 
+  it('make the antibody drops small, about a cell across, and never start one in a wall', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const { antibodies, cells } = newGame({ level: 5, random: seeded(seed) });
+      for (const drop of antibodies) {
+        expect(drop.max).toBeGreaterThanOrEqual(20);
+        expect(drop.max).toBeLessThanOrEqual(28);
+        const cell = cellAt(cells, drop.x, drop.y, CELL_SIZE);
+        if (cell) expect(cell.match).toBe(true);
+        expect(drop.x).toBeGreaterThanOrEqual(ANTIBODY_EDGE);
+        expect(drop.y).toBeLessThanOrEqual(HEIGHT - ANTIBODY_EDGE);
+      }
+    }
+  });
+
+  it('only put drops where they fit', () => {
+    expect(placeAntibodies(3, { x: 0, y: 0 }, seeded(), () => false)).toEqual([]);
+  });
+
   it('give up on a drop that can never find room', () => {
     const middle = () => 0.5; // every drop would land right on her
-    expect(placeAntibodies(3, { x: WIDTH / 2, y: HEIGHT / 2 }, middle)).toEqual([]);
+    expect(placeAntibodies(3, { x: WIDTH / 2, y: HEIGHT / 2 }, middle, () => true)).toEqual([]);
   });
 
   it('use Math.random and level 1 by default', () => {
@@ -169,25 +187,50 @@ describe('wandering antibodies', () => {
   });
 
   it('bounce off the left and right sides', () => {
-    const d = drop({ x: WIDTH - 1, heading: 0 });
+    const d = drop({ x: WIDTH - ANTIBODY_EDGE - 1, heading: 0 });
     wander(d, 1, () => 0.5);
-    expect(d.x).toBe(WIDTH);
+    expect(d.x).toBe(WIDTH - ANTIBODY_EDGE);
     expect(Math.cos(d.heading)).toBeCloseTo(-1); // now heading back left
-    const e = drop({ x: 1, heading: Math.PI });
+    const e = drop({ x: ANTIBODY_EDGE + 1, heading: Math.PI });
     wander(e, 1, () => 0.5);
-    expect(e.x).toBe(0);
+    expect(e.x).toBe(ANTIBODY_EDGE);
     expect(Math.cos(e.heading)).toBeCloseTo(1);
   });
 
   it('bounce off the top and bottom', () => {
-    const d = drop({ y: HEIGHT - 1, heading: Math.PI / 2 });
+    const d = drop({ y: HEIGHT - ANTIBODY_EDGE - 1, heading: Math.PI / 2 });
     wander(d, 1, () => 0.5);
-    expect(d.y).toBe(HEIGHT);
+    expect(d.y).toBe(HEIGHT - ANTIBODY_EDGE);
     expect(Math.sin(d.heading)).toBeCloseTo(-1); // now heading back up
-    const e = drop({ y: 1, heading: -Math.PI / 2 });
+    const e = drop({ y: ANTIBODY_EDGE + 1, heading: -Math.PI / 2 });
     wander(e, 1, () => 0.5);
-    expect(e.y).toBe(0);
+    expect(e.y).toBe(ANTIBODY_EDGE);
     expect(Math.sin(e.heading)).toBeCloseTo(1);
+  });
+});
+
+describe('antibodies in the maze', () => {
+  it('turn back at a wall instead of going through it', () => {
+    const d = { x: 100, y: 100, max: 24, r: 0, heading: 0 };
+    wander(d, 1, () => 0.5, (x) => x > 104); // a wall just ahead
+    expect([d.x, d.y]).toEqual([100, 100]); // stays put this time
+    expect(Math.cos(d.heading)).toBeLessThan(0.01); // now facing away from it, or along it
+  });
+
+  it("never wander into another virus's cell", () => {
+    const game = openFlask({ random: seeded(9) });
+    for (const cell of game.cells) cell.state = 'burst';
+    const wall = game.cells[60];
+    wall.match = false;
+    // Start just left of the wall, heading straight for it.
+    game.antibodies = [{ x: wall.x - 30, y: wall.y, max: 24, r: 0, heading: 0 }];
+    game.player.x = 10; // well away
+    game.player.y = 10;
+    for (let i = 0; i < 400; i++) {
+      step(game, 0.05);
+      const [drop] = game.antibodies;
+      expect(cellAt(game.cells, drop.x, drop.y, CELL_SIZE)).not.toBe(wall);
+    }
   });
 });
 

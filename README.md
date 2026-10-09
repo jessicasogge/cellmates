@@ -10,7 +10,7 @@ A cute virology game for the browser, and the sister game to [PetriPals](https:/
 2. **Drift around the flask** with the arrow keys, or on a touch screen, by touching the flask and sliding your finger.
 3. **Find cells with the teal dot.** That's the receptor Flo's spikes fit, like a key in a lock. The other cells have locks for other viruses: a gray square, a gold ring, a purple triangle or an orange diamond. Those are walls, so the flask is a maze: Flo can only move over cells with her dot and patches where cells have burst.
 4. **Copy and burst.** Drift onto a cell and Flo slips inside. The cell makes copies of her, then bursts, and the copies take over the matching cells next door, which burst too.
-5. **Dodge the antibodies.** Their clouds spread out from a few drops and slowly drift around the flask. Touch one and Flo is neutralized.
+5. **Dodge the antibodies.** Their small clouds spread out from a few drops and slowly wander the maze, turning back at walls just like Flo. Touch one and she's neutralized.
 
 Burst enough cells to clear the level: 12, then 18, 24, 30 and 36. Each level adds another antibody.
 

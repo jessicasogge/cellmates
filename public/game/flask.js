@@ -7,8 +7,8 @@
 // with her lock and she slips inside; the cell copies her for a
 // moment, then bursts. Her copies take over the matching cells next door,
 // which burst in turn, but those don't spread any further, so she has to
-// keep finding fresh cells. Antibody clouds spread out from a few drops and
-// wander slowly around the flask; touch one and she's neutralized. Burst enough cells to clear the level.
+// keep finding fresh cells. Small antibody clouds spread out from a few drops
+// and wander slowly through the maze too; touch one and she's neutralized. Burst enough cells to clear the level.
 
 import { cellAt, hexGrid } from './hexgrid.js';
 
@@ -23,6 +23,8 @@ export const COPY_TIME = 1.5; // seconds a cell takes to copy her and burst
 export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
 export const WANDER_SPEED = 8; // how fast they drift about, per second
 export const WANDER_TURN = 2; // how sharply they can turn, per second
+export const ANTIBODY_REACH = 8; // how close to a wall a drop's middle can get
+export const ANTIBODY_EDGE = 16; // how close to the flask's sides it can get
 export const MATCH_SHARE = 0.7; // how many cells have her receptor
 
 // The locks on the other cells: receptors for other viruses, which her key
@@ -60,7 +62,7 @@ export function newGame({ level = 1, random = Math.random } = {}) {
     target: targetFor(level),
     cells,
     player,
-    antibodies: placeAntibodies(level, player, random),
+    antibodies: placeAntibodies(level, player, random, (x, y) => !blocked(cells, x, y, ANTIBODY_REACH)),
     random, // for the antibodies' wandering
     bursts: 0, // cells burst so far
     time: 0,
@@ -68,29 +70,32 @@ export function newGame({ level = 1, random = Math.random } = {}) {
   };
 }
 
-// Up to `count` antibody drops, each well clear of the mate's starting spot
-// and of each other. Gives up on a drop that can't find room.
-export function placeAntibodies(count, player, random) {
+// Up to `count` antibody drops, each somewhere `isOpen(x, y)` (not in a
+// wall), well clear of the mate's starting spot and of each other. Gives up
+// on a drop that can't find room.
+export function placeAntibodies(count, player, random, isOpen) {
   const drops = [];
   for (let tries = 0; drops.length < count && tries < 500; tries++) {
-    const max = 50 + random() * 20; // how far its cloud spreads
-    const x = random() * WIDTH;
-    const y = random() * HEIGHT;
+    const max = 20 + random() * 8; // how far its cloud spreads: about a cell
+    const x = ANTIBODY_EDGE + random() * (WIDTH - 2 * ANTIBODY_EDGE);
+    const y = ANTIBODY_EDGE + random() * (HEIGHT - 2 * ANTIBODY_EDGE);
     const clearOfPlayer = Math.hypot(x - player.x, y - player.y) > max + 60;
     const clearOfOthers = drops.every((drop) => Math.hypot(drop.x - x, drop.y - y) > drop.max + max);
     // Each drifts off in its own direction (`heading`, in radians).
-    if (clearOfPlayer && clearOfOthers) drops.push({ x, y, max, r: 0, heading: random() * 2 * Math.PI });
+    if (clearOfPlayer && clearOfOthers && isOpen(x, y)) {
+      drops.push({ x, y, max, r: 0, heading: random() * 2 * Math.PI });
+    }
   }
   return drops;
 }
 
-// Whether she'd overlap a wall (a cell with another virus's lock) with her
-// middle at (x, y). Checks her middle and four points around it, so she
-// can't squeeze halfway into one.
-function blocked(game, x, y) {
-  const reach = PLAYER_RADIUS * 0.6;
+// Whether something with its middle at (x, y) would overlap a wall (a cell
+// with another virus's lock). Checks its middle and four points `reach`
+// away, so it can't squeeze halfway into one. The mate and the antibodies
+// both move through the maze this way.
+function blocked(cells, x, y, reach) {
   return [[0, 0], [reach, 0], [-reach, 0], [0, reach], [0, -reach]].some(([ox, oy]) => {
-    const cell = cellAt(game.cells, x + ox, y + oy, CELL_SIZE);
+    const cell = cellAt(cells, x + ox, y + oy, CELL_SIZE);
     return cell !== null && !cell.match;
   });
 }
@@ -108,19 +113,25 @@ export function slide(from, [dx, dy], isBlocked) {
 
 // Drift an antibody drop along for `dt` seconds, turning a little at random,
 // like something carried about in the liquid. It bounces off the sides of
-// the flask, so it never wanders out of it.
-export function wander(drop, dt, random) {
+// the flask, and like the mate it can't go through walls (`isBlocked(x, y)`):
+// when it meets one it turns to try another way.
+export function wander(drop, dt, random, isBlocked = () => false) {
   drop.heading += (random() - 0.5) * 2 * WANDER_TURN * dt;
-  drop.x += Math.cos(drop.heading) * WANDER_SPEED * dt;
-  drop.y += Math.sin(drop.heading) * WANDER_SPEED * dt;
-  if (drop.x < 0 || drop.x > WIDTH) {
-    drop.x = clamp(drop.x, 0, WIDTH);
+  let x = drop.x + Math.cos(drop.heading) * WANDER_SPEED * dt;
+  let y = drop.y + Math.sin(drop.heading) * WANDER_SPEED * dt;
+  if (x < ANTIBODY_EDGE || x > WIDTH - ANTIBODY_EDGE) {
+    x = clamp(x, ANTIBODY_EDGE, WIDTH - ANTIBODY_EDGE);
     drop.heading = Math.PI - drop.heading; // bounce back sideways
   }
-  if (drop.y < 0 || drop.y > HEIGHT) {
-    drop.y = clamp(drop.y, 0, HEIGHT);
+  if (y < ANTIBODY_EDGE || y > HEIGHT - ANTIBODY_EDGE) {
+    y = clamp(y, ANTIBODY_EDGE, HEIGHT - ANTIBODY_EDGE);
     drop.heading = -drop.heading; // bounce back up or down
   }
+  if (isBlocked(x, y)) {
+    drop.heading += Math.PI / 2 + random() * Math.PI; // somewhere back the way it came
+    return;
+  }
+  [drop.x, drop.y] = [x, y];
 }
 
 function infect(cell, spreads) {
@@ -141,7 +152,7 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
   const spread = 1 - (1 - Math.min(1, game.time / GROW_TIME)) ** 2;
   for (const drop of game.antibodies) {
     drop.r = drop.max * spread;
-    wander(drop, dt, game.random);
+    wander(drop, dt, game.random, (x, y) => blocked(game.cells, x, y, ANTIBODY_REACH));
   }
 
   const { player } = game;
@@ -150,7 +161,7 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
     // Move if she can; if a wall's in the way, slide along it.
     const x = clamp(player.x + dx, PLAYER_RADIUS, WIDTH - PLAYER_RADIUS);
     const y = clamp(player.y + dy, PLAYER_RADIUS, HEIGHT - PLAYER_RADIUS);
-    [player.x, player.y] = slide(player, [x - player.x, y - player.y], (px, py) => blocked(game, px, py));
+    [player.x, player.y] = slide(player, [x - player.x, y - player.y], (px, py) => blocked(game.cells, px, py, PLAYER_RADIUS * 0.6));
     const touching = game.antibodies.some(
       (drop) => Math.hypot(drop.x - player.x, drop.y - player.y) < drop.r + PLAYER_RADIUS * 0.6,
     );

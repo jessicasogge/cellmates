@@ -59,8 +59,8 @@ function drawFlask(game, mate, flask) {
     const cloud = svgEl('circle', { cx: drop.x, cy: drop.y, r: 0, class: 'antibody-cloud' });
     const icon = svgEl('g', { class: 'antibody' });
     icon.append(
-      svgEl('circle', { r: 13 }),
-      svgEl('path', { d: 'M0 8 V0 L-6 -7 M0 0 L6 -7' }),
+      svgEl('circle', { r: 9 }),
+      svgEl('path', { d: 'M0 5.5 V0 L-4 -5 M0 0 L4 -5' }),
     );
     svg.append(cloud, icon);
     return { cloud, icon };
