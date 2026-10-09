@@ -5,8 +5,9 @@
 const SQRT3 = Math.sqrt(3);
 
 // Every cell that fits in a `width` x `height` box, for hexagons `size` from
-// center to corner. Each cell has an `id` (its place in the list), its
-// center (`x`, `y`) and the ids of the cells touching it (`neighbors`).
+// center to corner, with the sheet centered in the box. Each cell has an
+// `id` (its place in the list), its center (`x`, `y`) and the ids of the
+// cells touching it (`neighbors`).
 export function hexGrid(width, height, size) {
   const tall = SQRT3 * size; // flat side to flat side
   const cells = [];
@@ -17,6 +18,13 @@ export function hexGrid(width, height, size) {
       if (y + tall / 2 > height) break;
       cells.push({ id: cells.length, x, y });
     }
+  }
+  // Share the room left over equally on both sides.
+  const right = Math.max(...cells.map((cell) => cell.x)) + size;
+  const bottom = Math.max(...cells.map((cell) => cell.y)) + tall / 2;
+  for (const cell of cells) {
+    cell.x += (width - right) / 2;
+    cell.y += (height - bottom) / 2;
   }
   // In this layout all six neighbors are exactly one cell height apart.
   for (const cell of cells) {

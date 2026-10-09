@@ -19,6 +19,18 @@ describe('hexGrid', () => {
     expect(cells.map((c) => c.id)).toEqual(cells.map((_, i) => i));
   });
 
+  it('centers the sheet when the cells leave room over', () => {
+    const cells = hexGrid(340, 500, 21); // 10 columns, with room to spare
+    const left = Math.min(...cells.map((c) => c.x)) - 21;
+    const right = 340 - (Math.max(...cells.map((c) => c.x)) + 21);
+    expect(left).toBeGreaterThan(5);
+    expect(left).toBeCloseTo(right);
+    const tall = Math.sqrt(3) * 21;
+    const top = Math.min(...cells.map((c) => c.y)) - tall / 2;
+    const bottom = 500 - (Math.max(...cells.map((c) => c.y)) + tall / 2);
+    expect(top).toBeCloseTo(bottom);
+  });
+
   it('gives a cell in the middle six neighbors, each one cell away', () => {
     const middle = cellAt(cells, 170, 250, SIZE);
     expect(middle.neighbors).toHaveLength(6);

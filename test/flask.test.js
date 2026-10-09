@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { cellAt } from '../public/game/hexgrid.js';
 import {
-  CHASE_SPEED, COPY_TIME, DECOYS, GROW_TIME, slide, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
+  CELL_SIZE, CHASE_SPEED, COPY_TIME, DECOYS, GROW_TIME, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, slide, step, targetFor, WIDTH,
 } from '../public/game/flask.js';
 
 // Random numbers that repeat a pattern, so every game is the same.
@@ -29,18 +29,18 @@ function driftOnto(game, id) {
 
 describe('the levels', () => {
   it('need more cells burst each time', () => {
-    expect([1, 2, 3, 4, 5].map(targetFor)).toEqual([10, 15, 20, 25, 30]);
+    expect([1, 2, 3, 4, 5].map(targetFor)).toEqual([12, 18, 24, 30, 36]);
     expect(LEVELS).toBe(5);
   });
 
   it('start with every cell healthy, and the mate in a clear patch in the middle', () => {
     const game = newGame({ level: 2, random: seeded() });
-    expect(game.target).toBe(15);
+    expect(game.target).toBe(18);
     const start = game.cells.filter((cell) => cell.state !== 'healthy');
     expect(start).toHaveLength(1);
-    expect(start[0]).toMatchObject({ state: 'burst', match: true, x: WIDTH / 2 });
-    expect(Math.abs(start[0].y - HEIGHT / 2)).toBeLessThan(18);
-    expect(game.player).toEqual({ x: WIDTH / 2, y: HEIGHT / 2, inside: null });
+    expect(start[0]).toMatchObject({ state: 'burst', match: true });
+    expect(Math.hypot(start[0].x - WIDTH / 2, start[0].y - HEIGHT / 2)).toBeLessThan(21);
+    expect(game.player).toEqual({ x: start[0].x, y: start[0].y, inside: null });
     expect(game.bursts).toBe(0);
     expect(game.over).toBeNull();
   });
@@ -83,7 +83,7 @@ describe('the levels', () => {
   it('use Math.random and level 1 by default', () => {
     const game = newGame();
     expect(game.level).toBe(1);
-    expect(game.target).toBe(10);
+    expect(game.target).toBe(12);
   });
 });
 
@@ -111,20 +111,25 @@ describe('drifting', () => {
 });
 
 describe('the maze', () => {
-  // A flask of clear floor, with one wall to the right of where she starts.
+  // A flask of clear floor, with one wall next to her on the right.
   function walled() {
     const game = openFlask();
     for (const cell of game.cells) cell.state = 'burst';
-    const wall = game.cells.find((cell) => cell.x > WIDTH / 2 + 20 && Math.abs(cell.y - HEIGHT / 2) < 18);
+    const home = { ...game.player };
+    const wall = game.cells.find((cell) => cell.x > home.x + 20 && Math.abs(cell.y - home.y) < 20);
     wall.match = false;
-    return { game, wall };
+    return { game, wall, home };
   }
 
   it("won't let her drift onto another virus's cell", () => {
-    const { game, wall } = walled();
-    for (let i = 0; i < 20; i++) step(game, 0.05, [3, 0]);
-    expect(game.player.x).toBeLessThan(wall.x - 17);
-    expect(game.player.y).toBe(HEIGHT / 2);
+    const { game, wall, home } = walled();
+    for (let i = 0; i < 20; i++) {
+      step(game, 0.05, [3, 0]);
+      expect(cellAt(game.cells, game.player.x, game.player.y, CELL_SIZE)).not.toBe(wall);
+    }
+    expect(game.player.x).toBeLessThan(wall.x);
+    expect(game.player.x).toBeGreaterThan(home.x); // she got as far as she could
+    expect(game.player.y).toBe(home.y);
   });
 
   it('lets her keep moving along a wall when she heads into it at an angle', () => {
@@ -132,16 +137,16 @@ describe('the maze', () => {
     const start = game.player.y;
     for (let i = 0; i < 40; i++) {
       step(game, 0.05, [3, wall.y > start ? -2 : 2]);
-      expect(cellAt(game.cells, game.player.x, game.player.y, 20)).not.toBe(wall); // never on it
+      expect(cellAt(game.cells, game.player.x, game.player.y, CELL_SIZE)).not.toBe(wall); // never on it
     }
     expect(Math.abs(game.player.y - start)).toBeGreaterThan(20); // got past it
   });
 
   it('keeps her still when walls block every way she tries', () => {
-    const { game } = walled();
-    for (const cell of game.cells) if (cell.state === 'burst' && Math.hypot(cell.x - WIDTH / 2, cell.y - HEIGHT / 2) > 5) cell.match = false;
+    const { game, home } = walled();
+    for (const cell of game.cells) if (cell.x !== home.x || cell.y !== home.y) cell.match = false;
     step(game, 0.05, [30, 30]);
-    expect([game.player.x, game.player.y]).toEqual([WIDTH / 2, HEIGHT / 2]);
+    expect(game.player).toMatchObject(home);
   });
 });
 
@@ -236,7 +241,7 @@ describe('bursting', () => {
 
 describe('the end of a level', () => {
   it('clears it once she has burst enough cells', () => {
-    const game = openFlask({ bursts: 9 });
+    const game = openFlask({ bursts: 11 });
     driftOnto(game, 40);
     expect(step(game, COPY_TIME)).toEqual(['burst', 'cleared']);
     expect(game.over).toBe('cleared');
@@ -262,10 +267,11 @@ describe('the end of a level', () => {
 
   it('creeps the antibodies slowly toward her', () => {
     const game = openFlask();
-    game.antibodies = [{ x: WIDTH / 2 - 100, y: HEIGHT / 2, max: 50, r: 0 }];
+    const { x, y } = game.player;
+    game.antibodies = [{ x: x - 100, y, max: 50, r: 0 }];
     step(game, 1);
-    expect(game.antibodies[0].x).toBeCloseTo(WIDTH / 2 - 100 + CHASE_SPEED);
-    expect(game.antibodies[0].y).toBe(HEIGHT / 2);
+    expect(game.antibodies[0].x).toBeCloseTo(x - 100 + CHASE_SPEED);
+    expect(game.antibodies[0].y).toBe(y);
     expect(CHASE_SPEED).toBeLessThan(10); // much slower than she drifts
   });
 
@@ -281,11 +287,12 @@ describe('the end of a level', () => {
 
   it("stops on top of her instead of overshooting", () => {
     const game = openFlask();
-    game.antibodies = [{ x: WIDTH / 2 + 1, y: HEIGHT / 2, max: 50, r: 0 }];
+    const { x, y } = game.player;
+    game.antibodies = [{ x: x + 1, y, max: 50, r: 0 }];
     step(game, 10);
-    expect(game.antibodies[0]).toMatchObject({ x: WIDTH / 2, y: HEIGHT / 2 });
+    expect(game.antibodies[0]).toMatchObject({ x, y });
     step(game, 1); // already there: stays put
-    expect(game.antibodies[0]).toMatchObject({ x: WIDTH / 2, y: HEIGHT / 2 });
+    expect(game.antibodies[0]).toMatchObject({ x, y });
   });
 
   it('stops everything once the level is over', () => {

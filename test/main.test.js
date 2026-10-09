@@ -72,7 +72,7 @@ describe('the flask', () => {
     open();
     expect($('.dish-title h1').textContent).toBe('Flo');
     expect($('.dish-title .species').textContent).toBe('Influenza A virus');
-    expect($('.cell-count').textContent).toBe('Level 2 · 0 / 15 cells burst');
+    expect($('.cell-count').textContent).toBe('Level 2 · 0 / 18 cells burst');
   });
 
   it('draws every cell, with a dot or a square for her receptor, plus the antibodies and her', () => {
@@ -176,22 +176,22 @@ describe('steering', () => {
 describe('the end of a level', () => {
   it('clears it, offering the next level and a fun fact', () => {
     const { game } = open();
-    game.bursts = 16;
+    game.bursts = 19;
     run(0);
     expect(frames).toHaveLength(0); // the game stops
     expect($('.win-banner').hidden).toBe(false);
     expect($('.banner-title').textContent).toBe('Level 2 cleared!');
-    expect($('.banner-text').textContent).toBe('Flo burst 16 cells.');
+    expect($('.banner-text').textContent).toBe('Flo burst 19 cells.');
     expect($('.banner-next').textContent).toBe('Level 3: one more antibody');
     expect($('.banner-next').getAttribute('href')).toBe('./flask.html?mate=flo&level=3');
     expect($('.fun-fact').hidden).toBe(false);
-    expect($('.cell-count').textContent).toBe('Level 2 · 16 / 15 cells burst');
+    expect($('.cell-count').textContent).toBe('Level 2 · 19 / 18 cells burst');
     expect(sporeBurst).toHaveBeenLastCalledWith($('.flask'), { big: false });
   });
 
   it('starts over from level 1 after the last level', () => {
     const { game } = open('?mate=flo&level=5');
-    game.bursts = 30;
+    game.bursts = 36;
     run(0);
     expect($('.banner-title').textContent).toBe('You cleared every level!');
     expect($('.banner-next').textContent).toBe('Play again');

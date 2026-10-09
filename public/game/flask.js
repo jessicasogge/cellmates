@@ -15,7 +15,7 @@ import { cellAt, hexGrid } from './hexgrid.js';
 // The flask, in its own units (main.js scales it to fit the screen).
 export const WIDTH = 340;
 export const HEIGHT = 500;
-export const CELL_SIZE = 20; // center to corner
+export const CELL_SIZE = 21; // center to corner
 export const PLAYER_RADIUS = 14;
 
 export const LEVELS = 5;
@@ -29,9 +29,9 @@ export const MATCH_SHARE = 0.7; // how many cells have her receptor
 // is teal.
 export const DECOYS = ['square', 'ring', 'triangle', 'diamond'];
 
-// Cells to burst to clear a level: 10, 15, 20, 25, then 30. One cell and the
-// ones next door make about 5, so level 1 takes a couple of tries.
-export const targetFor = (level) => 5 + 5 * level;
+// Cells to burst to clear a level: 12, 18, 24, 30, then 36. One cell and the
+// ones next door make about 5, so level 1 takes two or three tries.
+export const targetFor = (level) => 6 + 6 * level;
 
 const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
 
@@ -49,9 +49,11 @@ export function newGame({ level = 1, random = Math.random } = {}) {
       spreads: false, // whether her copies take over the cells next door
     };
   });
-  const player = { x: WIDTH / 2, y: HEIGHT / 2, inside: null };
-  // She starts in a clear patch, so she's never stuck inside a wall.
-  Object.assign(cellAt(cells, player.x, player.y, CELL_SIZE), { match: true, lock: 'match', state: 'burst' });
+  // She starts in a clear patch in the middle, so she's never stuck inside a
+  // wall: the cell nearest the middle, already burst.
+  const start = cellAt(cells, WIDTH / 2, HEIGHT / 2, CELL_SIZE);
+  Object.assign(start, { match: true, lock: 'match', state: 'burst' });
+  const player = { x: start.x, y: start.y, inside: null };
   return {
     level,
     target: targetFor(level),
