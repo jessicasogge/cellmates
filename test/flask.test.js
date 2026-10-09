@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { cellAt } from '../public/game/hexgrid.js';
 import {
-  COPY_TIME, DECOYS, GROW_TIME, slide, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
+  CHASE_SPEED, COPY_TIME, DECOYS, GROW_TIME, slide, HEIGHT, LEVELS, newGame, placeAntibodies, PLAYER_RADIUS, step, targetFor, WIDTH,
 } from '../public/game/flask.js';
 
 // Random numbers that repeat a pattern, so every game is the same.
@@ -33,7 +33,7 @@ describe('the levels', () => {
     expect(LEVELS).toBe(5);
   });
 
-  it('start with every cell healthy, and the pal in a clear patch in the middle', () => {
+  it('start with every cell healthy, and the mate in a clear patch in the middle', () => {
     const game = newGame({ level: 2, random: seeded() });
     expect(game.target).toBe(15);
     const start = game.cells.filter((cell) => cell.state !== 'healthy');
@@ -258,6 +258,34 @@ describe('the end of a level', () => {
     game.antibodies = [{ x: 20, y: 20, max: 60, r: 0 }];
     step(game, GROW_TIME / 2);
     expect(game.antibodies[0].r).toBeCloseTo(45); // 3/4 of the way at half time
+  });
+
+  it('creeps the antibodies slowly toward her', () => {
+    const game = openFlask();
+    game.antibodies = [{ x: WIDTH / 2 - 100, y: HEIGHT / 2, max: 50, r: 0 }];
+    step(game, 1);
+    expect(game.antibodies[0].x).toBeCloseTo(WIDTH / 2 - 100 + CHASE_SPEED);
+    expect(game.antibodies[0].y).toBe(HEIGHT / 2);
+    expect(CHASE_SPEED).toBeLessThan(10); // much slower than she drifts
+  });
+
+  it("chases her even while she's inside a cell", () => {
+    const game = openFlask();
+    game.antibodies = [{ x: 20, y: 20, max: 50, r: 0 }];
+    driftOnto(game, 40);
+    const before = Math.hypot(game.player.x - 20, game.player.y - 20);
+    step(game, 1);
+    const [drop] = game.antibodies;
+    expect(Math.hypot(game.player.x - drop.x, game.player.y - drop.y)).toBeCloseTo(before - CHASE_SPEED);
+  });
+
+  it("stops on top of her instead of overshooting", () => {
+    const game = openFlask();
+    game.antibodies = [{ x: WIDTH / 2 + 1, y: HEIGHT / 2, max: 50, r: 0 }];
+    step(game, 10);
+    expect(game.antibodies[0]).toMatchObject({ x: WIDTH / 2, y: HEIGHT / 2 });
+    step(game, 1); // already there: stays put
+    expect(game.antibodies[0]).toMatchObject({ x: WIDTH / 2, y: HEIGHT / 2 });
   });
 
   it('stops everything once the level is over', () => {

@@ -89,11 +89,16 @@ describe('the flask', () => {
     expect($('.player svg').getAttribute('width')).toBe('48');
   });
 
-  it('spreads the antibody clouds as time goes on', () => {
-    open();
+  it('spreads the antibody clouds as time goes on, and moves them as they chase her', () => {
+    const { game } = open();
+    const startX = $('.antibody-cloud').getAttribute('cx');
     run(0);
     run(1000);
     expect(Number($('.antibody-cloud').getAttribute('r'))).toBeGreaterThan(0);
+    const [drop] = game.antibodies;
+    expect($('.antibody-cloud').getAttribute('cx')).not.toBe(startX);
+    expect($('.antibody-cloud').getAttribute('cx')).toBe(drop.x.toFixed(1));
+    expect($('.antibody').getAttribute('transform')).toBe(`translate(${drop.x.toFixed(1)} ${drop.y.toFixed(1)})`);
   });
 });
 

@@ -57,13 +57,13 @@ function drawFlask(game, mate, flask) {
   });
   const clouds = game.antibodies.map((drop) => {
     const cloud = svgEl('circle', { cx: drop.x, cy: drop.y, r: 0, class: 'antibody-cloud' });
-    const icon = svgEl('g', { class: 'antibody', transform: `translate(${drop.x} ${drop.y})` });
+    const icon = svgEl('g', { class: 'antibody' });
     icon.append(
       svgEl('circle', { r: 13 }),
       svgEl('path', { d: 'M0 8 V0 L-6 -7 M0 0 L6 -7' }),
     );
     svg.append(cloud, icon);
-    return cloud;
+    return { cloud, icon };
   });
   const player = svgEl('g', { class: 'player' });
   const art = mateArt(mate);
@@ -92,7 +92,14 @@ export function startGame({
 
   const render = () => {
     game.cells.forEach((cell, i) => drawn.cells[i].setAttribute('class', `cell ${cell.state}${cell.match ? '' : ' wall'}`));
-    game.antibodies.forEach((drop, i) => drawn.clouds[i].setAttribute('r', drop.r.toFixed(1)));
+    game.antibodies.forEach((drop, i) => {
+      const { cloud, icon } = drawn.clouds[i];
+      const [x, y] = [drop.x.toFixed(1), drop.y.toFixed(1)];
+      cloud.setAttribute('cx', x);
+      cloud.setAttribute('cy', y);
+      cloud.setAttribute('r', drop.r.toFixed(1));
+      icon.setAttribute('transform', `translate(${x} ${y})`);
+    });
     const { player } = game;
     drawn.player.setAttribute('transform', `translate(${player.x.toFixed(1)} ${player.y.toFixed(1)})`);
     drawn.player.setAttribute('class', player.inside === null ? 'player' : 'player inside');

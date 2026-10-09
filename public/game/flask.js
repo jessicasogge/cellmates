@@ -1,14 +1,14 @@
 // The rules of the flask, with no drawing: where everything is, and what
 // happens each frame. main.js draws it and feeds in the player's moves.
 //
-// The player's pal drifts over a sheet of cells, like a maze: cells with
+// The player's mate drifts over a sheet of cells, like a maze: cells with
 // other viruses' locks are walls, so she can only move over cells with her
 // receptor (her "lock") and patches where cells have burst. Touch a cell
 // with her lock and she slips inside; the cell copies her for a
 // moment, then bursts. Her copies take over the matching cells next door,
 // which burst in turn, but those don't spread any further, so she has to
-// keep finding fresh cells. Antibody clouds spread out from a few drops;
-// touch one and she's neutralized. Burst enough cells to clear the level.
+// keep finding fresh cells. Antibody clouds spread out from a few drops and
+// creep slowly after her; touch one and she's neutralized. Burst enough cells to clear the level.
 
 import { cellAt, hexGrid } from './hexgrid.js';
 
@@ -21,6 +21,7 @@ export const PLAYER_RADIUS = 14;
 export const LEVELS = 5;
 export const COPY_TIME = 1.5; // seconds a cell takes to copy her and burst
 export const GROW_TIME = 3; // seconds the antibody clouds take to spread out
+export const CHASE_SPEED = 6; // how fast they creep after her, per second
 export const MATCH_SHARE = 0.7; // how many cells have her receptor
 
 // The locks on the other cells: receptors for other viruses, which her key
@@ -34,7 +35,7 @@ export const targetFor = (level) => 5 + 5 * level;
 
 const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
 
-// A fresh level: every cell healthy, the pal in the middle, and one antibody
+// A fresh level: every cell healthy, the mate in the middle, and one antibody
 // drop per level.
 export function newGame({ level = 1, random = Math.random } = {}) {
   const cells = hexGrid(WIDTH, HEIGHT, CELL_SIZE).map((cell) => {
@@ -63,7 +64,7 @@ export function newGame({ level = 1, random = Math.random } = {}) {
   };
 }
 
-// Up to `count` antibody drops, each well clear of the pal's starting spot
+// Up to `count` antibody drops, each well clear of the mate's starting spot
 // and of each other. Gives up on a drop that can't find room.
 export function placeAntibodies(count, player, random) {
   const drops = [];
@@ -106,7 +107,7 @@ function infect(cell, spreads) {
   cell.spreads = spreads;
 }
 
-// Move the game on by `dt` seconds, with the pal trying to move by
+// Move the game on by `dt` seconds, with the mate trying to move by
 // [dx, dy]. Returns what happened: 'attach', 'burst', 'cleared' or
 // 'neutralized', in order.
 export function step(game, dt, [dx, dy] = [0, 0]) {
@@ -116,9 +117,18 @@ export function step(game, dt, [dx, dy] = [0, 0]) {
 
   // Antibodies diffuse out quickly at first, then slow down.
   const spread = 1 - (1 - Math.min(1, game.time / GROW_TIME)) ** 2;
-  for (const drop of game.antibodies) drop.r = drop.max * spread;
-
   const { player } = game;
+  for (const drop of game.antibodies) {
+    drop.r = drop.max * spread;
+    // Creep toward her, very slowly, like antibodies finding a virus.
+    const distance = Math.hypot(player.x - drop.x, player.y - drop.y);
+    const move = Math.min(distance, CHASE_SPEED * dt);
+    if (distance > 0) {
+      drop.x += ((player.x - drop.x) / distance) * move;
+      drop.y += ((player.y - drop.y) / distance) * move;
+    }
+  }
+
   if (player.inside === null) {
     // Move if she can; if a wall's in the way, slide along it.
     const x = clamp(player.x + dx, PLAYER_RADIUS, WIDTH - PLAYER_RADIUS);
