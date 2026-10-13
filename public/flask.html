@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flask: CellMates</title>
+    <meta name="description" content="Flick Flo the flu virus into a flask of cells and set off a chain of bursting cells." />
+    <link rel="preload" href="./fonts/fredoka-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="play">
+    <header class="hud">
+      <a class="back" href="./">CellMates</a>
+      <span class="level-name">Level 1</span>
+      <button class="mute" type="button" aria-pressed="false" aria-label="Sound">🔊</button>
+    </header>
+
+    <!-- How much of the flask you've taken over, with a mark for each star -->
+    <div class="meter" role="progressbar" aria-label="Cells taken over" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="meter-fill"></div>
+    </div>
+    <p class="status">
+      <span class="taken">0 cells</span> taken ·
+      <span class="flicks-label">flicks</span> <span class="flicks"></span>
+    </p>
+
+    <div class="stage">
+      <canvas id="flask" aria-label="A culture flask with a sheet of cells. Pull back and let go to flick Flo in."></canvas>
+      <p class="chain-call" aria-live="polite"></p>
+    </div>
+
+    <p class="help">
+      Pull back anywhere and let go to flick Flo in. She can only get into cells with
+      <span class="bumps">teal bumps</span> (her receptor), and every cell she takes over bursts out more of her.
+      Keep clear of the blue antibodies!
+      <span class="keys">Keyboard: arrows to aim, space to flick.</span>
+    </p>
+
+    <div class="result" hidden>
+      <h2 class="result-title"></h2>
+      <p class="result-stars" aria-hidden="true"></p>
+      <p class="result-detail"></p>
+      <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+      <div class="result-buttons">
+        <button class="again" type="button">Try again</button>
+        <a class="next" href="./flask.html">Next level</a>
+      </div>
+    </div>
+
+    <script type="module" src="./game/play.js"></script>
+  </body>
+</html>

@@ -62,6 +62,17 @@ The tagline: *"Viruses can't grow on their own. They need a cell."*
 
 The counter shows **virions made** (every burst adds its burst size). Reaching the level's target wins.
 
+#### Prototype: the flick version
+
+The first prototype (`flask.html`) tries a different take on this loop, to test whether a hands-off chain reaction is the fun part:
+
+- **No steering at all.** You flick your pal in from the neck of the flask like a slingshot (pull back, let go), and she drifts to a stop. Viruses really can't move on their own, so this is truer to life too.
+- **Free virions do all the spreading.** Every burst sends new virions to the cells nearby, so one good flick sets off a chain. Cells without your receptor break chains up, so aiming at a big patch of the right cells is the skill.
+- **Three flicks per level, and stars.** The meter shows the share of the flask's cells taken over, with one, two and three star marks. One star beats the level.
+- **Short, repeatable rounds.** Each level's cells are laid out the same way every time and your aim is kept, so "Try again" is a fair rematch. Chain call-outs ("Burst-tastic! ×10") and pops that climb a scale make long chains feel good.
+
+If playtesting likes it, steering could come back for Classic, with flicking as its own mode (or the other way around).
+
 ### 4.3 Controls
 
 The same controls as PetriPals, reused from `keyboard.js` and `touch.js`:
@@ -192,7 +203,7 @@ The same approach and coverage gate as PetriPals:
 
 ## 10. Milestones
 
-1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun?
+1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Built as the flick version: see [4.2](#42-the-core-loop).)*
 2. **Classic:** antibody clouds, interferon, seven levels, end-of-level facts.
 3. **Pals:** the first six, the picker, electron microscope mode.
 4. **Coinfection** and **Brownian Brunch.**

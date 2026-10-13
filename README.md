@@ -2,7 +2,18 @@
 
 A cute virology game for the browser, and the sister game to [PetriPals](https://github.com/jessicasogge/petripals) and [FunGals](https://jessicasogge.github.io/fungals/). Bacteria and fungi grow on agar in a petri dish, but viruses can't: they need a living cell. Pick a real virus, find the cells with your receptor, take them over and burst out to spread across a cell culture flask.
 
-**Status:** just getting started. See the [design doc](docs/design.md) for the plan.
+**Status:** a playable prototype: three levels with Flo, the flu virus. See the [design doc](docs/design.md) for the plan.
+
+<img src="docs/flask.png" alt="Level 1: a culture flask full of hexagonal cells, some with teal receptor bumps. A chain of burst cells spreads across the middle, with little virions drifting out of them, and the words Plaque attack! x20" width="300">
+
+## How to play
+
+1. **Pull back and let go.** Press anywhere on the flask, pull back like a slingshot, and let go to flick Flo in from the neck. The dotted line shows about where she'll land. (On a keyboard: the arrow keys aim and the space bar flicks.)
+2. **Land on the right cell.** Viruses can't swim, so once she's flicked, she just drifts. She can only get into cells with **teal bumps**: her receptor, sialic acid.
+3. **Watch it spread.** The cell makes copies of her and bursts, and the new virions drift off to land on the cells around it. One good flick can set off a long chain. Each burst cell leaves a clear hole, a **plaque**.
+4. **Take over the flask.** You get three flicks. Fill the meter to the stars: one star beats the level, and three is a perfect flask. Virions that drift into the blue **antibody** clouds are stopped.
+
+Every level lays its cells out the same way each time, and your aim stays put, so **Try again** (or the R key) is a fair rematch.
 
 ## Running it locally
 
@@ -28,11 +39,19 @@ The tests use [Vitest](https://vitest.dev/), and most run in [jsdom](https://git
 
 | Path | What's there |
 |---|---|
-| `public/index.html` | Home page (a placeholder for now), with its row of pals drawn by `script.js` |
+| `public/index.html` | Home page, with its row of pals drawn by `script.js` |
+| `public/flask.html` | The game page; `game/play.js` runs it |
+| `public/game/config.js` | The numbers the game is built on: the flask, how virions drift, Flo's life cycle and the levels |
+| `public/game/infect.js` | The game itself, with no drawing: cells, drifting virions, attach → copy → burst |
+| `public/game/hex.js` | The hexagonal grid of cells |
+| `public/game/aim.js` | Aiming the flick, by pulling back or with the arrow keys |
+| `public/game/draw.js` | Drawing the flask on a canvas |
+| `public/game/sound.js` | The pop of a bursting cell, a note higher for each one in a chain |
 | `public/game/pals.js` | Every pal's name and drawing, in one place. So far: Tess (phage T4), Flo (influenza A), Rota (rotavirus) and Cora (coronavirus) |
 | `public/game/` | Game code carried over from PetriPals: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the fun-fact pop-up (`facts.js`, with italics for scientific names from `italics.js`), and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `docs/design.md` | The design doc |
 | `test/` | Tests |
+| `scripts/simulate.mjs` | Plays every level many times with a computer player, to help tune the levels (`node scripts/simulate.mjs`) |
 | `src/index.ts` | Small Express server for local development |
 
 ## Deployment
