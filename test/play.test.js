@@ -1,15 +1,14 @@
 // @vitest-environment jsdom
-// play.js: the Burst or Wait page. Loads the real cell.html into jsdom, with
-// a stand-in canvas, and runs the game frame by frame by hand.
+// play.js: the Plaque page. Loads the real plaque.html into jsdom, with a
+// stand-in canvas, and runs the game frame by frame by hand.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fakeContext } from './fake-canvas.js';
 
 vi.mock('../public/game/spores.js', () => ({ sporeBurst: vi.fn() }));
-vi.mock('../public/game/sound.js', () => ({ pop: vi.fn() }));
 
-const html = readFileSync(resolve(import.meta.dirname, '../public/cell.html'), 'utf8');
+const html = readFileSync(resolve(import.meta.dirname, '../public/plaque.html'), 'utf8');
 document.body.innerHTML = html.match(/<body[^>]*>([\s\S]*)<\/body>/)[1];
 
 const ctx = fakeContext();
@@ -18,12 +17,15 @@ const frames = [];
 vi.stubGlobal('requestAnimationFrame', (callback) => frames.push(callback));
 
 const { sporeBurst } = await import('../public/game/spores.js');
-const { pop } = await import('../public/game/sound.js');
-const { HOST, VIRUSES } = await import('../public/game/config.js');
-const { running, burstCall, copyNote, resultText } = await import('../public/game/play.js');
+const { DISH, LAWN, VIRUSES } = await import('../public/game/config.js');
+const { running, clearedText, resultText, tappedCell } = await import('../public/game/play.js');
+const { createDish } = await import('../public/game/lawn.js');
 
 const $ = (selector) => document.querySelector(selector);
-const canvas = $('#cell');
+const canvas = $('#dish');
+// The canvas is DISH.size px square at the top left, so a tap's px are
+// dish units.
+canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: DISH.size, height: DISH.size });
 let clock = 0;
 
 // Run `n` frames of `ms` each.
@@ -34,9 +36,12 @@ function frame(n = 1, ms = 16) {
   }
 }
 
-// Run until something about the run is true, or give up after a while.
-function until(check, limit = 2000) {
+function until(check, limit = 1000) {
   for (let i = 0; i < limit && !check(); i++) frame();
+}
+
+function tap(x, y) {
+  canvas.dispatchEvent(new MouseEvent('pointerdown', { clientX: x, clientY: y, bubbles: true }));
 }
 
 function key(name, target = document.body) {
@@ -45,43 +50,55 @@ function key(name, target = document.body) {
   return event;
 }
 
-// Restart and run on until there are copies to burst.
-function readyToBurst() {
+// Restart, and run until the first cell has copies to burst.
+function ready() {
   running.restart();
-  running.run.cell.breaking = 99; // so it can't self-destruct on its own
-  until(() => running.run.cell.copies >= 20);
+  until(() => running.dish.landed);
+  running.dish.first.lasts = 99; // so it can't self-destruct while we wait
+  until(() => running.dish.first.copies >= VIRUSES.tess.full);
+  return running.dish.first;
 }
 
-describe('burstCall', () => {
-  it('cheers louder for bigger bursts', () => {
-    expect(burstCall(12)).toBe('+12');
-    expect(burstCall(90)).toBe('Big burst! +90');
-    expect(burstCall(150)).toBe('Huge burst! +150');
+// End the dish with `share` of the lawn cleared.
+function endWith(share) {
+  const { dish } = running;
+  until(() => dish.landed);
+  dish.cells.forEach((c, i) => { c.state = i < Math.round(share * dish.cells.length) ? 'plaque' : 'healthy'; });
+  frame();
+}
+
+describe('clearedText and resultText', () => {
+  const dish = createDish(VIRUSES.tess, LAWN, () => 0.5);
+  const clear = (share) => dish.cells.forEach((c, i) => { c.state = i < Math.round(share * dish.cells.length) ? 'plaque' : 'healthy'; });
+
+  it('says how much is cleared, and the goal', () => {
+    clear(0);
+    expect(clearedText(dish)).toBe(`Cleared 0% of the lawn · goal ${LAWN.target * 100}%`);
+  });
+
+  it('cheers a win, a near miss and a miss', () => {
+    clear(1);
+    expect(resultText(dish)).toEqual({ title: 'You won!', message: 'Tess’s plaque cleared 100% of the lawn.' });
+    clear(LAWN.target * 0.9);
+    expect(resultText(dish).title).toBe('So close!');
+    clear(0.05);
+    expect(resultText(dish).title).toBe('The plaque stopped growing');
+    expect(resultText(dish).message).toContain('before they turn red');
   });
 });
 
-describe('copyNote', () => {
-  it('goes up a note about every dozen copies', () => {
-    expect(copyNote(0)).toBe(1);
-    expect(copyNote(12)).toBe(2);
-    expect(copyNote(60)).toBe(6);
-  });
-});
+describe('tappedCell', () => {
+  const dish = createDish(VIRUSES.tess, LAWN, () => 0.5);
+  const cell = dish.first;
+  Object.assign(cell, { state: 'infected', copies: 50 });
 
-describe('resultText', () => {
-  const run = (score, bursts, bestBurst) => ({ score, bursts, bestBurst });
-
-  it('sums up the run', () => {
-    expect(resultText(run(300, 3, 140), 500, false)).toEqual({
-      score: '300 copies',
-      detail: 'You burst 3 cells, the biggest with 140 copies. Best run: 500.',
-    });
-    expect(resultText(run(90, 1, 90), 90, true).score).toBe('90 copies: a new best!');
-    expect(resultText(run(90, 1, 90), 90, true).detail).toContain('You burst 1 cell,');
+  it('picks the cell under the tap, or a ready one just next to it', () => {
+    expect(tappedCell(dish, cell.x, cell.y)).toBe(cell);
+    expect(tappedCell(dish, cell.x + DISH.cellSize * 1.2, cell.y)).toBe(cell);
   });
 
-  it('suggests bursting sooner if nothing got out', () => {
-    expect(resultText(run(0, 0, 0), 0, false).detail).toContain('Try bursting a little sooner!');
+  it('picks nothing for a tap far from any ready cell', () => {
+    expect(tappedCell(dish, 20, 20)).toBeUndefined();
   });
 });
 
@@ -90,166 +107,58 @@ describe('the page', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.unstubAllGlobals();
-    vi.stubGlobal('requestAnimationFrame', (callback) => frames.push(callback));
   });
 
-  it('starts on the first cell with every life, and draws it', () => {
-    expect($('.cell-number').textContent).toBe('Cell 1');
-    expect($('.lives').textContent).toBe('●'.repeat(HOST.lives));
-    expect($('.burst-button').disabled).toBe(true);
-    expect($('.danger').style.left).toBe(`${HOST.breaking[0] * 100}%`);
+  it('starts a dish, and draws it', () => {
+    expect($('.cleared').textContent).toBe(clearedText(running.dish));
+    expect($('.win-banner').hidden).toBe(true);
     expect(ctx.calls.length).toBeGreaterThan(0);
   });
 
-  it('copies, with pops that don’t pile up', () => {
-    readyToBurst();
-    expect($('.call').textContent).toBe('Copying her DNA…');
-    expect($('.copies-count').textContent).toBe(String(running.run.cell.copies));
-    expect($('.burst-button').disabled).toBe(false);
-    expect(pop).toHaveBeenCalled();
-    expect(pop.mock.calls.length).toBeLessThan(running.run.cell.copies);
+  it('bursts a cell you tap, and shows it spreading', () => {
+    const cell = ready();
+    tap(cell.x, cell.y);
+    expect(cell.state).toBe('plaque');
+    expect(running.view.pops).toHaveLength(1);
+    expect($('.cleared').textContent).toBe(clearedText(running.dish));
+    frame(40); // the burst fades away
+    expect(running.view.pops).toHaveLength(0);
+    tap(5, 5); // a tap on nothing does nothing
   });
 
-  it('says "copy" for one copy', () => {
-    running.restart();
-    running.run.cell.breaking = 99;
-    until(() => running.run.cell.copies >= 1);
-    running.run.cell.copies = 1;
-    running.run.cell.time = VIRUSES.tess.eclipse; // no more yet
-    frame();
-    expect($('.copies-word').textContent).toBe('copy');
-  });
-
-  it('bursts with the button, banking the copies and showing the breaking point', () => {
-    readyToBurst();
-    running.run.cell.breaking = 0.8;
-    const copies = running.run.cell.copies;
-    $('.burst-button').click();
-    expect(running.run.score).toBe(copies);
-    expect($('.call').textContent).toBe(burstCall(copies));
-    expect($('.breaking-mark').hidden).toBe(false);
-    expect($('.alarm-label').textContent).toBe('It would have held out to 80%.');
-    expect(sporeBurst).toHaveBeenCalledWith(canvas);
-    expect(pop).toHaveBeenCalledWith(15);
-    frame();
-    expect($('.score').textContent).toBe(String(copies));
-
-    until(() => running.run.number === 2);
-    expect($('.breaking-mark').hidden).toBe(true);
-    expect($('.alarm-label').textContent).toContain('Somewhere in the red');
-  });
-
-  it('bursts with the space bar or a tap on the cell, but not before there are copies', () => {
-    running.restart();
-    key(' ');
-    canvas.dispatchEvent(new Event('pointerdown'));
-    expect(running.run.score).toBe(0);
-    readyToBurst();
+  it('bursts the most urgent cell with the space bar', () => {
+    const cell = ready();
     expect(key(' ').defaultPrevented).toBe(true);
-    expect(running.run.score).toBeGreaterThan(0);
-    readyToBurst();
-    canvas.dispatchEvent(new Event('pointerdown'));
-    expect(running.run.cell.phase).toBe('burst');
+    expect(cell.state).toBe('plaque');
+    key('x'); // other keys do nothing
   });
 
-  it('quiets the alarm once per cell, with the button or Q', () => {
-    readyToBurst();
-    running.run.cell.alarm = 0.6;
-    $('.block-button').click();
-    expect(running.run.cell.alarm).toBeCloseTo(0.6 - VIRUSES.tess.block);
-    expect($('.block-button').disabled).toBe(true);
-    readyToBurst();
-    running.run.cell.alarm = 0.6;
-    key('q');
-    expect(running.run.cell.blocked).toBe(true);
-    key('Q'); // already used
-    key('x'); // nothing
+  it('leaves the space bar alone on buttons and links', () => {
+    const cell = ready();
+    expect(key(' ', $('.play-again')).defaultPrevented).toBe(false);
+    expect(cell.state).toBe('infected');
   });
 
-  it('leaves keys alone on buttons and links', () => {
-    readyToBurst();
-    expect(key(' ', $('.mute')).defaultPrevented).toBe(false);
-    expect(running.run.score).toBe(0);
-  });
-
-  it('self-destructs, losing a life, and says where it broke', () => {
-    readyToBurst();
-    running.run.cell.breaking = 0.42;
-    running.run.cell.alarm = 0.42;
-    frame();
-    expect($('.call').textContent).toMatch(/^Self-destruct! Lost \d+$/);
-    expect($('.alarm-label').textContent).toBe('It broke at 42%.');
-    expect($('.lives').textContent).toBe('●'.repeat(HOST.lives - 1) + '○');
-    expect(pop).toHaveBeenCalledWith(1);
-  });
-
-  it('says so plainly if a cell self-destructs with nothing in it', () => {
+  it('celebrates a win', () => {
     running.restart();
-    until(() => running.run.cell.phase === 'copying');
-    running.run.cell.breaking = 0;
-    running.run.cell.time = VIRUSES.tess.eclipse;
-    frame();
-    expect($('.call').textContent).toBe('Self-destruct!');
-  });
-
-  it('ends the run, celebrates a new best, and plays again', () => {
-    localStorage.clear();
-    readyToBurst();
-    $('.burst-button').click();
-    running.run.lives = 1;
-    until(() => running.run.number === 2);
-    until(() => running.run.cell.phase === 'copying');
-    running.run.cell.breaking = 0;
-    running.run.cell.time = VIRUSES.tess.eclipse;
-    until(() => running.run.over);
-    expect($('.result').hidden).toBe(false);
-    expect($('.result-score').textContent).toContain('a new best!');
-    expect(sporeBurst).toHaveBeenLastCalledWith(canvas, { big: true });
-    expect(localStorage.getItem('cellmates-best')).toBe(String(running.run.score));
+    endWith(1);
+    expect($('.win-banner').hidden).toBe(false);
+    expect($('.win-title').textContent).toBe('You won!');
     expect($('.fun-fact').hidden).toBe(false);
-
-    key(' '); // the space bar plays again too
-    expect($('.result').hidden).toBe(true);
-    expect(running.run.number).toBe(1);
+    expect(sporeBurst).toHaveBeenCalledWith(canvas, { big: true });
+    tap(DISH.size / 2, DISH.size / 2); // no bursting behind the pop-up
+    $('.play-again').click();
+    expect($('.win-banner').hidden).toBe(true);
   });
 
-  it('doesn’t celebrate a run below your best', () => {
-    localStorage.setItem('cellmates-best', '100000');
+  it('says so when the plaque stops short, and plays again with the space bar', () => {
     running.restart();
-    running.run.lives = 1;
-    until(() => running.run.cell.phase === 'copying');
-    running.run.cell.breaking = 0;
-    running.run.cell.time = VIRUSES.tess.eclipse;
-    until(() => running.run.over);
-    expect($('.result-score').textContent).toBe('0 copies');
+    endWith(0.05);
+    expect($('.win-title').textContent).toBe('The plaque stopped growing');
     expect(sporeBurst).not.toHaveBeenCalled();
-    $('.again').click();
-    expect($('.result').hidden).toBe(true);
-  });
-
-  it('keeps quiet when muted, and remembers it', () => {
-    $('.mute').click();
-    expect($('.mute').getAttribute('aria-pressed')).toBe('true');
-    expect(localStorage.getItem('cellmates-muted')).toBe('1');
-    readyToBurst();
-    expect(pop).not.toHaveBeenCalled();
-    $('.mute').click();
-    expect($('.mute').textContent).toBe('🔊');
-  });
-
-  it('copes with a browser that won’t save anything', () => {
-    vi.stubGlobal('localStorage', {
-      getItem: () => { throw new Error('blocked'); },
-      setItem: () => { throw new Error('blocked'); },
-    });
-    running.restart();
-    running.run.lives = 1;
-    until(() => running.run.cell.phase === 'copying');
-    running.run.cell.breaking = 0;
-    running.run.cell.time = VIRUSES.tess.eclipse;
-    expect(() => until(() => running.run.over)).not.toThrow();
-    expect(() => $('.mute').click()).not.toThrow();
+    key(' ');
+    expect($('.win-banner').hidden).toBe(true);
+    expect(running.dish.landed).toBe(false);
   });
 
   it('redraws at the new size when the window changes', () => {
@@ -257,6 +166,6 @@ describe('the page', () => {
     window.devicePixelRatio = 2;
     window.dispatchEvent(new Event('resize'));
     expect(canvas.width).toBe(600);
-    expect(canvas.height).toBe(500);
+    expect(canvas.height).toBe(600);
   });
 });

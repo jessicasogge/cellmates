@@ -62,16 +62,16 @@ The tagline: *"Viruses can't grow on their own. They need a cell."*
 
 The counter shows **virions made** (every burst adds its burst size). Reaching the level's target wins.
 
-#### Prototype: Burst or Wait
+#### Prototype: Plaque
 
-The first prototype (`cell.html`) zooms in on the most interesting part of this loop, the inside of one cell, and turns it into a push-your-luck game. (An earlier "flick it into the flask" version was dropped: it wasn't true to life, and you mostly watched.)
+The first prototype (`plaque.html`) is closest to the [Phage Lawn](#45-stretch-phage-lawn-crossover-with-petripals) idea: Tess on a petri dish covered in a lawn of *E. coli*. Two earlier tries were dropped: flicking a virus into a flask (not true to life, and mostly watching), and bursting one cell at a time (just luck, with nothing to juggle).
 
-- You play **Tess** inside an *E. coli*, since phages really do burst their cells open. (Flu buds out of a cell instead, so Flo would need a different game.)
-- Copies pile up at a steady rate after the eclipse, the way real T4's do. The cell's alarm rises unevenly toward a hidden breaking point; if it gets there first, the cell self-destructs (abortive infection) and the copies are lost.
-- Two moves: **Burst** now, or **Quiet the alarm** once per cell (Tess's Dmd protein really does switch off one of *E. coli*'s self-destruct systems).
-- Each cell after a burst is a little tougher, and three self-destructs end the run. After every cell, the meter shows where the breaking point was.
+- Each infected cell fills with copies at a steady rate after the eclipse, and is also getting ready to self-destruct (abortive infection), each at its own speed. You can see how close it is: it turns red and shakes.
+- **Tap to burst.** Its copies infect up to six neighbors, one per 25 copies, so waiting pays, but only until it's too late. A self-destructed cell is lost and blocks the spread.
+- The plaque grows from one cell to many at once, so the skill is choosing which to burst first.
+- Win by clearing 60% of the lawn. No sound, no saved scores: just play again.
 
-It could grow into the Hide & Burst mode below: the same "how long do I wait?" question, with lysogeny as a third choice.
+Later, picking a real phage gene between dishes (like T4's *lysis inhibition*, which lets a cell hold off bursting) could make each dish play differently.
 
 ### 4.3 Controls
 
@@ -203,7 +203,7 @@ The same approach and coverage gate as PetriPals:
 
 ## 10. Milestones
 
-1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Prototyped first as Burst or Wait: see [4.2](#42-the-core-loop).)*
+1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Prototyped first as Plaque: see [4.2](#42-the-core-loop).)*
 2. **Classic:** antibody clouds, interferon, seven levels, end-of-level facts.
 3. **Pals:** the first six, the picker, electron microscope mode.
 4. **Coinfection** and **Brownian Brunch.**

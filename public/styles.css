@@ -126,258 +126,98 @@ a {
 
 /* The game page. */
 body.play {
-  padding: 0.75rem 1rem 1.5rem;
+  padding: 1rem 1rem 2rem;
 }
 
-.hud {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 24rem;
-  margin: 0 auto 0.5rem;
+.dish-title .pal-name {
+  margin: 0;
   font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 600;
-}
-
-.hud .back {
-  color: #be185d;
-  text-decoration: none;
-}
-
-.hud .back::before {
-  content: '‹ ';
-}
-
-.mute {
-  border: 0;
-  background: none;
-  font-size: 1.3rem;
-  cursor: pointer;
-}
-
-.status {
-  margin: 0.4rem 0;
-  font-family: Nunito, system-ui, sans-serif;
   font-weight: 700;
-}
-
-.lives {
+  font-size: 2.2rem;
   color: #be185d;
-  letter-spacing: 0.15em;
 }
 
-/* The bacterium, as big as fits. */
+.dish-title .species {
+  margin: 0 0 0.75rem;
+  color: #6b2149;
+}
+
+/* The petri dish, as big as fits. */
 .stage {
   position: relative;
-  max-width: 28rem;
+  max-width: 30rem;
   margin: 0 auto;
 }
 
-#cell {
+#dish {
   display: block;
   width: 100%;
-  aspect-ratio: 360 / 300;
+  aspect-ratio: 1;
   touch-action: manipulation; /* quick taps, no double-tap zoom */
   cursor: pointer;
 }
 
-/* The copy counter, the number you're pushing your luck for. */
-.copies {
-  margin: 0.25rem 0 0;
-  font-family: Fredoka, system-ui, sans-serif;
+.cleared {
+  margin: 0.75rem 0 0;
+  font-family: Nunito, system-ui, sans-serif;
   font-weight: 700;
-  font-size: 1.3rem;
-  color: #6d28d9;
+  font-size: 1.1rem;
 }
 
-.copies-count {
-  font-size: 2.6rem;
-  font-variant-numeric: tabular-nums;
-}
-
-/* "Big burst! +120" and friends, popping up over the cell. */
-.call {
-  position: absolute;
-  top: 44%;
-  left: 0;
-  right: 0;
-  margin: 0;
-  pointer-events: none;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.8rem;
-  color: #be185d;
-  text-shadow: 0 2px 0 #fff, 0 0 12px #fff;
-  opacity: 0;
-}
-
-.call.show {
-  animation: call 1.1s ease-out;
-}
-
-@keyframes call {
-  0% {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-
-  15% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-
-  70% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(-14px);
-  }
-}
-
-.help {
-  max-width: 22rem;
-  margin: 0.75rem auto 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
+.how-to-play {
+  max-width: 26rem;
+  margin: 0.75rem auto;
+  line-height: 1.5;
   color: #6b2149;
 }
 
-/* The cell's alarm, with the zone where it might self-destruct getting
-   redder toward the end, since that's where it's likeliest. */
-.alarm {
-  position: relative;
-  max-width: 24rem;
-  height: 1.4rem;
-  margin: 0.5rem auto 0.25rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #f5f5f4;
-  box-shadow: inset 0 0 0 2px #e7e5e4;
-}
-
-.danger {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  background: linear-gradient(to right, #fee2e2, #f87171);
-}
-
-.alarm-fill {
-  position: absolute;
-  top: 0.35rem;
-  bottom: 0.35rem;
-  left: 0;
-  width: 0;
-  border-radius: 999px;
-  background: #7f1d1d;
-}
-
-/* Where the cell's breaking point really was, shown once it's over. */
-.breaking-mark {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  margin-left: -2px;
-  background: #4a044e;
-}
-
-.breaking-mark[hidden] {
-  display: none;
-}
-
-.alarm-label {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #6b2149;
-}
-
-/* The two moves. */
-.moves {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  margin: 1rem 0 0.5rem;
-}
-
-.burst-button,
-.block-button {
-  border: 0;
-  border-radius: 999px;
-  font-family: Fredoka, system-ui, sans-serif;
+.purple {
+  color: #7c3aed;
   font-weight: 700;
-  cursor: pointer;
 }
 
-.burst-button {
-  padding: 0.8rem 2.6rem;
-  background: #7c3aed;
-  color: #fff;
-  font-size: 1.6rem;
-  box-shadow: 0 4px 0 #4c1d95;
-}
-
-.burst-button:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #4c1d95;
-}
-
-.block-button {
-  padding: 0.6rem 1rem;
-  background: #ede9fe;
-  color: #5b21b6;
-  font-size: 1rem;
-}
-
-.burst-button:disabled,
-.block-button:disabled {
-  opacity: 0.4;
-  cursor: default;
+.red {
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .keys {
   display: block;
   margin-top: 0.25rem;
+  font-size: 0.9rem;
   opacity: 0.8;
 }
 
-/* The end-of-run pop-up, over the game. */
-.result {
-  position: fixed;
+.back-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+/* The end-of-dish pop-up, over the dish. */
+.win-banner {
+  position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(20rem, calc(100% - 2rem));
+  width: min(20rem, calc(100% - 1rem));
   padding: 1.25rem 1.25rem 1.5rem;
   border-radius: 1.25rem;
   background: #fff;
   box-shadow: 0 10px 40px rgb(131 24 67 / 0.3);
 }
 
-.result[hidden] {
+.win-banner[hidden] {
   display: none;
 }
 
-.result-title {
+.win-banner h2 {
   margin: 0;
   font-family: Fredoka, system-ui, sans-serif;
   font-size: 1.8rem;
   color: #be185d;
 }
 
-.result-score {
-  margin: 0.5rem 0;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: #6d28d9;
-}
-
-.result-detail,
+.win-message,
 .fun-fact {
   line-height: 1.45;
 }
@@ -390,29 +230,12 @@ body.play {
   text-align: left;
 }
 
-.result-buttons {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-}
-
-.result-buttons .again {
-  padding: 0.6rem 1.2rem;
+.play-again {
+  padding: 0.6rem 1.4rem;
   border: 0;
   border-radius: 999px;
-  font: 700 1.05rem Fredoka, system-ui, sans-serif;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.result-buttons .again {
   background: #be185d;
   color: #fff;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .call.show {
-    animation: none;
-    opacity: 1;
-  }
+  font: 700 1.05rem Fredoka, system-ui, sans-serif;
+  cursor: pointer;
 }

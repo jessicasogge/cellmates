@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plaque: CellMates</title>
+    <meta name="description" content="You're Tess, a phage on a lawn of bacteria. Burst each cell at the right moment to spread, and clear a plaque across the petri dish." />
+    <link rel="preload" href="./fonts/fredoka-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="play">
+    <header class="dish-title">
+      <h1 class="pal-name">Tess</h1>
+      <p class="species"><i>Enterobacteria phage T4</i></p>
+    </header>
+
+    <div class="stage">
+      <canvas id="dish" aria-label="A petri dish covered in a lawn of E. coli, with Tess the phage spreading through it"></canvas>
+      <div class="win-banner" role="status" hidden>
+        <h2 class="win-title"></h2>
+        <p class="win-message"></p>
+        <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+        <button class="play-again" type="button">Play again</button>
+      </div>
+    </div>
+
+    <p class="cleared" aria-live="polite">Cleared 0% of the lawn · goal 60%</p>
+
+    <p class="how-to-play">
+      Tess has landed on a lawn of <i>E. coli</i>. Every cell she infects fills up with
+      <span class="purple">purple</span> copies of her. <strong>Tap a cell to burst it</strong>, and its copies infect
+      the cells around it: the fuller it is, the more it infects. But every infected cell is getting ready to
+      self-destruct, and turns <span class="red">red</span> as it gets close. Burst it in time, or it takes its
+      copies with it, and nothing can get past it. Clear 60% of the lawn to win!
+      <span class="keys">Keyboard: space bursts the cell closest to self-destructing.</span>
+    </p>
+
+    <a class="back-link" href="./">Back to CellMates</a>
+
+    <script type="module" src="./game/play.js"></script>
+  </body>
+</html>
