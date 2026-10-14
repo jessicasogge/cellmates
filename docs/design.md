@@ -62,16 +62,16 @@ The tagline: *"Viruses can't grow on their own. They need a cell."*
 
 The counter shows **virions made** (every burst adds its burst size). Reaching the level's target wins.
 
-#### Prototype: the flick version
+#### Prototype: Burst or Wait
 
-The first prototype (`flask.html`) tries a different take on this loop, to test whether a hands-off chain reaction is the fun part:
+The first prototype (`cell.html`) zooms in on the most interesting part of this loop, the inside of one cell, and turns it into a push-your-luck game. (An earlier "flick it into the flask" version was dropped: it wasn't true to life, and you mostly watched.)
 
-- **No steering at all.** You flick your pal in from the neck of the flask like a slingshot (pull back, let go), and she drifts to a stop. Viruses really can't move on their own, so this is truer to life too.
-- **Free virions do all the spreading.** Every burst sends new virions to the cells nearby, so one good flick sets off a chain. Cells without your receptor break chains up, so aiming at a big patch of the right cells is the skill.
-- **Three flicks per level, and stars.** The meter shows the share of the flask's cells taken over, with one, two and three star marks. One star beats the level.
-- **Short, repeatable rounds.** Each level's cells are laid out the same way every time and your aim is kept, so "Try again" is a fair rematch. Chain call-outs ("Burst-tastic! ×10") and pops that climb a scale make long chains feel good.
+- You play **Tess** inside an *E. coli*, since phages really do burst their cells open. (Flu buds out of a cell instead, so Flo would need a different game.)
+- Copies pile up at a steady rate after the eclipse, the way real T4's do. The cell's alarm rises unevenly toward a hidden breaking point; if it gets there first, the cell self-destructs (abortive infection) and the copies are lost.
+- Two moves: **Burst** now, or **Quiet the alarm** once per cell (Tess's Dmd protein really does switch off one of *E. coli*'s self-destruct systems).
+- Each cell after a burst is a little tougher, and three self-destructs end the run. After every cell, the meter shows where the breaking point was.
 
-If playtesting likes it, steering could come back for Classic, with flicking as its own mode (or the other way around).
+It could grow into the Hide & Burst mode below: the same "how long do I wait?" question, with lysogeny as a third choice.
 
 ### 4.3 Controls
 
@@ -203,7 +203,7 @@ The same approach and coverage gate as PetriPals:
 
 ## 10. Milestones
 
-1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Built as the flick version: see [4.2](#42-the-core-loop).)*
+1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Prototyped first as Burst or Wait: see [4.2](#42-the-core-loop).)*
 2. **Classic:** antibody clouds, interferon, seven levels, end-of-level facts.
 3. **Pals:** the first six, the picker, electron microscope mode.
 4. **Coinfection** and **Brownian Brunch.**

@@ -1,190 +1,164 @@
-// Drawing the flask on a canvas: the culture flask, its sheet of cells, the
-// antibody clouds, the drifting virions, your pal, the aim, and the pops of
-// bursting cells. All in flask units; the page sets the canvas up so they
-// fill it (see play.js).
+// Drawing Burst or Wait on a canvas: the host bacterium (an E. coli rod, like
+// PetriPals' Colette), your pal landing on it, the copies filling it up, and
+// it bursting open or self-destructing. All in stage units: the stage is
+// STAGE.width x STAGE.height, and the page sets the canvas up to fit it.
 
-import { FLASK } from './config.js';
-import { hexCorners } from './hex.js';
-import { canFlick } from './infect.js';
-import { landingSpot } from './aim.js';
+export const STAGE = { width: 360, height: 300 };
+
+// The bacterium: a rounded rod across the middle of the stage.
+export const ROD = { x: 40, y: 95, width: 280, height: 140 };
+const MIDDLE = { x: ROD.x + ROD.width / 2, y: ROD.y + ROD.height / 2 };
 
 export const COLORS = {
-  medium: '#fecdd3', // culture medium: pink from its pH dye, phenol red
-  wall: '#fda4af',
-  cell: '#fff7ed', // a healthy cell with your receptor
-  nucleus: '#c4b5fd',
-  receptor: '#14b8a6', // the receptor bumps, teal like Flo's HA spikes
-  other: '#e7d3dc', // a cell without your receptor: it won't let you in
-  outline: '#f9a8d4',
-  antibody: '#60a5fa',
-  aim: '#9f1239',
+  wall: '#65a30d', // the cell wall, green-apple like Colette
+  inside: '#d9f99d',
+  alarmed: '#fca5a5', // the inside turns this color as the alarm rises
+  dna: '#4d7c0f',
+  dead: '#d6d3d1',
 };
 
-// The flask's outline: a wide body with a narrower neck at the bottom,
-// where your pal waits.
-function flaskPath(ctx) {
-  ctx.beginPath();
-  ctx.roundRect(4, 4, FLASK.width - 8, FLASK.cells.bottom + 10, 22);
-  ctx.roundRect(FLASK.launch.x - 46, FLASK.cells.bottom, 92, FLASK.height - FLASK.cells.bottom - 4, 14);
+// Mix two #rrggbb colors: `t` of the way from `a` to `b`.
+export function mix(a, b, t) {
+  const channel = (hex, i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  const parts = [0, 1, 2].map((i) => Math.round(channel(a, i) + (channel(b, i) - channel(a, i)) * t));
+  return `#${parts.map((n) => n.toString(16).padStart(2, '0')).join('')}`;
 }
 
-function hexPath(ctx, x, y, size) {
-  const corners = hexCorners(x, y, size);
-  ctx.beginPath();
-  ctx.moveTo(...corners[0]);
-  for (const [cx, cy] of corners.slice(1)) ctx.lineTo(cx, cy);
-  ctx.closePath();
-}
-
-function drawCell(ctx, cell, color) {
-  const size = FLASK.cellSize - 1.5; // a little gap between cells
-  if (cell.state === 'plaque') {
-    // A burst cell leaves a clear hole in the sheet: just the medium.
-    hexPath(ctx, cell.x, cell.y, size * 0.9);
-    ctx.setLineDash([3, 3]);
-    ctx.strokeStyle = COLORS.wall;
-    ctx.stroke();
-    ctx.setLineDash([]);
-    return;
-  }
-  hexPath(ctx, cell.x, cell.y, size);
-  ctx.fillStyle = cell.receptor ? COLORS.cell : COLORS.other;
-  ctx.fill();
-  ctx.strokeStyle = COLORS.outline;
-  ctx.stroke();
-  if (cell.state === 'infected') {
-    // Glowing in her color, more and more as the copies are made, with a
-    // ring that fills up until it bursts.
-    ctx.globalAlpha = 0.25 + 0.6 * cell.progress;
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.arc(cell.x, cell.y, size * 0.6, -Math.PI / 2, -Math.PI / 2 + cell.progress * Math.PI * 2);
-    ctx.strokeStyle = COLORS.aim;
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.lineWidth = 1;
-    return;
-  }
-  ctx.beginPath();
-  ctx.arc(cell.x, cell.y, size * 0.32, 0, Math.PI * 2);
-  ctx.fillStyle = COLORS.nucleus;
-  ctx.fill();
-  if (cell.receptor) {
-    // Three receptor bumps on alternate corners. Shape as well as color
-    // tells the two kinds of cell apart.
-    ctx.fillStyle = COLORS.receptor;
-    for (const [cx, cy] of hexCorners(cell.x, cell.y, size * 0.78).filter((_, i) => i % 2 === 0)) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
-      ctx.fill();
+// Where each new copy sits inside the rod, in rows, filling it up from the
+// middle outward. Past MAX_SHOWN, the counter says how many.
+export const SPOTS = (() => {
+  const spots = [];
+  for (let y = ROD.y + 16; y <= ROD.y + ROD.height - 16; y += 11) {
+    for (let x = ROD.x + 22; x <= ROD.x + ROD.width - 22; x += 11) {
+      // Inside the rod's rounded ends too.
+      const end = Math.min(x - ROD.x, ROD.x + ROD.width - x);
+      const dy = Math.abs(y - MIDDLE.y);
+      if (end < ROD.height / 2 && Math.hypot(ROD.height / 2 - end, dy) > ROD.height / 2 - 14) continue;
+      spots.push({ x, y });
     }
   }
+  return spots.sort((a, b) => Math.hypot(a.x - MIDDLE.x, a.y - MIDDLE.y) - Math.hypot(b.x - MIDDLE.x, b.y - MIDDLE.y));
+})();
+export const MAX_SHOWN = SPOTS.length;
+
+function rodPath(ctx, grow = 1) {
+  const width = ROD.width * grow;
+  const height = ROD.height * grow;
+  ctx.beginPath();
+  ctx.roundRect(MIDDLE.x - width / 2, MIDDLE.y - height / 2, width, height, height / 2);
 }
 
-function drawAntibody(ctx, cloud) {
+// A tiny new phage: a head with a tail, no face.
+function drawCopy(ctx, x, y, color) {
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(cloud.x, cloud.y, cloud.r, 0, Math.PI * 2);
-  ctx.globalAlpha = 0.28;
-  ctx.fillStyle = COLORS.antibody;
+  ctx.arc(x, y - 1.5, 3.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.setLineDash([5, 4]);
-  ctx.strokeStyle = COLORS.antibody;
-  ctx.stroke();
-  ctx.setLineDash([]);
-  // A few little Y-shaped antibodies inside.
-  ctx.strokeStyle = '#1d4ed8';
+  ctx.fillRect(x - 0.75, y, 1.5, 4);
+}
+
+// Her loop of DNA, loose inside the cell. Bacteria have no nucleus.
+function drawDna(ctx, wobble) {
+  ctx.strokeStyle = COLORS.dna;
+  ctx.globalAlpha = 0.35;
   ctx.lineWidth = 2;
-  for (let i = 0; i < 5; i++) {
-    const angle = (i / 5) * Math.PI * 2;
-    const x = cloud.x + Math.cos(angle) * cloud.r * 0.5;
-    const y = cloud.y + Math.sin(angle) * cloud.r * 0.5;
-    ctx.beginPath();
-    ctx.moveTo(x, y + 5);
-    ctx.lineTo(x, y);
-    ctx.lineTo(x - 4, y - 4);
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 4, y - 4);
-    ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i <= 40; i++) {
+    const a = (i / 40) * Math.PI * 2;
+    const r = 1 + 0.18 * Math.sin(a * 5 + wobble);
+    const x = MIDDLE.x + Math.cos(a) * 70 * r;
+    const y = MIDDLE.y + Math.sin(a) * 30 * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
   ctx.lineWidth = 1;
-}
-
-// A free virion: small, with spikes and no face, like PetriPals' offspring.
-function drawVirion(ctx, v, virus) {
-  ctx.beginPath();
-  ctx.arc(v.x, v.y, 5.5, 0, Math.PI * 2);
-  ctx.fillStyle = virus.spike;
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(v.x, v.y, 4, 0, Math.PI * 2);
-  ctx.fillStyle = virus.color;
-  ctx.fill();
 }
 
 // Your pal, with her face: her drawing from pals.js once it's loaded, and a
-// plain virion until then.
-function drawPal(ctx, x, y, image, virus) {
-  if (image?.complete && image.naturalWidth) ctx.drawImage(image, x - 16, y - 16, 32, 32);
-  else drawVirion(ctx, { x, y }, virus);
+// plain dot until then.
+function drawPal(ctx, image, x, y, size) {
+  if (image?.complete && image.naturalWidth) ctx.drawImage(image, x - size / 2, y - size / 2, size, size);
+  else {
+    ctx.fillStyle = COLORS.wall;
+    ctx.beginPath();
+    ctx.arc(x, y, size / 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
-// The aim: a dotted line to about where she'll land, and a ring there.
-function drawAim(ctx, aim) {
-  const spot = landingSpot(aim);
-  ctx.setLineDash([2, 7]);
-  ctx.lineCap = 'round';
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = COLORS.aim;
-  ctx.beginPath();
-  ctx.moveTo(FLASK.launch.x, FLASK.launch.y);
-  ctx.lineTo(spot.x, spot.y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(spot.x, spot.y, 9, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.lineWidth = 1;
-}
+// Draw the run's current cell. `view` has what's only for the screen:
+// { palImage, clock } (clock in s, for wobbling).
+export function drawCell(ctx, run, view) {
+  const { cell, virus } = run;
+  const shown = Math.min(cell.copies, MAX_SHOWN);
+  ctx.clearRect(0, 0, STAGE.width, STAGE.height);
 
-// Rings that spread out and fade where a cell burst: { x, y, age } in s.
-export const POP_TIME = 0.45;
-function drawPop(ctx, pop, color) {
-  const t = pop.age / POP_TIME;
-  ctx.globalAlpha = 1 - t;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(pop.x, pop.y, 8 + t * 26, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  ctx.lineWidth = 1;
-}
+  if (cell.phase === 'burst') {
+    // Burst open: the empty wall fades, and the copies fly out every way.
+    const t = Math.min(1, cell.phaseTime / run.host.afterTime);
+    ctx.globalAlpha = 1 - t;
+    rodPath(ctx, 1 + t * 0.15);
+    ctx.setLineDash([10, 8]);
+    ctx.strokeStyle = COLORS.wall;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 1;
+    const spread = 1 + t * 3;
+    for (const spot of SPOTS.slice(0, shown)) {
+      drawCopy(ctx, MIDDLE.x + (spot.x - MIDDLE.x) * spread, MIDDLE.y + (spot.y - MIDDLE.y) * spread, virus.color);
+    }
+    return;
+  }
 
-// Draw the whole flask for `game`. `view` has what's only for the screen:
-// { aim, palImage, pops }.
-export function drawFlask(ctx, game, view) {
-  ctx.clearRect(0, 0, FLASK.width, FLASK.height);
-  flaskPath(ctx);
-  ctx.fillStyle = COLORS.medium;
+  if (cell.phase === 'died') {
+    // Self-destructed: it shrinks, goes grey and breaks into little
+    // bubbles, taking the copies with it.
+    const t = Math.min(1, cell.phaseTime / run.host.afterTime);
+    rodPath(ctx, 1 - t * 0.25);
+    ctx.fillStyle = COLORS.dead;
+    ctx.fill();
+    ctx.fillStyle = '#e7e5e4';
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(MIDDLE.x + Math.cos(a) * (120 + t * 30), MIDDLE.y + Math.sin(a) * (55 + t * 25), 6 + t * 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const shrink = 1 - t * 0.25;
+    for (const spot of SPOTS.slice(0, shown)) {
+      drawCopy(ctx, MIDDLE.x + (spot.x - MIDDLE.x) * shrink, MIDDLE.y + (spot.y - MIDDLE.y) * shrink, '#a8a29e');
+    }
+    return;
+  }
+
+  // Alive: the more alarmed it gets, the redder and more jittery it is.
+  const shake = cell.alarm * 2.5 * Math.sin(view.clock * 40);
+  ctx.save();
+  ctx.translate(shake, 0);
+  rodPath(ctx);
+  ctx.fillStyle = mix(COLORS.inside, COLORS.alarmed, Math.min(1, cell.alarm));
   ctx.fill();
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 6;
   ctx.strokeStyle = COLORS.wall;
   ctx.stroke();
   ctx.lineWidth = 1;
+  drawDna(ctx, view.clock * 2);
+  for (const spot of SPOTS.slice(0, shown)) drawCopy(ctx, spot.x, spot.y, virus.color);
+  ctx.restore();
 
-  for (const cell of game.cells) drawCell(ctx, cell, game.virus.color);
-  for (const cloud of game.antibodies) drawAntibody(ctx, cloud);
-  for (const pop of view.pops) drawPop(ctx, pop, game.virus.color);
-  for (const v of game.virions) {
-    if (v.lead) drawPal(ctx, v.x, v.y, view.palImage, game.virus);
-    else drawVirion(ctx, v, game.virus);
-  }
-  if (canFlick(game)) {
-    drawAim(ctx, view.aim);
-    drawPal(ctx, FLASK.launch.x, FLASK.launch.y, view.palImage, game.virus);
+  if (cell.phase === 'entering') {
+    // She drifts down and lands on the cell's wall.
+    const t = Math.min(1, cell.phaseTime / run.host.enterTime);
+    drawPal(ctx, view.palImage, MIDDLE.x, 10 + (ROD.y - 30) * t, 70);
+  } else {
+    // A phage like Tess never goes inside: she injects her DNA and her
+    // empty shell stays stuck to the outside.
+    ctx.globalAlpha = 0.6;
+    drawPal(ctx, view.palImage, MIDDLE.x + shake, ROD.y - 20, 70);
+    ctx.globalAlpha = 1;
   }
 }

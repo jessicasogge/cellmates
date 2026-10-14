@@ -1,61 +1,39 @@
-// The flask page (flask.html): runs a level, draws it, and handles your
-// flicks, the score, and the end-of-level pop-up.
-//
-// The level comes from the address: flask.html?level=2. Every round of a
-// level lays its cells out the same way, so "Try again" is a fair rematch,
-// and your aim stays where it was, so you can tweak your last flick.
+// The Burst or Wait page (cell.html): runs the game, draws it, and handles
+// your two moves, the score, and the end-of-run pop-up.
 
-import { FLASK, LEVELS, VIRUSES } from './config.js';
-import { createGame, flick, isOver, share, stars, step } from './infect.js';
-import { aimFromPull, flickVelocity, nudgeAim, START_AIM } from './aim.js';
-import { drawFlask, POP_TIME } from './draw.js';
+import { HOST, VIRUSES } from './config.js';
+import { block, burst, canBlock, canBurst, createRun, step } from './cell.js';
+import { drawCell, STAGE } from './draw.js';
 import { pop } from './sound.js';
 import { palById } from './pals.js';
 import { hideFact, showFact } from './facts.js';
 import { sporeBurst } from './spores.js';
 
-const PAL = 'flo';
+const PAL = 'tess';
 
-// What to call out at points in a chain of bursts.
-export const CHAIN_CALLS = new Map([
-  [5, 'Nice! ×5'],
-  [10, 'Burst-tastic! ×10'],
-  [20, 'Plaque attack! ×20'],
-  [30, 'Flask takeover! ×30'],
-  [45, 'Unstoppable! ×45'],
-]);
-
-// Which level (0-based) the address asks for, from its ?level=, 1-based.
-// The first level for anything missing or out of range.
-export function levelFromSearch(search) {
-  const n = Number(new URLSearchParams(search).get('level'));
-  return Number.isInteger(n) && n >= 1 && n <= LEVELS.length ? n - 1 : 0;
+// What to call out for a burst of `copies`.
+export function burstCall(copies) {
+  if (copies >= 150) return `Huge burst! +${copies}`;
+  if (copies >= 90) return `Big burst! +${copies}`;
+  return `+${copies}`;
 }
 
-// How many cells you need for each star, for `game`.
-export function cellsForStars(game) {
-  return game.level.stars.map((needed) => Math.ceil(needed * game.cells.length));
+// The pitch step for the pop of the `copies`th copy: a note higher about
+// every dozen copies, so waiting sounds like it's building up.
+export function copyNote(copies) {
+  return 1 + Math.floor(copies / 12);
 }
 
-// The end-of-level pop-up's words for `game`: { title, detail }.
-export function resultText(game, isLast) {
-  const got = stars(game);
-  const [one, , three] = cellsForStars(game);
-  const taken = `You took over ${game.taken} of ${game.cells.length} cells`;
-  const chain = game.bestChain > 1 ? `, with a chain of ${game.bestChain}` : '';
-  if (got === 0) {
-    const close = game.taken >= one * 0.75;
-    return {
-      title: close ? 'So close!' : 'Not quite!',
-      detail: `${taken}${chain}. One star needs ${one}.`,
-    };
-  }
-  const title = got === 3 && isLast ? 'You beat every flask!' : got === 3 ? 'Perfect flask!' : 'Level beaten!';
-  const more = got < 3 ? ` Three stars needs ${three}.` : '';
-  return { title, detail: `${taken}${chain}.${more}` };
+// The end-of-run pop-up's words.
+export function resultText(run, best, isNewBest) {
+  const score = isNewBest ? `${run.score} copies: a new best!` : `${run.score} copies`;
+  const bursts = run.bursts === 1 ? '1 cell' : `${run.bursts} cells`;
+  const detail = run.bursts > 0
+    ? `You burst ${bursts}, the biggest with ${run.bestBurst} copies. Best run: ${best}.`
+    : `Every cell self-destructed before you burst. Try bursting a little sooner! Best run: ${best}.`;
+  return { score, detail };
 }
 
-// Read and write little saved settings, where the browser allows it.
 function load(key) {
   try {
     return localStorage.getItem(key);
@@ -71,7 +49,7 @@ function save(key, value) {
   }
 }
 
-// Flo's drawing from pals.js, as an image the canvas can draw.
+// A pal's drawing from pals.js, as an image the canvas can draw.
 export function palImage(pal) {
   const image = new Image();
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">${pal.art}</svg>`;
@@ -81,36 +59,24 @@ export function palImage(pal) {
 
 // Start the page. Returns a few handles for tests.
 export function start() {
-  const index = levelFromSearch(location.search);
-  const level = LEVELS[index];
-  const isLast = index === LEVELS.length - 1;
   const virus = VIRUSES[PAL];
-  const canvas = document.querySelector('#flask');
-  const ctx = canvas.getContext('2d');
   const $ = (selector) => document.querySelector(selector);
+  const canvas = $('#cell');
+  const ctx = canvas.getContext('2d');
   const result = $('.result');
-  const chainCall = $('.chain-call');
-  const meter = $('.meter');
+  const callLine = $('.call');
+  const burstButton = $('.burst-button');
+  const blockButton = $('.block-button');
+  const mark = $('.breaking-mark');
   const muteButton = $('.mute');
 
-  const view = { aim: START_AIM, palImage: palImage(palById(PAL)), pops: [] };
-  let game;
-  let shown; // whether the end-of-level pop-up is up
+  const view = { palImage: palImage(palById(PAL)), clock: 0 };
+  let run;
   let muted = load('cellmates-muted') === '1';
+  let lastPop = -1; // view.clock of the last copy pop, so they don't pile up
 
-  $('.level-name').textContent = `Level ${index + 1} of ${LEVELS.length}`;
-
-  // The star marks along the meter. The meter is full at three stars.
-  const top = level.stars[2];
-  for (const needed of level.stars) {
-    const mark = document.createElement('span');
-    mark.className = 'star-mark';
-    mark.textContent = '★';
-    // Kept a little in from the end so the last star stays on screen.
-    mark.style.left = `${(needed / top) * 94}%`;
-    meter.append(mark);
-  }
-  const marks = [...meter.querySelectorAll('.star-mark')];
+  // Where the danger zone starts on the alarm meter.
+  $('.danger').style.left = `${HOST.breaking[0] * 100}%`;
 
   function showMute() {
     muteButton.textContent = muted ? '🔇' : '🔊';
@@ -123,119 +89,134 @@ export function start() {
   });
   showMute();
 
-  function call(words) {
-    chainCall.textContent = words;
-    // Restart the pop-in animation, even if the words are the same.
-    chainCall.classList.remove('show');
-    void chainCall.offsetWidth;
-    chainCall.classList.add('show');
+  function sound(note) {
+    if (!muted) pop(note);
   }
 
-  function showScore() {
-    $('.taken').textContent = game.taken === 1 ? '1 cell' : `${game.taken} cells`;
-    $('.flicks').textContent = '●'.repeat(game.flicksLeft) + '○'.repeat(level.flicks - game.flicksLeft);
-    const filled = Math.min(1, share(game) / top);
-    $('.meter-fill').style.width = `${filled * 94}%`;
-    meter.setAttribute('aria-valuenow', String(Math.round(filled * 100)));
-    const got = stars(game);
-    marks.forEach((mark, i) => mark.classList.toggle('earned', i < got));
+  function call(words) {
+    callLine.textContent = words;
+    // Restart the pop-in animation, even if the words are the same.
+    callLine.classList.remove('show');
+    void callLine.offsetWidth;
+    callLine.classList.add('show');
+  }
+
+  // Everything on the page that changes as you play.
+  function show() {
+    const { cell } = run;
+    $('.cell-number').textContent = `Cell ${run.number}`;
+    $('.score').textContent = String(run.score);
+    $('.lives').textContent = '●'.repeat(run.lives) + '○'.repeat(HOST.lives - run.lives);
+    $('.copies-count').textContent = String(cell.copies);
+    $('.copies-word').textContent = cell.copies === 1 ? 'copy' : 'copies';
+    const alarm = Math.round(Math.min(1, cell.alarm) * 100);
+    $('.alarm-fill').style.width = `${alarm}%`;
+    $('.alarm').setAttribute('aria-valuenow', String(alarm));
+    burstButton.disabled = !canBurst(run);
+    blockButton.disabled = !canBlock(run);
+  }
+
+  // Once a cell is over, show where its breaking point was, so you can see
+  // how close you came (or how much longer you could have waited).
+  const label = $('.alarm-label');
+  const usualLabel = label.textContent;
+  function reveal(breaking, burstOut) {
+    const percent = Math.round(breaking * 100);
+    mark.style.left = `${percent}%`;
+    mark.hidden = false;
+    label.textContent = burstOut ? `It would have held out to ${percent}%.` : `It broke at ${percent}%.`;
+  }
+  function unreveal() {
+    mark.hidden = true;
+    label.textContent = usualLabel;
   }
 
   function restart() {
-    game = createGame(level, virus);
-    shown = false;
-    view.pops = [];
+    run = createRun(virus, HOST);
     result.hidden = true;
-    chainCall.textContent = '';
+    unreveal();
+    callLine.textContent = '';
     hideFact();
-    showScore();
+    show();
   }
 
   function finish() {
-    shown = true;
-    showScore();
-    const got = stars(game);
-    const best = Math.max(got, Number(load(`cellmates-best-${index + 1}`)) || 0);
-    save(`cellmates-best-${index + 1}`, String(best));
-    const { title, detail } = resultText(game, isLast);
-    $('.result-title').textContent = title;
-    $('.result-stars').replaceChildren(...[0, 1, 2].map((i) => {
-      const star = document.createElement('span');
-      star.textContent = '★';
-      star.classList.toggle('earned', i < got);
-      return star;
-    }));
-    $('.result-detail').textContent = `${detail} Best: ${best} ★`;
-    const next = $('.next');
-    next.hidden = got === 0 || isLast;
-    next.href = `./flask.html?level=${index + 2}`;
+    const before = Number(load('cellmates-best')) || 0;
+    const best = Math.max(before, run.score);
+    save('cellmates-best', String(best));
+    const isNewBest = run.score > before && run.score > 0;
+    const { score, detail } = resultText(run, best, isNewBest);
+    $('.result-score').textContent = score;
+    $('.result-detail').textContent = detail;
     showFact(PAL, virus);
     result.hidden = false;
-    if (got > 0) sporeBurst(canvas, { big: isLast && got === 3 });
+    if (isNewBest) sporeBurst(canvas, { big: true });
   }
 
   function handle(event) {
-    if (event.type === 'burst') {
-      view.pops.push({ x: event.x, y: event.y, age: 0 });
-      if (!muted) pop(event.chain);
-      if (CHAIN_CALLS.has(event.chain)) call(CHAIN_CALLS.get(event.chain));
-    } else if (event.lead && event.type === 'neutralized') {
-      call('Stopped by antibodies!');
-    } else if (event.lead && event.type === 'fizzle') {
-      call('No receptor there!');
+    switch (event.type) {
+      case 'entered':
+        call('Copying her DNA…');
+        break;
+      case 'copy':
+        if (view.clock - lastPop > 0.07) {
+          sound(copyNote(event.copies));
+          lastPop = view.clock;
+        }
+        break;
+      case 'died':
+        sound(1);
+        call(event.lost ? `Self-destruct! Lost ${event.lost}` : 'Self-destruct!');
+        reveal(event.breaking, false);
+        break;
+      case 'next':
+        unreveal();
+        callLine.textContent = '';
+        break;
+      case 'over':
+        finish();
+        break;
+      default: // 'jolt': the cell's shake shows it
     }
   }
 
-  function tryFlick() {
-    if (shown || !flick(game, ...flickVelocity(view.aim))) return;
-    showScore();
+  function tryBurst() {
+    const event = burst(run);
+    if (!event) return;
+    sound(15);
+    call(burstCall(event.copies));
+    reveal(run.cell.breaking, true);
+    sporeBurst(canvas);
+    show();
   }
 
-  // Aiming with a finger or mouse: press, pull back, let go.
-  let pull = null;
-  canvas.addEventListener('pointerdown', (e) => {
-    pull = { x: e.clientX, y: e.clientY, aimed: false };
-    canvas.setPointerCapture?.(e.pointerId);
-  });
-  canvas.addEventListener('pointermove', (e) => {
-    if (!pull) return;
-    const aim = aimFromPull(e.clientX - pull.x, e.clientY - pull.y, canvas.clientWidth * 0.45);
-    if (aim) {
-      view.aim = aim;
-      pull.aimed = true;
-    }
-  });
-  canvas.addEventListener('pointerup', () => {
-    if (pull?.aimed) tryFlick();
-    pull = null;
-  });
-  canvas.addEventListener('pointercancel', () => {
-    pull = null;
-  });
+  function tryBlock() {
+    if (block(run)) show();
+  }
+
+  burstButton.addEventListener('click', tryBurst);
+  blockButton.addEventListener('click', tryBlock);
+  $('.again').addEventListener('click', restart);
+  // Tapping the cell itself bursts it too: it's the biggest thing to hit.
+  canvas.addEventListener('pointerdown', tryBurst);
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'r' || e.key === 'R') {
-      restart();
-      return;
-    }
     if (e.target.closest?.('button, a')) return; // let buttons and links work
-    if (e.key === ' ' || e.key === 'Enter') {
+    if (e.key === ' ') {
       e.preventDefault();
-      tryFlick();
-    } else if (e.key.startsWith('Arrow')) {
-      e.preventDefault();
-      view.aim = nudgeAim(view.aim, e.key);
+      if (run.over) restart();
+      else tryBurst();
+    } else if (e.key === 'q' || e.key === 'Q') {
+      tryBlock();
     }
   });
-
-  $('.again').addEventListener('click', restart);
 
   // Keep the canvas sharp at any size: draw at the screen's real pixels.
   function fit() {
     const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.round(canvas.clientWidth * ratio) || FLASK.width;
-    canvas.height = Math.round((canvas.width * FLASK.height) / FLASK.width);
-    const scale = canvas.width / FLASK.width;
+    canvas.width = Math.round(canvas.clientWidth * ratio) || STAGE.width;
+    canvas.height = Math.round((canvas.width * STAGE.height) / STAGE.width);
+    const scale = canvas.width / STAGE.width;
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
   }
   window.addEventListener('resize', fit);
@@ -246,23 +227,17 @@ export function start() {
     // At most 1/20 s at a time, so coming back to a hidden tab doesn't jump.
     const dt = last === null ? 0 : Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (!shown) {
-      const before = game.taken;
-      const flicksBefore = game.flicksLeft;
-      step(game, dt).forEach(handle);
-      if (game.taken !== before || game.flicksLeft !== flicksBefore) showScore();
-      if (isOver(game)) finish();
-    }
-    for (const p of view.pops) p.age += dt;
-    view.pops = view.pops.filter((p) => p.age < POP_TIME);
-    drawFlask(ctx, game, view);
+    view.clock += dt;
+    step(run, dt).forEach(handle);
+    show();
+    drawCell(ctx, run, view);
     requestAnimationFrame(frame);
   }
 
   restart();
   requestAnimationFrame(frame);
-  return { get game() { return game; }, view, restart };
+  return { get run() { return run; }, view, restart };
 }
 
-// Start right away on the flask page. Exported so tests can reach the game.
-export const running = document.querySelector('#flask') ? start() : null;
+// Start right away on the game page. Exported so tests can reach the game.
+export const running = document.querySelector('#cell') ? start() : null;

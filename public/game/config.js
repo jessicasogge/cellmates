@@ -1,79 +1,65 @@
-// The numbers the game is built on: the flask, how virions drift, each
-// virus's life cycle, and the levels. Most of these are tuning knobs for
+// The numbers Burst or Wait is built on. Most of these are tuning knobs for
 // playtesting, so they're all in one place.
 //
-// Distances are in flask units: the flask is FLASK.width wide and
-// FLASK.height tall, and the page scales it to fit the screen. Times are in
-// seconds and speeds in flask units per second.
+// The real science, sped up: a T4 phage's whole life cycle inside E. coli
+// takes about 25 minutes at body temperature. In the game, one second is
+// about ten real minutes, so it takes a few seconds.
 
-export const FLASK = {
-  width: 360,
-  height: 600,
-  // The sheet of cells, inside the flask's walls, leaving room at the bottom
-  // for the neck, where your pal waits to be flicked.
-  cells: { left: 14, top: 14, right: 346, bottom: 500 },
-  cellSize: 20, // middle to corner: about 9 cells across
-  // Where your pal waits before each flick, in the neck of the flask.
-  launch: { x: 180, y: 552 },
-};
-
-// How virions move. Viruses can't swim: no flagella, no legs. Once
-// something (your flick, or a bursting cell) sends them off, they slow down
-// in the thick liquid and then just jiggle about (Brownian motion).
-export const DRIFT = {
-  drag: 2.4, // how fast they slow down: speed shrinks by e every 1/drag s
-  jiggle: 200, // strength of the random jiggling
-  settle: 30, // below this speed, a virion can land on a cell
-  maxFlick: 1300, // the fastest flick, enough to reach the top of the flask
-};
-
-// Each virus's life cycle, keyed by pal id. Only Flo for the prototype.
+// Each virus's life cycle inside one host cell, keyed by pal id. Only Tess
+// for the prototype.
 //
-//   receptor   what she grabs onto on a cell (shown in the help text)
-//   burst      new virions out of each cell. Scaled way down: a real cell
-//              releases hundreds or more.
-//   copyTime   s from getting in to bursting out. Sped way up: really it's
-//              about 6 to 8 hours for flu.
-//   lifetime   s a virion lasts once it's drifting slowly, before it stops
-//              being able to infect anything. Real flu lasts hours in a
-//              flask, but a short life is what makes chains end.
-//   color      her color, for infected cells and her virions
-//   facts      "Did you know?" facts for the end-of-level pop-up
+//   host      the cell she infects, drawn as a cartoon
+//   eclipse   s after getting in before the first whole copy exists. Until
+//             then the cell is only copying her DNA and making parts (the
+//             "eclipse"). Real T4: about 12 minutes.
+//   perSecond whole copies assembled each second after that. Real T4 makes
+//             them at a roughly steady rate, about 100 to 200 by the time
+//             the cell bursts, so these are real-sized numbers.
+//   block     how far her anti-defense protein knocks the alarm back, once
+//             per cell
+//   facts     "Did you know?" facts for the end-of-run pop-up
 export const VIRUSES = {
-  flo: {
-    receptor: 'sialic acid',
-    burst: 6,
-    copyTime: 0.9,
-    lifetime: 0.6,
-    color: '#fb7185',
-    spike: '#14b8a6',
+  tess: {
+    host: 'E. coli',
+    eclipse: 1.2,
+    perSecond: 40,
+    block: 0.3,
+    color: '#a78bfa',
     facts: [
-      'Flo has two kinds of spikes. Her HA spikes grab sialic acid on a cell to get in, and her NA spikes snip it away so new copies can get out.',
-      'Flo keeps her genes in eight separate pieces. When two flu viruses get into the same cell, they can swap pieces.',
-      'Flo’s spikes change a little every year. That’s why there’s a new flu vaccine every year too.',
-      'In the game, a cell releases 6 copies of Flo. A real cell infected with flu releases hundreds of them, or more.',
-      'Flo is only about 100 nanometers across. You could line up hundreds of her across the width of a hair.',
+      'Tess can’t burst out whenever she likes. Waiting longer means more copies, but slower spreading, so every kind of phage has its own best time to burst.',
+      'A T4 phage like Tess makes 100 to 200 copies of herself inside one *E. coli*, in under half an hour.',
+      'Some bacteria self-destruct on purpose when a phage gets in. They die, but the phage dies with them, so it can’t spread to their neighbors.',
+      'Tess makes a protein called Dmd that switches off one of *E. coli*’s self-destruct systems.',
+      'For the first part of an infection, there are no whole copies of Tess in the cell at all, only her DNA and loose parts. Scientists call it the eclipse.',
+      'To burst out, Tess makes one protein that punches holes in the cell’s inner skin, and another that chews through its tough wall.',
     ],
   },
 };
 
-// The levels. Every level's cells are laid out the same way each time (from
-// `seed`), so you can learn a flask and try a better flick.
+// How the host cell fights back. It's always noticing the virus, and at some
+// point it self-destructs (bacteria call it abortive infection; our own cells
+// call it apoptosis). You can see how alarmed it is, but not exactly where
+// its breaking point is.
 //
-//   receptors  share of cells that have your receptor and let you in
-//   flicks     how many times you can flick your pal in
-//   stars      share of the flask's cells you need to take over for one,
-//              two and three stars. One star beats the level.
-//   antibodies clouds of neutralizing antibody: any virion that drifts into
-//              one is stopped. { x, y, r } in flask units.
-export const LEVELS = [
-  { seed: 12, receptors: 0.5, flicks: 3, stars: [0.3, 0.45, 0.54], antibodies: [] },
-  { seed: 8, receptors: 0.5, flicks: 3, stars: [0.2, 0.35, 0.45],
-    antibodies: [{ x: 180, y: 330, r: 46 }] },
-  { seed: 4, receptors: 0.5, flicks: 3, stars: [0.12, 0.2, 0.28],
-    antibodies: [{ x: 110, y: 380, r: 40 }, { x: 250, y: 220, r: 40 }] },
-];
-
-// At most this many drifting virions at once, so phones keep up. Any
-// more from a burst are left out.
-export const MAX_VIRIONS = 90;
+//   enterTime   s for her to land and get in at the start of each cell
+//   alarmRate   how fast the alarm rises, per s, on average
+//   jumpRate    how often (per s, on average) it jumps up suddenly
+//   jumpSize    how big a sudden jump is, on average
+//   breaking    the range the hidden breaking point is picked from, as a
+//               share of the alarm meter, with high points likelier than
+//               low ones. The meter shows this range as its danger zone.
+//   tougher     each cell after one you burst has an alarm this many times
+//               faster than the last, since the next bacterium might carry
+//               more defense systems. This is what ends a run sooner or later.
+//   lives       how many cells can self-destruct on you before the run ends
+//   afterTime   s to show a burst or a self-destruct before the next cell
+export const HOST = {
+  enterTime: 0.7,
+  alarmRate: 0.16,
+  jumpRate: 0.7,
+  jumpSize: 0.08,
+  breaking: [0.2, 1],
+  tougher: 1.2,
+  lives: 3,
+  afterTime: 1.1,
+};

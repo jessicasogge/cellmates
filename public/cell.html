@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Burst or Wait: CellMates</title>
+    <meta name="description" content="You're Tess, a phage inside a bacterium. Wait to make more copies, but burst out before the cell self-destructs." />
+    <link rel="preload" href="./fonts/fredoka-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="play">
+    <header class="hud">
+      <a class="back" href="./">CellMates</a>
+      <span class="cell-number">Cell 1</span>
+      <button class="mute" type="button" aria-pressed="false" aria-label="Sound">🔊</button>
+    </header>
+
+    <p class="status">
+      Score <span class="score">0</span> ·
+      <span class="lives" aria-label="Lives"></span>
+    </p>
+
+    <div class="stage">
+      <p class="copies" aria-live="off"><span class="copies-count">0</span> <span class="copies-word">copies</span></p>
+      <canvas id="cell" aria-label="Tess the phage on an E. coli bacterium, making copies of herself inside it"></canvas>
+      <p class="call" aria-live="polite"></p>
+    </div>
+
+    <!-- The cell's alarm. The red zone is where it might self-destruct. -->
+    <div class="alarm" role="meter" aria-label="The cell's alarm" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="danger"></div>
+      <div class="alarm-fill"></div>
+      <div class="breaking-mark" hidden></div>
+    </div>
+    <p class="alarm-label">The cell’s alarm. Somewhere in the red, it self-destructs.</p>
+
+    <div class="moves">
+      <button class="burst-button" type="button" disabled>Burst!</button>
+      <button class="block-button" type="button" disabled>Quiet the alarm</button>
+    </div>
+
+    <p class="help">
+      Tess has landed on an <i>E. coli</i> and is making copies of herself inside it.
+      The longer you wait, the more copies, but the cell is fighting back.
+      <strong>Burst</strong> before it self-destructs, or you lose every copy in it.
+      Once per cell, Tess can quiet its alarm a little.
+      <span class="keys">Keyboard: space to burst, Q to quiet the alarm.</span>
+    </p>
+
+    <div class="result" hidden>
+      <h2 class="result-title">Run over</h2>
+      <p class="result-score"></p>
+      <p class="result-detail"></p>
+      <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+      <div class="result-buttons">
+        <button class="again" type="button">Play again</button>
+      </div>
+    </div>
+
+    <script type="module" src="./game/play.js"></script>
+  </body>
+</html>

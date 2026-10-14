@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// play.js: the flask page. Loads the real flask.html into jsdom, with a
-// stand-in canvas, and runs the game frame by frame by hand.
+// play.js: the Burst or Wait page. Loads the real cell.html into jsdom, with
+// a stand-in canvas, and runs the game frame by frame by hand.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -9,9 +9,8 @@ import { fakeContext } from './fake-canvas.js';
 vi.mock('../public/game/spores.js', () => ({ sporeBurst: vi.fn() }));
 vi.mock('../public/game/sound.js', () => ({ pop: vi.fn() }));
 
-const html = readFileSync(resolve(import.meta.dirname, '../public/flask.html'), 'utf8');
+const html = readFileSync(resolve(import.meta.dirname, '../public/cell.html'), 'utf8');
 document.body.innerHTML = html.match(/<body[^>]*>([\s\S]*)<\/body>/)[1];
-history.replaceState(null, '', '/flask.html?level=3');
 
 const ctx = fakeContext();
 HTMLCanvasElement.prototype.getContext = () => ctx;
@@ -20,12 +19,11 @@ vi.stubGlobal('requestAnimationFrame', (callback) => frames.push(callback));
 
 const { sporeBurst } = await import('../public/game/spores.js');
 const { pop } = await import('../public/game/sound.js');
-const { LEVELS } = await import('../public/game/config.js');
-const play = await import('../public/game/play.js');
-const { running, levelFromSearch, cellsForStars, resultText, CHAIN_CALLS } = play;
+const { HOST, VIRUSES } = await import('../public/game/config.js');
+const { running, burstCall, copyNote, resultText } = await import('../public/game/play.js');
 
 const $ = (selector) => document.querySelector(selector);
-const canvas = $('#flask');
+const canvas = $('#cell');
 let clock = 0;
 
 // Run `n` frames of `ms` each.
@@ -36,54 +34,58 @@ function frame(n = 1, ms = 16) {
   }
 }
 
+// Run until something about the run is true, or give up after a while.
+function until(check, limit = 2000) {
+  for (let i = 0; i < limit && !check(); i++) frame();
+}
+
 function key(name, target = document.body) {
   const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
   target.dispatchEvent(event);
   return event;
 }
 
-function pointer(type, x, y) {
-  canvas.dispatchEvent(new MouseEvent(type, { clientX: x, clientY: y, bubbles: true }));
+// Restart and run on until there are copies to burst.
+function readyToBurst() {
+  running.restart();
+  running.run.cell.breaking = 99; // so it can't self-destruct on its own
+  until(() => running.run.cell.copies >= 20);
 }
 
-describe('levelFromSearch', () => {
-  it('reads a 1-based level from the address', () => {
-    expect(levelFromSearch('?level=2')).toBe(1);
+describe('burstCall', () => {
+  it('cheers louder for bigger bursts', () => {
+    expect(burstCall(12)).toBe('+12');
+    expect(burstCall(90)).toBe('Big burst! +90');
+    expect(burstCall(150)).toBe('Huge burst! +150');
   });
+});
 
-  it('starts at the first level for anything else', () => {
-    for (const search of ['', '?level=0', '?level=99', '?level=two', '?level=1.5']) {
-      expect(levelFromSearch(search)).toBe(0);
-    }
+describe('copyNote', () => {
+  it('goes up a note about every dozen copies', () => {
+    expect(copyNote(0)).toBe(1);
+    expect(copyNote(12)).toBe(2);
+    expect(copyNote(60)).toBe(6);
   });
 });
 
 describe('resultText', () => {
-  const game = (taken, bestChain = 0) => ({ level: LEVELS[0], cells: { length: 100 }, taken, bestChain });
+  const run = (score, bursts, bestBurst) => ({ score, bursts, bestBurst });
 
-  it('says how many cells each star needs', () => {
-    expect(cellsForStars(game(0))).toEqual([30, 45, 54]);
+  it('sums up the run', () => {
+    expect(resultText(run(300, 3, 140), 500, false)).toEqual({
+      score: '300 copies',
+      detail: 'You burst 3 cells, the biggest with 140 copies. Best run: 500.',
+    });
+    expect(resultText(run(90, 1, 90), 90, true).score).toBe('90 copies: a new best!');
+    expect(resultText(run(90, 1, 90), 90, true).detail).toContain('You burst 1 cell,');
   });
 
-  it('cheers on a near miss more than a far one', () => {
-    expect(resultText(game(25, 9), false)).toEqual({
-      title: 'So close!',
-      detail: 'You took over 25 of 100 cells, with a chain of 9. One star needs 30.',
-    });
-    expect(resultText(game(2), false).title).toBe('Not quite!');
-  });
-
-  it('beats the level with one star or more, and says what three needs', () => {
-    expect(resultText(game(31, 20), false)).toEqual({
-      title: 'Level beaten!',
-      detail: 'You took over 31 of 100 cells, with a chain of 20. Three stars needs 54.',
-    });
-    expect(resultText(game(60), false).title).toBe('Perfect flask!');
-    expect(resultText(game(60), true).title).toBe('You beat every flask!');
+  it('suggests bursting sooner if nothing got out', () => {
+    expect(resultText(run(0, 0, 0), 0, false).detail).toContain('Try bursting a little sooner!');
   });
 });
 
-describe('the flask page', () => {
+describe('the page', () => {
   beforeAll(() => frame()); // the first frame
 
   afterEach(() => {
@@ -92,134 +94,148 @@ describe('the flask page', () => {
     vi.stubGlobal('requestAnimationFrame', (callback) => frames.push(callback));
   });
 
-  it('starts the level from the address, with a star mark for each star', () => {
-    expect(running.game.level).toBe(LEVELS[2]);
-    expect($('.level-name').textContent).toBe('Level 3 of 3');
-    expect(document.querySelectorAll('.star-mark')).toHaveLength(3);
-    expect($('.flicks').textContent).toBe('●●●');
-    expect($('.taken').textContent).toBe('0 cells');
-    expect(ctx.calls.length).toBeGreaterThan(0); // the flask got drawn
+  it('starts on the first cell with every life, and draws it', () => {
+    expect($('.cell-number').textContent).toBe('Cell 1');
+    expect($('.lives').textContent).toBe('●'.repeat(HOST.lives));
+    expect($('.burst-button').disabled).toBe(true);
+    expect($('.danger').style.left).toBe(`${HOST.breaking[0] * 100}%`);
+    expect(ctx.calls.length).toBeGreaterThan(0);
   });
 
-  it('turns the aim with the arrow keys and flicks with the space bar', () => {
-    const before = running.view.aim;
-    expect(key('ArrowLeft').defaultPrevented).toBe(true);
-    expect(running.view.aim.angle).toBeLessThan(before.angle);
-    key('x'); // nothing
+  it('copies, with pops that don’t pile up', () => {
+    readyToBurst();
+    expect($('.call').textContent).toBe('Copying her DNA…');
+    expect($('.copies-count').textContent).toBe(String(running.run.cell.copies));
+    expect($('.burst-button').disabled).toBe(false);
+    expect(pop).toHaveBeenCalled();
+    expect(pop.mock.calls.length).toBeLessThan(running.run.cell.copies);
+  });
+
+  it('says "copy" for one copy', () => {
+    running.restart();
+    running.run.cell.breaking = 99;
+    until(() => running.run.cell.copies >= 1);
+    running.run.cell.copies = 1;
+    running.run.cell.time = VIRUSES.tess.eclipse; // no more yet
+    frame();
+    expect($('.copies-word').textContent).toBe('copy');
+  });
+
+  it('bursts with the button, banking the copies and showing the breaking point', () => {
+    readyToBurst();
+    running.run.cell.breaking = 0.8;
+    const copies = running.run.cell.copies;
+    $('.burst-button').click();
+    expect(running.run.score).toBe(copies);
+    expect($('.call').textContent).toBe(burstCall(copies));
+    expect($('.breaking-mark').hidden).toBe(false);
+    expect($('.alarm-label').textContent).toBe('It would have held out to 80%.');
+    expect(sporeBurst).toHaveBeenCalledWith(canvas);
+    expect(pop).toHaveBeenCalledWith(15);
+    frame();
+    expect($('.score').textContent).toBe(String(copies));
+
+    until(() => running.run.number === 2);
+    expect($('.breaking-mark').hidden).toBe(true);
+    expect($('.alarm-label').textContent).toContain('Somewhere in the red');
+  });
+
+  it('bursts with the space bar or a tap on the cell, but not before there are copies', () => {
+    running.restart();
     key(' ');
-    expect(running.game.flicksLeft).toBe(2);
-    expect($('.flicks').textContent).toBe('●●○');
-    key('Enter'); // she's still flying, so no second flick yet
-    expect(running.game.flicksLeft).toBe(2);
+    canvas.dispatchEvent(new Event('pointerdown'));
+    expect(running.run.score).toBe(0);
+    readyToBurst();
+    expect(key(' ').defaultPrevented).toBe(true);
+    expect(running.run.score).toBeGreaterThan(0);
+    readyToBurst();
+    canvas.dispatchEvent(new Event('pointerdown'));
+    expect(running.run.cell.phase).toBe('burst');
+  });
+
+  it('quiets the alarm once per cell, with the button or Q', () => {
+    readyToBurst();
+    running.run.cell.alarm = 0.6;
+    $('.block-button').click();
+    expect(running.run.cell.alarm).toBeCloseTo(0.6 - VIRUSES.tess.block);
+    expect($('.block-button').disabled).toBe(true);
+    readyToBurst();
+    running.run.cell.alarm = 0.6;
+    key('q');
+    expect(running.run.cell.blocked).toBe(true);
+    key('Q'); // already used
+    key('x'); // nothing
   });
 
   it('leaves keys alone on buttons and links', () => {
-    running.restart();
-    const event = key(' ', $('.mute'));
-    expect(event.defaultPrevented).toBe(false);
-    expect(running.game.flicksLeft).toBe(3);
+    readyToBurst();
+    expect(key(' ', $('.mute')).defaultPrevented).toBe(false);
+    expect(running.run.score).toBe(0);
   });
 
-  it('aims by pulling back on the flask and flicks on letting go', () => {
-    running.restart();
-    pointer('pointerup', 0, 0); // a stray let-go does nothing
-    pointer('pointermove', 0, 0); // and so does moving without pressing
-    pointer('pointerdown', 100, 100);
-    pointer('pointermove', 102, 101); // too small to aim
-    pointer('pointerup', 102, 101);
-    expect(running.game.flicksLeft).toBe(3);
-
-    pointer('pointerdown', 100, 100);
-    pointer('pointermove', 100, 180); // pull down: aim up
-    expect(running.view.aim.angle).toBeCloseTo(-Math.PI / 2);
-    pointer('pointerup', 100, 180);
-    expect(running.game.flicksLeft).toBe(2);
-
-    pointer('pointerdown', 100, 100);
-    pointer('pointercancel', 100, 100);
-    pointer('pointerup', 100, 180);
-    expect(running.game.flicksLeft).toBe(2);
+  it('self-destructs, losing a life, and says where it broke', () => {
+    readyToBurst();
+    running.run.cell.breaking = 0.42;
+    running.run.cell.alarm = 0.42;
+    frame();
+    expect($('.call').textContent).toMatch(/^Self-destruct! Lost \d+$/);
+    expect($('.alarm-label').textContent).toBe('It broke at 42%.');
+    expect($('.lives').textContent).toBe('●'.repeat(HOST.lives - 1) + '○');
+    expect(pop).toHaveBeenCalledWith(1);
   });
 
-  it('pops, calls out chains, and counts cells as they burst', () => {
+  it('says so plainly if a cell self-destructs with nothing in it', () => {
     running.restart();
-    const game = running.game;
-    const cell = game.cells.find((c) => c.receptor);
-    cell.state = 'infected';
-    cell.progress = 0.999;
-    game.chain = 4; // the next burst is the fifth in a row
+    until(() => running.run.cell.phase === 'copying');
+    running.run.cell.breaking = 0;
+    running.run.cell.time = VIRUSES.tess.eclipse;
     frame();
-    expect(pop).toHaveBeenCalledWith(5);
-    expect($('.chain-call').textContent).toBe(CHAIN_CALLS.get(5));
-    expect($('.taken').textContent).toBe('1 cell');
-    expect(running.view.pops).toHaveLength(1);
-    frame(40); // the pop fades away
-    expect(running.view.pops).toHaveLength(0);
+    expect($('.call').textContent).toBe('Self-destruct!');
   });
 
-  it('says when your pal is stopped by antibodies or finds no receptor', () => {
-    running.restart();
-    const game = running.game;
-    const [cloud] = game.antibodies;
-    game.virions.push({ x: cloud.x, y: cloud.y, vx: 0, vy: 0, idle: 0, lead: true });
-    frame();
-    expect($('.chain-call').textContent).toBe('Stopped by antibodies!');
+  it('ends the run, celebrates a new best, and plays again', () => {
+    localStorage.clear();
+    readyToBurst();
+    $('.burst-button').click();
+    running.run.lives = 1;
+    until(() => running.run.number === 2);
+    until(() => running.run.cell.phase === 'copying');
+    running.run.cell.breaking = 0;
+    running.run.cell.time = VIRUSES.tess.eclipse;
+    until(() => running.run.over);
+    expect($('.result').hidden).toBe(false);
+    expect($('.result-score').textContent).toContain('a new best!');
+    expect(sporeBurst).toHaveBeenLastCalledWith(canvas, { big: true });
+    expect(localStorage.getItem('cellmates-best')).toBe(String(running.run.score));
+    expect($('.fun-fact').hidden).toBe(false);
 
-    const other = game.cells.find((c) => !c.receptor && Math.hypot(c.x - cloud.x, c.y - cloud.y) > 80);
-    game.virions.push({ x: other.x, y: other.y, vx: 0, vy: 0, idle: 5, lead: true });
-    frame();
-    expect($('.chain-call').textContent).toBe('No receptor there!');
+    key(' '); // the space bar plays again too
+    expect($('.result').hidden).toBe(true);
+    expect(running.run.number).toBe(1);
+  });
+
+  it('doesn’t celebrate a run below your best', () => {
+    localStorage.setItem('cellmates-best', '100000');
+    running.restart();
+    running.run.lives = 1;
+    until(() => running.run.cell.phase === 'copying');
+    running.run.cell.breaking = 0;
+    running.run.cell.time = VIRUSES.tess.eclipse;
+    until(() => running.run.over);
+    expect($('.result-score').textContent).toBe('0 copies');
+    expect(sporeBurst).not.toHaveBeenCalled();
+    $('.again').click();
+    expect($('.result').hidden).toBe(true);
   });
 
   it('keeps quiet when muted, and remembers it', () => {
-    running.restart();
     $('.mute').click();
     expect($('.mute').getAttribute('aria-pressed')).toBe('true');
     expect(localStorage.getItem('cellmates-muted')).toBe('1');
-    const cell = running.game.cells.find((c) => c.receptor);
-    cell.state = 'infected';
-    cell.progress = 0.999;
-    frame();
+    readyToBurst();
     expect(pop).not.toHaveBeenCalled();
     $('.mute').click();
     expect($('.mute').textContent).toBe('🔊');
-  });
-
-  it('shows the result when the round is over, with no stars', () => {
-    running.restart();
-    running.game.flicksLeft = 0;
-    frame();
-    expect($('.result').hidden).toBe(false);
-    expect($('.result-title').textContent).toBe('Not quite!');
-    expect(document.querySelectorAll('.result-stars .earned')).toHaveLength(0);
-    expect($('.next').hidden).toBe(true);
-    expect($('.fun-fact').hidden).toBe(false);
-    expect(sporeBurst).not.toHaveBeenCalled();
-    key(' '); // no flicking behind the pop-up
-    expect(running.game.flicksLeft).toBe(0);
-  });
-
-  it('celebrates stars, remembers your best, and tries again', () => {
-    running.restart();
-    running.game.flicksLeft = 0;
-    running.game.taken = running.game.cells.length;
-    frame();
-    expect(document.querySelectorAll('.result-stars .earned')).toHaveLength(3);
-    expect($('.result-title').textContent).toBe('You beat every flask!');
-    expect($('.next').hidden).toBe(true); // it's the last level
-    expect(localStorage.getItem('cellmates-best-3')).toBe('3');
-    expect(sporeBurst).toHaveBeenCalledWith(canvas, { big: true });
-    expect(document.querySelectorAll('.star-mark.earned')).toHaveLength(3);
-
-    $('.again').click();
-    expect($('.result').hidden).toBe(true);
-    expect(running.game.flicksLeft).toBe(3);
-  });
-
-  it('starts over with R', () => {
-    key(' ');
-    key('r');
-    expect(running.game.flicksLeft).toBe(3);
   });
 
   it('copes with a browser that won’t save anything', () => {
@@ -228,10 +244,11 @@ describe('the flask page', () => {
       setItem: () => { throw new Error('blocked'); },
     });
     running.restart();
-    running.game.flicksLeft = 0;
-    running.game.taken = Math.ceil(running.game.cells.length * LEVELS[2].stars[0]);
-    expect(() => frame()).not.toThrow();
-    expect($('.result-detail').textContent).toContain('Best: 1 ★');
+    running.run.lives = 1;
+    until(() => running.run.cell.phase === 'copying');
+    running.run.cell.breaking = 0;
+    running.run.cell.time = VIRUSES.tess.eclipse;
+    expect(() => until(() => running.run.over)).not.toThrow();
     expect(() => $('.mute').click()).not.toThrow();
   });
 
@@ -240,6 +257,6 @@ describe('the flask page', () => {
     window.devicePixelRatio = 2;
     window.dispatchEvent(new Event('resize'));
     expect(canvas.width).toBe(600);
-    expect(canvas.height).toBe(1000);
+    expect(canvas.height).toBe(500);
   });
 });

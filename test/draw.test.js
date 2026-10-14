@@ -1,54 +1,65 @@
-// draw.js: drawing the flask. A stand-in canvas records what gets drawn.
+// draw.js: drawing the bacterium. A stand-in canvas records what gets drawn.
 import { describe, expect, it } from 'vitest';
-import { drawFlask, POP_TIME } from '../public/game/draw.js';
-import { createGame, flick } from '../public/game/infect.js';
-import { START_AIM } from '../public/game/aim.js';
-import { VIRUSES } from '../public/game/config.js';
+import { drawCell, MAX_SHOWN, mix, ROD, SPOTS } from '../public/game/draw.js';
+import { createRun } from '../public/game/cell.js';
+import { HOST, VIRUSES } from '../public/game/config.js';
 import { fakeContext } from './fake-canvas.js';
 
-const level = { seed: 2, receptors: 0.5, flicks: 2, stars: [0.1, 0.2, 0.3], antibodies: [{ x: 100, y: 100, r: 30 }] };
-const count = (ctx, name) => ctx.calls.filter(([n]) => n === name).length;
+const loaded = { complete: true, naturalWidth: 200 };
 
-function drawn(game, view = {}) {
+function drawn(change = {}, palImage = loaded) {
+  const run = createRun(VIRUSES.tess, HOST, () => 0.5);
+  Object.assign(run.cell, change);
   const ctx = fakeContext();
-  drawFlask(ctx, game, { aim: START_AIM, palImage: null, pops: [], ...view });
+  drawCell(ctx, run, { palImage, clock: 1 });
   return ctx;
 }
+const count = (ctx, name) => ctx.calls.filter(([n]) => n === name).length;
 
-describe('drawFlask', () => {
-  it('draws every cell, and the aim while you can flick', () => {
-    const game = createGame(level, VIRUSES.flo);
-    const ctx = drawn(game);
-    expect(count(ctx, 'closePath')).toBe(game.cells.length);
-    expect(ctx.calls.some(([n, ...args]) => n === 'setLineDash' && args[0][0] === 2)).toBe(true);
+describe('mix', () => {
+  it('blends two colors', () => {
+    expect(mix('#000000', '#ffffff', 0)).toBe('#000000');
+    expect(mix('#000000', '#ffffff', 1)).toBe('#ffffff');
+    expect(mix('#000000', '#ffffff', 0.5)).toBe('#808080');
+  });
+});
+
+describe('SPOTS', () => {
+  it('has room for every copy shown, all inside the rod, from the middle out', () => {
+    expect(SPOTS.length).toBe(MAX_SHOWN);
+    expect(MAX_SHOWN).toBeGreaterThan(150); // room for a typical big burst
+    for (const { x, y } of SPOTS) {
+      expect(x > ROD.x && x < ROD.x + ROD.width && y > ROD.y && y < ROD.y + ROD.height).toBe(true);
+    }
+    const middle = { x: ROD.x + ROD.width / 2, y: ROD.y + ROD.height / 2 };
+    const distance = (s) => Math.hypot(s.x - middle.x, s.y - middle.y);
+    expect(distance(SPOTS[0])).toBeLessThan(distance(SPOTS.at(-1)));
+  });
+});
+
+describe('drawCell', () => {
+  it('draws her landing, from her picture', () => {
+    const ctx = drawn();
+    expect(count(ctx, 'drawImage')).toBe(1);
+    expect(count(ctx, 'roundRect')).toBe(1);
   });
 
-  it('draws infected cells with a ring, and burst cells as holes', () => {
-    const game = createGame(level, VIRUSES.flo);
-    game.cells[0].state = 'infected';
-    game.cells[0].progress = 0.5;
-    game.cells[1].state = 'plaque';
-    const ctx = drawn(game);
-    const ring = ctx.calls.find(([n, x, y, , start, end]) =>
-      n === 'arc' && x === game.cells[0].x && y === game.cells[0].y && start === -Math.PI / 2 && end === Math.PI / 2);
-    expect(ring).toBeTruthy();
+  it('draws a plain dot for her until her picture has loaded', () => {
+    expect(count(drawn({}, { complete: false }), 'drawImage')).toBe(0);
+    expect(count(drawn({}, null), 'drawImage')).toBe(0);
   });
 
-  it('draws drifting virions, your pal from her picture, and pops', () => {
-    const game = createGame(level, VIRUSES.flo);
-    flick(game, 0, -100);
-    game.virions.push({ x: 50, y: 50, vx: 0, vy: 0, idle: 0, lead: false });
-    const palImage = { complete: true, naturalWidth: 200 };
-    const ctx = drawn(game, { palImage, pops: [{ x: 10, y: 10, age: POP_TIME / 2 }] });
-    expect(ctx.calls.filter(([n, image]) => n === 'drawImage' && image === palImage)).toHaveLength(1);
-    expect(ctx.calls.some(([n, x, y]) => n === 'arc' && x === 50 && y === 50)).toBe(true);
-    // No aim while she's flying.
-    expect(ctx.calls.some(([n, ...args]) => n === 'setLineDash' && args[0][0] === 2)).toBe(false);
+  it('fills the cell with copies, up to the most it can show', () => {
+    const few = drawn({ phase: 'copying', copies: 10, alarm: 0.5 });
+    const lots = drawn({ phase: 'copying', copies: 5000, alarm: 0.9 });
+    expect(count(lots, 'fillRect') - count(few, 'fillRect')).toBe(MAX_SHOWN - 10);
   });
 
-  it('draws your pal as a plain virion until her picture has loaded', () => {
-    const game = createGame(level, VIRUSES.flo);
-    const ctx = drawn(game, { palImage: { complete: false } });
-    expect(count(ctx, 'drawImage')).toBe(0);
+  it('draws a burst and a self-destruct, with every copy', () => {
+    for (const phase of ['burst', 'died']) {
+      const ctx = drawn({ phase, phaseTime: 0.5, copies: 30 });
+      expect(count(ctx, 'fillRect')).toBe(30);
+      expect(count(ctx, 'drawImage')).toBe(0); // she's gone from the wall
+    }
   });
 });
