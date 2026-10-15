@@ -4,8 +4,8 @@
 //   node scripts/simulate.mjs
 //
 // The player steers straight for the nearest cell it can get into whose path
-// doesn't touch an antibody cloud (as big as it will get). It's a careful but
-// not clever player. The script prints how often it wins, how long that
+// keeps clear of the antibody clouds. It steers perfectly and never
+// hesitates, but doesn't plan ahead. The script prints how often it wins, how long that
 // takes, and how many cells the free copies took on their own.
 import { canEnter, createGame, move, step } from '../public/game/flask.js';
 import { ANTIBODIES, LEVELS, VIRUSES } from '../public/game/config.js';
@@ -18,7 +18,7 @@ function safePath(game, from, to) {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const t = Math.max(0, Math.min(1, ((c.x - from.x) * dx + (c.y - from.y) * dy) / (dx * dx + dy * dy || 1)));
-    return Math.hypot(from.x + dx * t - c.x, from.y + dy * t - c.y) > ANTIBODIES.radius + 8;
+    return Math.hypot(from.x + dx * t - c.x, from.y + dy * t - c.y) > c.r + 14;
   });
 }
 

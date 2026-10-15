@@ -36,7 +36,7 @@ export const VIRUSES = {
     speed: 110,
     enterTime: 1,
     copyTime: 1.4,
-    copies: 4,
+    copies: 3,
     drift: 40,
     lifetime: 2.5,
     color: '#fb7185',
@@ -60,16 +60,17 @@ export const VIRUSES = {
 //               long.
 export const CELLS = {
   receptors: 0.75,
-  warnChance: 0.5,
+  warnChance: 0.6,
 };
 
 // The levels, like PetriPals': each adds an antibody cloud and needs more
-// cells taken. Antibody clouds spread out from their drop over `spreadTime`
-// s to `radius`; touching one ends the game, and free copies that drift into
-// one are stopped.
-export const ANTIBODIES = { radius: 46, spreadTime: 12 };
+// cells taken. The immune system keeps making antibodies, so each cloud
+// starts `start` in radius and keeps spreading by `growth` a second, up to
+// `max`: the longer you take, the less room there is. Touching a cloud ends
+// the game, and free copies that drift into one are stopped.
+export const ANTIBODIES = { start: 16, growth: 2, max: 100 };
 export const LEVELS = [
-  { target: 20, antibodies: 1 },
-  { target: 28, antibodies: 2 },
-  { target: 34, antibodies: 3 },
+  { target: 28, antibodies: 1 },
+  { target: 30, antibodies: 2 },
+  { target: 32, antibodies: 3 },
 ];

@@ -29,7 +29,7 @@ describe('cloudSpots', () => {
     expect(spots).toHaveLength(3);
     for (const a of spots) {
       expect(a.y).toBeLessThan(FLASK.cells.bottom);
-      for (const b of spots) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(ANTIBODIES.radius * 2);
+      for (const b of spots) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(ANTIBODIES.max);
     }
   });
 
@@ -56,7 +56,7 @@ describe('createGame', () => {
   it('drops the level’s antibody clouds, starting small', () => {
     const game = createGame(LEVELS[2], flo);
     expect(game.clouds).toHaveLength(LEVELS[2].antibodies);
-    expect(game.clouds.every((c) => c.r === 0)).toBe(true);
+    expect(game.clouds.every((c) => c.r === ANTIBODIES.start)).toBe(true);
   });
 });
 
@@ -165,13 +165,13 @@ describe('step', () => {
     expect(game.copies).toEqual([]);
   });
 
-  it('spreads the antibody clouds out, and stops copies that drift in', () => {
+  it('keeps spreading the antibody clouds, up to a limit, and stops copies that drift in', () => {
     const game = createGame({ target: 5, antibodies: 1 }, flo, high);
     const [cloud] = game.clouds;
-    run(game, ANTIBODIES.spreadTime / 4);
-    expect(cloud.r).toBeCloseTo(ANTIBODIES.radius / 2);
-    run(game, ANTIBODIES.spreadTime);
-    expect(cloud.r).toBe(ANTIBODIES.radius);
+    run(game, 5);
+    expect(cloud.r).toBeCloseTo(ANTIBODIES.start + ANTIBODIES.growth * 5);
+    run(game, 1000);
+    expect(cloud.r).toBe(ANTIBODIES.max);
     game.copies.push({ x: cloud.x, y: cloud.y, vx: 0, vy: 0, age: 0 });
     step(game, 1 / 60);
     expect(game.copies).toEqual([]);
@@ -179,7 +179,6 @@ describe('step', () => {
 
   it('ends the game if she touches an antibody cloud', () => {
     const game = createGame({ target: 5, antibodies: 1 }, flo, high);
-    run(game, ANTIBODIES.spreadTime);
     const [cloud] = game.clouds;
     move(game, cloud.x - game.pal.x, cloud.y - game.pal.y);
     expect(step(game, 1 / 60)).toEqual([{ type: 'lost' }]);

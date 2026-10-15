@@ -26,6 +26,7 @@ describe('LEVELS', () => {
 
   it('start her below the cells, and keep antibody clouds smaller than the flask', () => {
     expect(FLASK.start.y).toBeGreaterThan(FLASK.cells.bottom);
-    expect(ANTIBODIES.radius * 2).toBeLessThan(FLASK.width / 2);
+    expect(ANTIBODIES.start).toBeLessThan(ANTIBODIES.max);
+    expect(ANTIBODIES.max * 2).toBeLessThan(FLASK.width);
   });
 });

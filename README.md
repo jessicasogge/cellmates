@@ -12,7 +12,7 @@ A cute virology game for the browser, and the sister game to [PetriPals](https:/
 2. **Get into cells with teal bumps.** That's her receptor; the plain cells won't let her in. Steer onto one and she gets in. A moment later, the cell releases her with copies of her, and leaves a clear hole (a plaque).
 3. **Let the copies spread.** They drift off and get into cells nearby on their own.
 4. **Watch for warned cells.** A cell that releases copies warns its neighbors (a **yellow outline**). Copies can't get into a warned cell. Flo can, but it takes her twice as long. So when the spreading stalls, steer Flo somewhere fresh.
-5. **Don't touch the antibodies.** The blue clouds spread out over the first few seconds. If Flo touches one, the game is over, and copies that drift in are stopped.
+5. **Don't touch the antibodies.** The blue clouds keep spreading the whole level, so the longer you take, the less room there is. If Flo touches one, the game is over, and copies that drift in are stopped.
 
 Take the level's number of cells to win. There are three levels, and each adds an antibody cloud.
 

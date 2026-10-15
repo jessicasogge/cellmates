@@ -68,7 +68,7 @@ The first prototype (`flask.html`) is this loop, kept simple:
 
 - You steer Flo like a PetriPal. Steering onto a cell with her receptor gets her in; a moment later it releases her plus four free copies, and dies, leaving a plaque.
 - Free copies drift and get into cells on their own, but every release warns some of its neighbors (interferon). Copies can't get into a warned cell, and Flo takes twice as long. So spreading stalls, and the choice is where to steer Flo to start it again.
-- Antibody clouds spread out like PetriPals' zones of inhibition. Touching one ends the game. Three levels, each with one more cloud.
+- Antibody clouds keep spreading the whole level (the immune system keeps making antibodies), so taking too long closes the flask off. Touching one ends the game. Three levels, each with one more cloud.
 
 Three earlier tries were dropped along the way: flicking a virus into the flask, bursting one cell at a time, and tapping a whole lawn of cells. None of them let you be your pal, and the last two were mostly luck or one button.
 

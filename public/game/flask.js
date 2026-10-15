@@ -27,17 +27,18 @@ import { ANTIBODIES, CELLS, FLASK } from './config.js';
 const NEIGHBORS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]];
 
 // Where to drop `count` antibody clouds: on the sheet of cells, not too near
-// the edges, the neck or each other.
+// the edges or the neck, and far enough apart that there's room to get
+// between them even once they're fully spread.
 export function cloudSpots(count, random = Math.random) {
   const { left, top, right, bottom } = FLASK.cells;
-  const margin = ANTIBODIES.radius * 0.6;
+  const margin = ANTIBODIES.start * 2;
   const spots = [];
   for (let tries = 0; spots.length < count && tries < 500; tries++) {
     const spot = {
       x: left + margin + random() * (right - left - margin * 2),
       y: top + margin + random() * (bottom - top - margin * 3),
     };
-    if (spots.every((s) => Math.hypot(s.x - spot.x, s.y - spot.y) > ANTIBODIES.radius * 2.2)) spots.push(spot);
+    if (spots.every((s) => Math.hypot(s.x - spot.x, s.y - spot.y) > ANTIBODIES.max * 1.1)) spots.push(spot);
   }
   return spots;
 }
@@ -62,7 +63,7 @@ export function createGame(level, virus, random = Math.random) {
     origin,
     pal: { ...FLASK.start, inside: null, facing: 1 }, // inside: the cell she's in
     copies: [], // free copies drifting about: { x, y, vx, vy, age }
-    clouds: cloudSpots(level.antibodies, random).map((s) => ({ ...s, r: 0 })),
+    clouds: cloudSpots(level.antibodies, random).map((s) => ({ ...s, r: ANTIBODIES.start })),
     taken: 0,
     time: 0,
     over: null, // 'won' or 'lost' once it's over
@@ -141,9 +142,8 @@ export function step(game, dt) {
   if (game.over) return events;
   game.time += dt;
 
-  // The antibody clouds spread out quickly at first, then slowly (like
-  // anything soaking out from a drop).
-  const spread = ANTIBODIES.radius * Math.min(1, Math.sqrt(game.time / ANTIBODIES.spreadTime));
+  // The antibody clouds keep spreading the whole time.
+  const spread = Math.min(ANTIBODIES.max, ANTIBODIES.start + ANTIBODIES.growth * game.time);
   for (const cloud of game.clouds) cloud.r = spread;
 
   // Your pal gets into a cell she's over, if she can.
