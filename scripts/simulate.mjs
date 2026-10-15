@@ -1,46 +1,54 @@
-// Plays Plaque many times with simple computer players, to help tune the
-// numbers in public/game/config.js. Run it with:
+// Plays each level many times with a simple computer player, to help tune
+// the numbers in public/game/config.js. Run it with:
 //
 //   node scripts/simulate.mjs
 //
-// Each player can tap a few times a second (like a person), and bursts the
-// ready cell closest to self-destructing, once its danger passes a set level
-// or it's full. A good tuning lets a quick, careful player win about half
-// the time, and doesn't let any player win by just tapping as fast as possible.
-import { burst, cleared, createDish, danger, isOver, mostUrgent, step } from '../public/game/lawn.js';
-import { LAWN, VIRUSES } from '../public/game/config.js';
+// The player steers straight for the nearest cell it can get into whose path
+// doesn't touch an antibody cloud (as big as it will get). It's a careful but
+// not clever player. The script prints how often it wins, how long that
+// takes, and how many cells the free copies took on their own.
+import { canEnter, createGame, move, step } from '../public/game/flask.js';
+import { ANTIBODIES, LEVELS, VIRUSES } from '../public/game/config.js';
 
-const DISHES = 400;
+const GAMES = 300;
+const flo = VIRUSES.flo;
 
-function play(tapsPerSecond, waitUntil) {
-  const dish = createDish(VIRUSES.tess, LAWN);
-  let sinceTap = 0;
-  while (!isOver(dish) && dish.time < 600) {
-    sinceTap += 1 / 60;
-    if (sinceTap >= 1 / tapsPerSecond) {
-      const cell = mostUrgent(dish);
-      if (cell && (danger(dish, cell) >= waitUntil || cell.copies >= dish.virus.full)) {
-        burst(dish, cell);
-        sinceTap = 0;
-      }
-    }
-    step(dish, 1 / 60);
-  }
-  return { cleared: cleared(dish), time: dish.time };
+function safePath(game, from, to) {
+  return game.clouds.every((c) => {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const t = Math.max(0, Math.min(1, ((c.x - from.x) * dx + (c.y - from.y) * dy) / (dx * dx + dy * dy || 1)));
+    return Math.hypot(from.x + dx * t - c.x, from.y + dy * t - c.y) > ANTIBODIES.radius + 8;
+  });
 }
 
-const percentile = (sorted, p) => sorted[Math.floor(p * (sorted.length - 1))];
-console.log(`cells: ${createDish(VIRUSES.tess, LAWN).cells.length}, target ${LAWN.target}`);
-console.log('taps/s  waits to  cleared p25 / p50 / p75   wins   seconds (median)');
-for (const taps of [2, 3, 4]) {
-  for (const waitUntil of [0, 0.4, 0.7, 0.9]) {
-    const dishes = Array.from({ length: DISHES }, () => play(taps, waitUntil));
-    const shares = dishes.map((d) => d.cleared).sort((a, b) => a - b);
-    const times = dishes.map((d) => d.time).sort((a, b) => a - b);
-    const wins = dishes.filter((d) => d.cleared >= LAWN.target).length / DISHES;
-    console.log(
-      `${String(taps).padStart(6)}  ${waitUntil.toFixed(1).padStart(8)}  ${[0.25, 0.5, 0.75].map((p) => percentile(shares, p).toFixed(2)).join(' / ')}` +
-        `   ${(wins * 100).toFixed(0).padStart(3)}%   ${percentile(times, 0.5).toFixed(0)}`,
-    );
+function play(level) {
+  const game = createGame(level, flo);
+  let byPal = 0;
+  while (!game.over && game.time < 180) {
+    const { pal } = game;
+    if (!pal.inside) {
+      const options = game.cells.filter((c) => canEnter(c, true) && safePath(game, pal, c));
+      if (options.length) {
+        const target = options.reduce((a, b) =>
+          Math.hypot(a.x - pal.x, a.y - pal.y) < Math.hypot(b.x - pal.x, b.y - pal.y) ? a : b);
+        const d = Math.hypot(target.x - pal.x, target.y - pal.y);
+        const stepSize = Math.min(d, flo.speed / 60);
+        move(game, ((target.x - pal.x) / d) * stepSize, ((target.y - pal.y) / d) * stepSize);
+      }
+    }
+    for (const e of step(game, 1 / 60)) if (e.type === 'entered') byPal++;
   }
+  return { won: game.over === 'won', time: game.time, byPal, taken: game.taken };
+}
+
+const median = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length / 2)];
+for (const [i, level] of LEVELS.entries()) {
+  const games = Array.from({ length: GAMES }, () => play(level));
+  const wins = games.filter((g) => g.won);
+  console.log(
+    `Level ${i + 1} (target ${level.target}): wins ${Math.round((wins.length / GAMES) * 100)}%` +
+      `, seconds ${median(wins.map((g) => g.time))?.toFixed(0)}` +
+      `, cells taken by Flo ${median(games.map((g) => g.byPal))} of ${median(games.map((g) => g.taken))}`,
+  );
 }

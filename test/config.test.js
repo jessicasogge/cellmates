@@ -1,33 +1,31 @@
-// config.js: the numbers Plaque is built on make sense.
+// config.js: the numbers the game is built on make sense together.
 import { describe, expect, it } from 'vitest';
-import { DISH, LAWN, VIRUSES } from '../public/game/config.js';
+import { ANTIBODIES, CELLS, FLASK, LEVELS, VIRUSES } from '../public/game/config.js';
 import { palById } from '../public/game/pals.js';
+import { createGame } from '../public/game/flask.js';
 
 describe('VIRUSES', () => {
   it('are all real pals, with a life cycle and at least four facts', () => {
     for (const [id, virus] of Object.entries(VIRUSES)) {
       expect(palById(id)).toBeTruthy();
-      expect(virus.eclipse).toBeGreaterThan(0);
-      expect(virus.perSecond).toBeGreaterThan(0);
-      // A full cell can infect all six neighbors.
-      expect(virus.full / virus.perNeighbor).toBeGreaterThanOrEqual(6);
+      expect(virus.speed).toBeGreaterThan(0);
+      expect(virus.copies).toBeGreaterThan(0);
       expect(virus.facts.length).toBeGreaterThanOrEqual(4);
     }
   });
 });
 
-describe('LAWN', () => {
-  it('self-destructs some time after the eclipse, with a reachable goal', () => {
-    const [low, high] = LAWN.selfDestruct;
-    expect(low).toBeGreaterThan(0);
-    expect(high).toBeGreaterThan(low);
-    expect(LAWN.target).toBeGreaterThan(0);
-    expect(LAWN.target).toBeLessThan(1);
+describe('LEVELS', () => {
+  it('each need more cells than the last, and fewer than the flask has with the receptor', () => {
+    const { cells } = createGame(LEVELS[0], VIRUSES.flo);
+    LEVELS.forEach((level, i) => {
+      if (i > 0) expect(level.target).toBeGreaterThan(LEVELS[i - 1].target);
+      expect(level.target).toBeLessThan(cells.length * CELLS.receptors);
+    });
   });
-});
 
-describe('DISH', () => {
-  it('fits the lawn inside the dish', () => {
-    expect(DISH.radius).toBeLessThan(DISH.size / 2);
+  it('start her below the cells, and keep antibody clouds smaller than the flask', () => {
+    expect(FLASK.start.y).toBeGreaterThan(FLASK.cells.bottom);
+    expect(ANTIBODIES.radius * 2).toBeLessThan(FLASK.width / 2);
   });
 });

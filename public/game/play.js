@@ -1,47 +1,44 @@
-// The Plaque page (plaque.html): runs a dish, draws it, and handles your
-// taps and the end-of-dish pop-up.
+// The flask page (flask.html): runs a level, draws it, steers your pal with
+// the arrow keys or a finger, and shows the end-of-level pop-up.
+//
+// The level comes from the address: flask.html?level=2.
 
-import { DISH, LAWN, VIRUSES } from './config.js';
-import { burst, canBurst, cellAt, cleared, createDish, hasWon, isOver, mostUrgent, step } from './lawn.js';
-import { drawDish, POP_TIME } from './draw.js';
+import { FLASK, LEVELS, VIRUSES } from './config.js';
+import { createGame, move, step } from './flask.js';
+import { drawFlask } from './draw.js';
+import { arrowKeys } from './keyboard.js';
+import { steer, touchSteering, watchInputMode } from './touch.js';
 import { palById } from './pals.js';
 import { hideFact, showFact } from './facts.js';
 import { sporeBurst } from './spores.js';
 
-const PAL = 'tess';
+const PAL = 'flo';
 
-// The line under the dish: how much of the lawn is cleared, and the goal.
-export function clearedText(dish) {
-  return `Cleared ${Math.round(cleared(dish) * 100)}% of the lawn · goal ${Math.round(dish.lawn.target * 100)}%`;
+// Which level (0-based) the address asks for, from its ?level=, 1-based.
+// The first level for anything missing or out of range.
+export function levelFromSearch(search) {
+  const n = Number(new URLSearchParams(search).get('level'));
+  return Number.isInteger(n) && n >= 1 && n <= LEVELS.length ? n - 1 : 0;
 }
 
-// The end-of-dish pop-up's words: { title, message }.
-export function resultText(dish) {
-  const percent = Math.round(cleared(dish) * 100);
-  if (hasWon(dish)) return { title: 'You won!', message: `Tess’s plaque cleared ${percent}% of the lawn.` };
-  const close = cleared(dish) >= dish.lawn.target * 0.8;
-  return {
-    title: close ? 'So close!' : 'The plaque stopped growing',
-    message: `Tess cleared ${percent}% of the lawn. Try bursting cells when they’re fuller, but before they turn red.`,
-  };
+// The line under the flask.
+export function countText(game, index) {
+  return `Level ${index + 1} · ${game.taken} / ${game.level.target} cells`;
 }
 
-// The cell a tap at (x, y) means: the one under it if it can be burst, or
-// else the nearest one that can, if it's close by. Fingers are big and
-// cells are small.
-export function tappedCell(dish, x, y) {
-  const under = cellAt(dish, x, y);
-  if (canBurst(under)) return under;
-  let best;
-  let nearest = DISH.cellSize * 1.4;
-  for (const cell of dish.cells) {
-    const distance = Math.hypot(cell.x - x, cell.y - y);
-    if (canBurst(cell) && distance < nearest) {
-      best = cell;
-      nearest = distance;
-    }
+// The end-of-level pop-up's words: { title, message, button }.
+export function resultText(game, index) {
+  if (game.over === 'lost') {
+    return {
+      title: 'Caught by antibodies!',
+      message: `Flo took ${game.taken} of ${game.level.target} cells. Antibodies stick to her spikes so she can’t get into cells.`,
+      button: 'Try again',
+    };
   }
-  return best;
+  if (index === LEVELS.length - 1) {
+    return { title: 'You won them all!', message: `Flo took over the flask on every level.`, button: 'Play again' };
+  }
+  return { title: 'You won!', message: `Flo took ${game.taken} cells.`, button: 'Next level' };
 }
 
 // A pal's drawing from pals.js, as an image the canvas can draw.
@@ -56,63 +53,61 @@ export function palImage(pal) {
 export function start() {
   const virus = VIRUSES[PAL];
   const $ = (selector) => document.querySelector(selector);
-  const canvas = $('#dish');
+  const canvas = $('#flask');
   const ctx = canvas.getContext('2d');
   const banner = $('.win-banner');
-  const view = { palImage: palImage(palById(PAL)), pops: [], clock: 0 };
-  let dish;
-  let done;
+  const image = palImage(palById(PAL));
+  const keys = arrowKeys();
+  const finger = touchSteering(canvas);
+  watchInputMode();
+  let index = levelFromSearch(location.search);
+  let game;
 
-  function restart() {
-    dish = createDish(virus, LAWN);
-    done = false;
-    view.pops = [];
+  function begin(next) {
+    index = next;
+    game = createGame(LEVELS[index], virus);
     banner.hidden = true;
     hideFact();
-    $('.cleared').textContent = clearedText(dish);
+    $('.target-cells').textContent = String(game.level.target);
+    $('.cell-count').textContent = countText(game, index);
   }
 
   function finish() {
-    done = true;
-    const { title, message } = resultText(dish);
+    const won = game.over === 'won';
+    const { title, message, button } = resultText(game, index);
     $('.win-title').textContent = title;
     $('.win-message').textContent = message;
+    $('.play-again').textContent = button;
     showFact(PAL, virus);
     banner.hidden = false;
-    if (hasWon(dish)) sporeBurst(canvas, { big: true });
+    if (won) sporeBurst(canvas, { big: index === LEVELS.length - 1 });
   }
 
-  function tryBurst(cell) {
-    const event = burst(dish, cell);
-    if (!event) return;
-    view.pops.push({ cell: event.cell, infected: event.infected, age: 0 });
-    $('.cleared').textContent = clearedText(dish);
+  $('.play-again').addEventListener('click', () => {
+    if (game.over === 'lost') begin(index);
+    else begin(index === LEVELS.length - 1 ? 0 : index + 1);
+  });
+
+  // Steering: the arrow keys, a dragging finger, or a held-down mouse, as
+  // in PetriPals. Finger and mouse positions are in screen px, so scale
+  // them to flask units.
+  function steerPal(dt) {
+    const scale = FLASK.width / (canvas.clientWidth || FLASK.width);
+    const target = finger.target();
+    const spot = target && [FLASK.width / 2 + target[0] * scale, FLASK.height / 2 + target[1] * scale];
+    const [dx, dy] = finger.drag();
+    const maxStep = virus.speed * dt;
+    const where = { x: game.pal.x, y: game.pal.y };
+    steer(where, keys.direction(), spot, maxStep, 2, [dx * scale, dy * scale], maxStep * 3);
+    move(game, where.x - game.pal.x, where.y - game.pal.y);
   }
-
-  // Tapping (or clicking) a cell bursts it.
-  canvas.addEventListener('pointerdown', (e) => {
-    if (done) return;
-    const box = canvas.getBoundingClientRect();
-    const x = ((e.clientX - box.left) / box.width) * DISH.size;
-    const y = ((e.clientY - box.top) / box.height) * DISH.size;
-    tryBurst(tappedCell(dish, x, y));
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== ' ' || e.target.closest?.('button, a')) return; // let buttons and links work
-    e.preventDefault();
-    if (done) restart();
-    else tryBurst(mostUrgent(dish));
-  });
-
-  $('.play-again').addEventListener('click', restart);
 
   // Keep the canvas sharp at any size: draw at the screen's real pixels.
   function fit() {
     const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.round(canvas.clientWidth * ratio) || DISH.size;
-    canvas.height = canvas.width;
-    const scale = canvas.width / DISH.size;
+    canvas.width = Math.round(canvas.clientWidth * ratio) || FLASK.width;
+    canvas.height = Math.round((canvas.width * FLASK.height) / FLASK.width);
+    const scale = canvas.width / FLASK.width;
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
   }
   window.addEventListener('resize', fit);
@@ -123,21 +118,20 @@ export function start() {
     // At most 1/20 s at a time, so coming back to a hidden tab doesn't jump.
     const dt = last === null ? 0 : Math.min(0.05, (now - last) / 1000);
     last = now;
-    view.clock += dt;
-    if (!done) {
-      step(dish, dt);
-      if (isOver(dish)) finish();
+    if (!game.over) {
+      steerPal(dt);
+      const events = step(game, dt);
+      $('.cell-count').textContent = countText(game, index);
+      if (events.some((e) => e.type === 'won' || e.type === 'lost')) finish();
     }
-    for (const pop of view.pops) pop.age += dt;
-    view.pops = view.pops.filter((pop) => pop.age < POP_TIME);
-    drawDish(ctx, dish, view);
+    drawFlask(ctx, game, image);
     requestAnimationFrame(frame);
   }
 
-  restart();
+  begin(index);
   requestAnimationFrame(frame);
-  return { get dish() { return dish; }, view, restart };
+  return { get game() { return game; }, begin };
 }
 
 // Start right away on the game page. Exported so tests can reach the game.
-export const running = document.querySelector('#dish') ? start() : null;
+export const running = document.querySelector('#flask') ? start() : null;

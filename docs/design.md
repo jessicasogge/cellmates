@@ -62,16 +62,15 @@ The tagline: *"Viruses can't grow on their own. They need a cell."*
 
 The counter shows **virions made** (every burst adds its burst size). Reaching the level's target wins.
 
-#### Prototype: Plaque
+#### Prototype
 
-The first prototype (`plaque.html`) is closest to the [Phage Lawn](#45-stretch-phage-lawn-crossover-with-petripals) idea: Tess on a petri dish covered in a lawn of *E. coli*. Two earlier tries were dropped: flicking a virus into a flask (not true to life, and mostly watching), and bursting one cell at a time (just luck, with nothing to juggle).
+The first prototype (`flask.html`) is this loop, kept simple:
 
-- Each infected cell fills with copies at a steady rate after the eclipse, and is also getting ready to self-destruct (abortive infection), each at its own speed. You can see how close it is: it turns red and shakes.
-- **Tap to burst.** Its copies infect up to six neighbors, one per 25 copies, so waiting pays, but only until it's too late. A self-destructed cell is lost and blocks the spread.
-- The plaque grows from one cell to many at once, so the skill is choosing which to burst first.
-- Win by clearing 60% of the lawn. No sound, no saved scores: just play again.
+- You steer Flo like a PetriPal. Steering onto a cell with her receptor gets her in; a moment later it releases her plus four free copies, and dies, leaving a plaque.
+- Free copies drift and get into cells on their own, but every release warns some of its neighbors (interferon). Copies can't get into a warned cell, and Flo takes twice as long. So spreading stalls, and the choice is where to steer Flo to start it again.
+- Antibody clouds spread out like PetriPals' zones of inhibition. Touching one ends the game. Three levels, each with one more cloud.
 
-Later, picking a real phage gene between dishes (like T4's *lysis inhibition*, which lets a cell hold off bursting) could make each dish play differently.
+Three earlier tries were dropped along the way: flicking a virus into the flask, bursting one cell at a time, and tapping a whole lawn of cells. None of them let you be your pal, and the last two were mostly luck or one button.
 
 ### 4.3 Controls
 
@@ -203,7 +202,7 @@ The same approach and coverage gate as PetriPals:
 
 ## 10. Milestones
 
-1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Prototyped first as Plaque: see [4.2](#42-the-core-loop).)*
+1. **Prototype:** flask, hex grid, one pal (Flo), drift, attach, copy, burst, plaques. Answers the question: is attach-and-burst fun? *(Prototyped: see [4.2](#42-the-core-loop).)*
 2. **Classic:** antibody clouds, interferon, seven levels, end-of-level facts.
 3. **Pals:** the first six, the picker, electron microscope mode.
 4. **Coinfection** and **Brownian Brunch.**

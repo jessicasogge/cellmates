@@ -2,22 +2,23 @@
 
 A cute virology game for the browser, and the sister game to [PetriPals](https://github.com/jessicasogge/petripals) and [FunGals](https://jessicasogge.github.io/fungals/). Bacteria and fungi grow on agar in a petri dish, but viruses can't: they need a living cell. Pick a real virus, find the cells with your receptor, take them over and burst out to spread across a cell culture flask.
 
-**Status:** a playable prototype of one game, **Plaque**, with Tess the phage. See the [design doc](docs/design.md) for the bigger plan.
+**Status:** a playable prototype: three levels with Flo, the flu virus. See the [design doc](docs/design.md) for the bigger plan.
 
-<img src="docs/plaque.png" alt="Plaque: a petri dish covered in a lawn of green E. coli rods, with a clear hole spreading out from the middle. Around its edge, infected cells glow pink and red with purple dots inside, and a few grey cells have self-destructed" width="300">
+<img src="docs/flask.png" alt="Flo, a smiling pink flu virus, floating over a flask of hexagonal cells. Cells with teal bumps have her receptor. Around her, a few cells are empty, a few have yellow outlines, small copies of her drift about, and two blue antibody clouds sit on the flask" width="300">
 
 ## How to play
 
-You're **Tess**, a T4 phage: a virus that infects bacteria. She lands on a petri dish covered in a lawn of *E. coli*.
+1. **Steer Flo.** Use the arrow keys, or on a touch screen, touch the flask and slide your finger, just like PetriPals.
+2. **Get into cells with teal bumps.** That's her receptor; the plain cells won't let her in. Steer onto one and she gets in. A moment later, the cell releases her with copies of her, and leaves a clear hole (a plaque).
+3. **Let the copies spread.** They drift off and get into cells nearby on their own.
+4. **Watch for warned cells.** A cell that releases copies warns its neighbors (a **yellow outline**). Copies can't get into a warned cell. Flo can, but it takes her twice as long. So when the spreading stalls, steer Flo somewhere fresh.
+5. **Don't touch the antibodies.** The blue clouds spread out over the first few seconds. If Flo touches one, the game is over, and copies that drift in are stopped.
 
-1. **Watch the cells fill up.** Every cell she infects fills with purple copies of her.
-2. **Tap a cell to burst it.** Its copies infect the cells around it, and the fuller it is, the more it infects. A burst cell leaves a clear hole in the lawn, called a **plaque**. (On a keyboard, the space bar bursts the cell closest to self-destructing.)
-3. **Don't wait too long.** Every infected cell is also getting ready to self-destruct, and turns red and shakes as it gets close. If it self-destructs first, its copies are lost, and nothing can get past it.
-4. **Clear 60% of the lawn to win.** Soon there are lots of cells going at once, so the game is in choosing which to burst first.
+Take the level's number of cells to win. There are three levels, and each adds an antibody cloud.
 
 ### The real science
 
-Plaques are real: it's how scientists grow and count phages, by spreading them on a lawn of bacteria and counting the clear spots. Some bacteria really do self-destruct when a phage gets in (*abortive infection*), which is exactly why it helps them: the phage dies too, and can't reach the neighbors. The numbers are real-sized: a T4 makes about 100 to 200 copies in one cell. Only the time is sped up, about ten real minutes to a second.
+Flu really is grown in flasks of cells, and virologists count the clear holes it leaves, called **plaques**. Infected cells really do warn their neighbors with **interferon**, and **antibodies** really do stop a virus by sticking to its spikes. Two game liberties: real viruses can't swim (they drift), and real cells release hundreds of copies, over hours, not four in a second.
 
 ## Running it locally
 
@@ -44,16 +45,16 @@ The tests use [Vitest](https://vitest.dev/), and most run in [jsdom](https://git
 | Path | What's there |
 |---|---|
 | `public/index.html` | Home page, with its row of pals drawn by `script.js` |
-| `public/plaque.html` | The Plaque page; `game/play.js` runs it |
-| `public/game/config.js` | The numbers the game is built on: the dish, Tess's life cycle and how the lawn fights back |
-| `public/game/lawn.js` | The game itself, with no drawing: infecting, filling up, bursting and self-destructing |
-| `public/game/hex.js` | The hexagonal grid of bacteria |
-| `public/game/draw.js` | Drawing the dish on a canvas |
+| `public/flask.html` | The game page; `game/play.js` runs it |
+| `public/game/config.js` | The numbers the game is built on: the flask, Flo, the cells and the levels |
+| `public/game/flask.js` | The game itself, with no drawing: steering, getting into cells, copies spreading, warnings and antibodies |
+| `public/game/hex.js` | The hexagonal grid of cells |
+| `public/game/draw.js` | Drawing the flask on a canvas |
 | `public/game/pals.js` | Every pal's name and drawing, in one place. So far: Tess (phage T4), Flo (influenza A), Rota (rotavirus) and Cora (coronavirus) |
-| `public/game/` | Game code carried over from PetriPals: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the fun-fact pop-up (`facts.js`, with italics for scientific names from `italics.js`), and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
+| `public/game/` | Also game code carried over from PetriPals: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the fun-fact pop-up (`facts.js`, with italics for scientific names from `italics.js`), and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `docs/design.md` | The design doc |
 | `test/` | Tests |
-| `scripts/simulate.mjs` | Plays thousands of runs with simple computer players, to help tune `config.js` (`node scripts/simulate.mjs`) |
+| `scripts/simulate.mjs` | Plays each level hundreds of times with a simple computer player, to help tune `config.js` (`node scripts/simulate.mjs`) |
 | `src/index.ts` | Small Express server for local development |
 
 ## Deployment

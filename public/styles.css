@@ -142,22 +142,23 @@ body.play {
   color: #6b2149;
 }
 
-/* The petri dish, as big as fits. */
+/* The flask, as big as fits. */
 .stage {
   position: relative;
-  max-width: 30rem;
+  width: min(100%, calc((100vh - 9rem) * 360 / 460));
+  min-width: 16rem;
   margin: 0 auto;
 }
 
-#dish {
+#flask {
   display: block;
   width: 100%;
-  aspect-ratio: 1;
-  touch-action: manipulation; /* quick taps, no double-tap zoom */
-  cursor: pointer;
+  aspect-ratio: 360 / 460;
+  touch-action: none; /* dragging steers Flo instead of scrolling the page */
+  user-select: none;
 }
 
-.cleared {
+.cell-count {
   margin: 0.75rem 0 0;
   font-family: Nunito, system-ui, sans-serif;
   font-weight: 700;
@@ -171,21 +172,25 @@ body.play {
   color: #6b2149;
 }
 
-.purple {
-  color: #7c3aed;
+.teal {
+  color: #0f766e;
   font-weight: 700;
 }
 
-.red {
-  color: #dc2626;
+.amber {
+  color: #b45309;
   font-weight: 700;
 }
 
-.keys {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.9rem;
-  opacity: 0.8;
+.blue {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+/* Steering directions for the way you're playing (see touch.js). */
+.input-touch .for-keys,
+.input-keys .for-touch {
+  display: none;
 }
 
 .back-link {
@@ -193,7 +198,7 @@ body.play {
   margin-top: 0.5rem;
 }
 
-/* The end-of-dish pop-up, over the dish. */
+/* The end-of-level pop-up, over the flask. */
 .win-banner {
   position: absolute;
   left: 50%;

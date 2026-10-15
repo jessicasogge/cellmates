@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// play.js: the Plaque page. Loads the real plaque.html into jsdom, with a
+// play.js: the flask page. Loads the real flask.html into jsdom, with a
 // stand-in canvas, and runs the game frame by frame by hand.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -8,8 +8,9 @@ import { fakeContext } from './fake-canvas.js';
 
 vi.mock('../public/game/spores.js', () => ({ sporeBurst: vi.fn() }));
 
-const html = readFileSync(resolve(import.meta.dirname, '../public/plaque.html'), 'utf8');
+const html = readFileSync(resolve(import.meta.dirname, '../public/flask.html'), 'utf8');
 document.body.innerHTML = html.match(/<body[^>]*>([\s\S]*)<\/body>/)[1];
+history.replaceState(null, '', '/flask.html?level=2');
 
 const ctx = fakeContext();
 HTMLCanvasElement.prototype.getContext = () => ctx;
@@ -17,18 +18,17 @@ const frames = [];
 vi.stubGlobal('requestAnimationFrame', (callback) => frames.push(callback));
 
 const { sporeBurst } = await import('../public/game/spores.js');
-const { DISH, LAWN, VIRUSES } = await import('../public/game/config.js');
-const { running, clearedText, resultText, tappedCell } = await import('../public/game/play.js');
-const { createDish } = await import('../public/game/lawn.js');
+const { FLASK, LEVELS } = await import('../public/game/config.js');
+const { running, countText, levelFromSearch, resultText } = await import('../public/game/play.js');
 
 const $ = (selector) => document.querySelector(selector);
-const canvas = $('#dish');
-// The canvas is DISH.size px square at the top left, so a tap's px are
-// dish units.
-canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: DISH.size, height: DISH.size });
+const canvas = $('#flask');
+// The canvas is FLASK.width px wide at the top left, so screen px are flask
+// units.
+Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: FLASK.width });
+canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: FLASK.width, height: FLASK.height });
 let clock = 0;
 
-// Run `n` frames of `ms` each.
 function frame(n = 1, ms = 16) {
   for (let i = 0; i < n; i++) {
     clock += ms;
@@ -36,136 +36,123 @@ function frame(n = 1, ms = 16) {
   }
 }
 
-function until(check, limit = 1000) {
-  for (let i = 0; i < limit && !check(); i++) frame();
+function pointer(type, x, y, pointerType = 'mouse') {
+  const event = new MouseEvent(type, { clientX: x, clientY: y, bubbles: true, cancelable: true });
+  Object.assign(event, { pointerId: 1, isPrimary: true, pointerType });
+  canvas.dispatchEvent(event);
 }
 
-function tap(x, y) {
-  canvas.dispatchEvent(new MouseEvent('pointerdown', { clientX: x, clientY: y, bubbles: true }));
-}
-
-function key(name, target = document.body) {
-  const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
-  target.dispatchEvent(event);
-  return event;
-}
-
-// Restart, and run until the first cell has copies to burst.
-function ready() {
-  running.restart();
-  until(() => running.dish.landed);
-  running.dish.first.lasts = 99; // so it can't self-destruct while we wait
-  until(() => running.dish.first.copies >= VIRUSES.tess.full);
-  return running.dish.first;
-}
-
-// End the dish with `share` of the lawn cleared.
-function endWith(share) {
-  const { dish } = running;
-  until(() => dish.landed);
-  dish.cells.forEach((c, i) => { c.state = i < Math.round(share * dish.cells.length) ? 'plaque' : 'healthy'; });
-  frame();
-}
-
-describe('clearedText and resultText', () => {
-  const dish = createDish(VIRUSES.tess, LAWN, () => 0.5);
-  const clear = (share) => dish.cells.forEach((c, i) => { c.state = i < Math.round(share * dish.cells.length) ? 'plaque' : 'healthy'; });
-
-  it('says how much is cleared, and the goal', () => {
-    clear(0);
-    expect(clearedText(dish)).toBe(`Cleared 0% of the lawn · goal ${LAWN.target * 100}%`);
-  });
-
-  it('cheers a win, a near miss and a miss', () => {
-    clear(1);
-    expect(resultText(dish)).toEqual({ title: 'You won!', message: 'Tess’s plaque cleared 100% of the lawn.' });
-    clear(LAWN.target * 0.9);
-    expect(resultText(dish).title).toBe('So close!');
-    clear(0.05);
-    expect(resultText(dish).title).toBe('The plaque stopped growing');
-    expect(resultText(dish).message).toContain('before they turn red');
+describe('levelFromSearch', () => {
+  it('reads a 1-based level from the address, or starts at the first', () => {
+    expect(levelFromSearch('?level=3')).toBe(2);
+    for (const search of ['', '?level=0', '?level=9', '?level=x']) expect(levelFromSearch(search)).toBe(0);
   });
 });
 
-describe('tappedCell', () => {
-  const dish = createDish(VIRUSES.tess, LAWN, () => 0.5);
-  const cell = dish.first;
-  Object.assign(cell, { state: 'infected', copies: 50 });
+describe('resultText', () => {
+  const game = (over, taken = 7) => ({ over, taken, level: { target: 20 } });
 
-  it('picks the cell under the tap, or a ready one just next to it', () => {
-    expect(tappedCell(dish, cell.x, cell.y)).toBe(cell);
-    expect(tappedCell(dish, cell.x + DISH.cellSize * 1.2, cell.y)).toBe(cell);
-  });
-
-  it('picks nothing for a tap far from any ready cell', () => {
-    expect(tappedCell(dish, 20, 20)).toBeUndefined();
+  it('says what happened, and what the button does', () => {
+    expect(resultText(game('lost'), 0)).toMatchObject({ title: 'Caught by antibodies!', button: 'Try again' });
+    expect(resultText(game('lost'), 0).message).toContain('Flo took 7 of 20 cells');
+    expect(resultText(game('won', 20), 0)).toEqual({ title: 'You won!', message: 'Flo took 20 cells.', button: 'Next level' });
+    expect(resultText(game('won'), LEVELS.length - 1)).toMatchObject({ title: 'You won them all!', button: 'Play again' });
   });
 });
 
 describe('the page', () => {
-  beforeAll(() => frame()); // the first frame
+  beforeAll(() => frame());
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('starts a dish, and draws it', () => {
-    expect($('.cleared').textContent).toBe(clearedText(running.dish));
-    expect($('.win-banner').hidden).toBe(true);
+  it('starts the level from the address', () => {
+    expect(running.game.level).toBe(LEVELS[1]);
+    expect($('.cell-count').textContent).toBe(countText(running.game, 1));
+    expect($('.target-cells').textContent).toBe(String(LEVELS[1].target));
     expect(ctx.calls.length).toBeGreaterThan(0);
   });
 
-  it('bursts a cell you tap, and shows it spreading', () => {
-    const cell = ready();
-    tap(cell.x, cell.y);
-    expect(cell.state).toBe('plaque');
-    expect(running.view.pops).toHaveLength(1);
-    expect($('.cleared').textContent).toBe(clearedText(running.dish));
-    frame(40); // the burst fades away
-    expect(running.view.pops).toHaveLength(0);
-    tap(5, 5); // a tap on nothing does nothing
+  it('steers her with the arrow keys', () => {
+    const before = running.game.pal.y;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', cancelable: true }));
+    frame(5);
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
+    expect(running.game.pal.y).toBeLessThan(before);
   });
 
-  it('bursts the most urgent cell with the space bar', () => {
-    const cell = ready();
-    expect(key(' ').defaultPrevented).toBe(true);
-    expect(cell.state).toBe('plaque');
-    key('x'); // other keys do nothing
+  it('steers her toward a held-down mouse, and with a dragging finger', () => {
+    running.begin(1);
+    frame();
+    const { pal } = running.game;
+    const before = { ...pal };
+    // The flask's middle is at (180, 230) on the screen; press to the left of her.
+    pointer('pointerdown', pal.x - 60, pal.y);
+    frame(3);
+    pointer('pointerup', pal.x - 60, pal.y);
+    expect(pal.x).toBeLessThan(before.x);
+
+    const x = pal.x;
+    pointer('pointerdown', 100, 300, 'touch');
+    pointer('pointermove', 110, 300, 'touch');
+    frame();
+    pointer('pointerup', 110, 300, 'touch');
+    expect(pal.x).toBeGreaterThan(x);
   });
 
-  it('leaves the space bar alone on buttons and links', () => {
-    const cell = ready();
-    expect(key(' ', $('.play-again')).defaultPrevented).toBe(false);
-    expect(cell.state).toBe('infected');
+  it('counts cells as she takes them', () => {
+    running.begin(1);
+    const { game } = running;
+    const cell = game.cells.find((c) => c.receptor);
+    game.pal.x = cell.x;
+    game.pal.y = cell.y;
+    frame(80);
+    expect(game.taken).toBeGreaterThan(0);
+    expect($('.cell-count').textContent).toBe(countText(game, 1));
   });
 
-  it('celebrates a win', () => {
-    running.restart();
-    endWith(1);
+  it('shows the pop-up and tries again when she’s caught', () => {
+    running.begin(1);
+    running.game.clouds = [{ x: running.game.pal.x, y: running.game.pal.y, r: 0 }];
+    frame(20);
+    expect(running.game.over).toBe('lost');
     expect($('.win-banner').hidden).toBe(false);
-    expect($('.win-title').textContent).toBe('You won!');
+    expect($('.win-title').textContent).toBe('Caught by antibodies!');
     expect($('.fun-fact').hidden).toBe(false);
-    expect(sporeBurst).toHaveBeenCalledWith(canvas, { big: true });
-    tap(DISH.size / 2, DISH.size / 2); // no bursting behind the pop-up
+    expect(sporeBurst).not.toHaveBeenCalled();
+    frame(); // nothing moves once it's over
     $('.play-again').click();
     expect($('.win-banner').hidden).toBe(true);
+    expect(running.game.level).toBe(LEVELS[1]);
   });
 
-  it('says so when the plaque stops short, and plays again with the space bar', () => {
-    running.restart();
-    endWith(0.05);
-    expect($('.win-title').textContent).toBe('The plaque stopped growing');
-    expect(sporeBurst).not.toHaveBeenCalled();
-    key(' ');
-    expect($('.win-banner').hidden).toBe(true);
-    expect(running.dish.landed).toBe(false);
+  it('celebrates a win and goes on to the next level, and back to the first after the last', () => {
+    running.begin(1);
+    running.game.taken = running.game.level.target;
+    frame();
+    expect($('.win-title').textContent).toBe('You won!');
+    expect(sporeBurst).toHaveBeenCalledWith(canvas, { big: false });
+    $('.play-again').click();
+    expect(running.game.level).toBe(LEVELS[2]);
+
+    running.game.taken = running.game.level.target;
+    frame();
+    expect($('.win-title').textContent).toBe('You won them all!');
+    expect(sporeBurst).toHaveBeenLastCalledWith(canvas, { big: true });
+    $('.play-again').click();
+    expect(running.game.level).toBe(LEVELS[0]);
   });
 
   it('redraws at the new size when the window changes', () => {
-    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 300 });
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 0 });
+    window.dispatchEvent(new Event('resize'));
+    expect(canvas.width).toBe(FLASK.width); // a fallback size while it has none
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 180 });
     window.devicePixelRatio = 2;
     window.dispatchEvent(new Event('resize'));
-    expect(canvas.width).toBe(600);
-    expect(canvas.height).toBe(600);
+    expect(canvas.width).toBe(360);
+    expect(canvas.height).toBe(460);
+    frame(); // steering copes with any size too
   });
 });
