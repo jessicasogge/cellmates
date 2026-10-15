@@ -103,3 +103,144 @@ a {
 .signature {
   font-size: 0.85rem;
 }
+
+/* The home page's way into the game. */
+.play-button {
+  display: inline-block;
+  margin: 0.5rem 0 0;
+  padding: 0.7rem 2.2rem;
+  border-radius: 999px;
+  background: #be185d;
+  color: #fff;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  text-decoration: none;
+  box-shadow: 0 4px 0 #831843;
+}
+
+.play-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #831843;
+}
+
+/* The game page. */
+body.play {
+  padding: 1rem 1rem 2rem;
+}
+
+.dish-title .pal-name {
+  margin: 0;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 2.2rem;
+  color: #be185d;
+}
+
+.dish-title .species {
+  margin: 0 0 0.75rem;
+  color: #6b2149;
+}
+
+/* The flask, as big as fits. */
+.stage {
+  position: relative;
+  width: min(100%, calc((100vh - 9rem) * 360 / 460));
+  min-width: 16rem;
+  margin: 0 auto;
+}
+
+#flask {
+  display: block;
+  width: 100%;
+  aspect-ratio: 360 / 460;
+  touch-action: none; /* dragging steers Flo instead of scrolling the page */
+  user-select: none;
+}
+
+.cell-count {
+  margin: 0.75rem 0 0;
+  font-family: Nunito, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.how-to-play {
+  max-width: 26rem;
+  margin: 0.75rem auto;
+  line-height: 1.5;
+  color: #6b2149;
+}
+
+.teal {
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.amber {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.blue {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+/* Steering directions for the way you're playing (see touch.js). */
+.input-touch .for-keys,
+.input-keys .for-touch {
+  display: none;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+/* The end-of-level pop-up, over the flask. */
+.win-banner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(20rem, calc(100% - 1rem));
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 10px 40px rgb(131 24 67 / 0.3);
+}
+
+.win-banner[hidden] {
+  display: none;
+}
+
+.win-banner h2 {
+  margin: 0;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-size: 1.8rem;
+  color: #be185d;
+}
+
+.win-message,
+.fun-fact {
+  line-height: 1.45;
+}
+
+.fun-fact {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #fff1f2;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.play-again {
+  padding: 0.6rem 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: #be185d;
+  color: #fff;
+  font: 700 1.05rem Fredoka, system-ui, sans-serif;
+  cursor: pointer;
+}

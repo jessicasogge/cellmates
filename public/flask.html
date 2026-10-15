@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flask: CellMates</title>
+    <meta name="description" content="Steer Flo the flu virus around a flask of cells. Get into cells, spread copies, and dodge the antibodies." />
+    <link rel="preload" href="./fonts/fredoka-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="play">
+    <header class="dish-title">
+      <h1 class="pal-name">Flo</h1>
+      <p class="species"><i>Influenza A virus</i></p>
+    </header>
+
+    <div class="stage">
+      <canvas id="flask" aria-label="A culture flask with a sheet of cells, and Flo the flu virus floating over them"></canvas>
+      <div class="win-banner" role="status" hidden>
+        <h2 class="win-title"></h2>
+        <p class="win-message"></p>
+        <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+        <button class="play-again" type="button">Play again</button>
+      </div>
+    </div>
+
+    <p class="cell-count" aria-live="polite">Level 1 · 0 / 28 cells</p>
+
+    <p class="how-to-play">
+      <span class="for-keys">Use the arrow keys to steer Flo.</span>
+      <span class="for-touch">Touch the flask and slide your finger to steer Flo.</span>
+      She can only get into cells with <span class="teal">teal bumps</span>.
+      Each one she gets into releases more copies of her, which drift off and get into cells nearby on their own.
+      But cells warn their neighbors (<span class="amber">yellow outline</span>): copies can’t get into a warned cell,
+      only Flo can, and it takes her longer. Take <span class="target-cells">28</span> cells to win,
+      and don’t touch the <span class="blue">antibodies</span>. They keep spreading, so be quick!
+    </p>
+
+    <a class="back-link" href="./">Back to CellMates</a>
+
+    <script type="module" src="./game/play.js"></script>
+  </body>
+</html>
