@@ -1,8 +1,9 @@
 // Drawing the flask on a canvas: the culture flask, its sheet of cells, the
-// antibody clouds, the drifting copies and your pal. All in flask units;
-// the page sets the canvas up so they fill it (see play.js).
+// antibody clouds, bursting cells, her trail of copies and your pal. All in
+// flask units; the page sets the canvas up so they fill it (see play.js).
 
 import { FLASK } from './config.js';
+import { POP_TIME } from './flask.js';
 import { hexCorners } from './hex.js';
 
 export const COLORS = {
@@ -116,7 +117,37 @@ function drawCloud(ctx, cloud) {
   ctx.lineWidth = 1;
 }
 
-// A free copy: small, with spikes and no face.
+// A burst: a ring in her color flying outward with bits of the cell, and
+// from the third burst in a row, the streak, "×3!", rising and fading.
+function drawPop(ctx, pop, color) {
+  const t = pop.age / POP_TIME; // 0 to 1
+  ctx.globalAlpha = 1 - t;
+  ctx.beginPath();
+  ctx.arc(pop.x, pop.y, 6 + t * 26, 0, Math.PI * 2);
+  ctx.lineWidth = 4 * (1 - t) + 1;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+  ctx.fillStyle = COLORS.cell;
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + pop.x;
+    ctx.beginPath();
+    ctx.arc(pop.x + Math.cos(angle) * t * 30, pop.y + Math.sin(angle) * t * 30, 3 * (1 - t) + 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (pop.streak >= 3) {
+    ctx.font = `700 ${16 + Math.min(pop.streak, 20)}px Fredoka, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#fff';
+    ctx.strokeText(`×${pop.streak}!`, pop.x, pop.y - 14 - t * 20);
+    ctx.fillStyle = COLORS.ring;
+    ctx.fillText(`×${pop.streak}!`, pop.x, pop.y - 14 - t * 20);
+  }
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 1;
+}
+
+// One of her copies: small, with spikes and no face.
 function drawCopy(ctx, copy, color) {
   ctx.beginPath();
   ctx.arc(copy.x, copy.y, 5, 0, Math.PI * 2);
@@ -150,6 +181,6 @@ export function drawFlask(ctx, game, palImage) {
   for (const cell of game.cells) drawCell(ctx, cell, color);
   for (const cloud of game.clouds) drawCloud(ctx, cloud);
   for (const copy of game.copies) drawCopy(ctx, copy, color);
-  // While she's inside a cell, the cell's glow and ring show where she is.
-  if (!game.pal.inside) drawPal(ctx, game.pal, palImage, color);
+  drawPal(ctx, game.pal, palImage, color);
+  for (const pop of game.pops) drawPop(ctx, pop, color);
 }

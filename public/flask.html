@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Flask: CellMates</title>
-    <meta name="description" content="Steer Flo the flu virus around a flask of cells. Get into cells, spread copies, and dodge the antibodies." />
+    <meta name="description" content="Steer Flo the flu virus around a flask of cells. Infect cells, grow a trail of copies, and dodge the antibodies." />
     <link rel="preload" href="./fonts/fredoka-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -24,16 +24,12 @@
       </div>
     </div>
 
-    <p class="cell-count" aria-live="polite">Level 1 · 0 / 28 cells</p>
+    <p class="cell-count" aria-live="polite">Level 1</p>
 
     <p class="how-to-play">
-      <span class="for-keys">Use the arrow keys to steer Flo.</span>
-      <span class="for-touch">Touch the flask and slide your finger to steer Flo.</span>
-      She can only get into cells with <span class="teal">teal bumps</span>.
-      Each one she gets into releases more copies of her, which drift off and get into cells nearby on their own.
-      But cells warn their neighbors (<span class="amber">yellow outline</span>): copies can’t get into a warned cell,
-      only Flo can, and it takes her longer. Take <span class="target-cells">28</span> cells to win,
-      and don’t touch the <span class="blue">antibodies</span>. They keep spreading, so be quick!
+      <span class="for-keys">Steer Flo with the arrow keys.</span>
+      <span class="for-touch">Slide your finger on the flask to steer Flo.</span>
+      Touch the cells with <span class="teal">teal bumps</span>, and don’t touch the <span class="blue">antibodies</span>!
     </p>
 
     <a class="back-link" href="./">Back to CellMates</a>

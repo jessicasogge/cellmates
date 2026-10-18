@@ -23,7 +23,7 @@ export function levelFromSearch(search) {
 
 // The line under the flask.
 export function countText(game, index) {
-  return `Level ${index + 1} · ${game.taken} / ${game.level.target} cells`;
+  return `Level ${index + 1} · ${game.taken} / ${game.target} cells`;
 }
 
 // The end-of-level pop-up's words: { title, message, button }.
@@ -31,14 +31,15 @@ export function resultText(game, index) {
   if (game.over === 'lost') {
     return {
       title: 'Caught by antibodies!',
-      message: `Flo took ${game.taken} of ${game.level.target} cells. Antibodies stick to her spikes so she can’t get into cells.`,
+      message: `Flo took ${game.taken} of ${game.target} cells. Antibodies stick to her spikes so she can’t get into cells.`,
       button: 'Try again',
     };
   }
+  const streak = game.bestStreak >= 3 ? ` Best streak: ×${game.bestStreak}!` : '';
   if (index === LEVELS.length - 1) {
-    return { title: 'You won them all!', message: `Flo took over the flask on every level.`, button: 'Play again' };
+    return { title: 'You won them all!', message: `Flo took over the flask on every level.${streak}`, button: 'Play again' };
   }
-  return { title: 'You won!', message: `Flo took ${game.taken} cells.`, button: 'Next level' };
+  return { title: 'You won!', message: `Flo took ${game.taken} cells.${streak}`, button: 'Next level' };
 }
 
 // A pal's drawing from pals.js, as an image the canvas can draw.
@@ -68,7 +69,6 @@ export function start() {
     game = createGame(LEVELS[index], virus);
     banner.hidden = true;
     hideFact();
-    $('.target-cells').textContent = String(game.level.target);
     $('.cell-count').textContent = countText(game, index);
   }
 

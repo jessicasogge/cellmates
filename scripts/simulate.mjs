@@ -3,52 +3,85 @@
 //
 //   node scripts/simulate.mjs
 //
-// The player steers straight for the nearest cell it can get into whose path
-// keeps clear of the antibody clouds. It steers perfectly and never
-// hesitates, but doesn't plan ahead. The script prints how often it wins, how long that
-// takes, and how many cells the free copies took on their own.
+// The player steers for the nearest cell it can get into that a cloud won't
+// cover, curving around clouds on the way. It never hesitates, but doesn't
+// plan ahead. The script prints how often
+// it wins, how long that takes, how long her trail got, how many cells her
+// copies took for her, and the best streak.
 import { canEnter, createGame, move, step } from '../public/game/flask.js';
-import { ANTIBODIES, LEVELS, VIRUSES } from '../public/game/config.js';
+import { LEVELS, VIRUSES } from '../public/game/config.js';
 
 const GAMES = 300;
 const flo = VIRUSES.flo;
 
-function safePath(game, from, to) {
-  return game.clouds.every((c) => {
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    const t = Math.max(0, Math.min(1, ((c.x - from.x) * dx + (c.y - from.y) * dy) / (dx * dx + dy * dy || 1)));
-    return Math.hypot(from.x + dx * t - c.x, from.y + dy * t - c.y) > c.r + 14;
-  });
+// The way to steer from (x, y) toward `to`: straight at it, pushed away from
+// any cloud close by, the way a player curves around one.
+function heading(game, x, y, to) {
+  let hx = to.x - x;
+  let hy = to.y - y;
+  const len = Math.hypot(hx, hy) || 1;
+  [hx, hy] = [hx / len, hy / len];
+  for (const c of game.clouds) {
+    const d = Math.hypot(x - c.x, y - c.y) || 1;
+    const room = game.level.size + 22;
+    if (d < room) {
+      const push = ((room - d) / 10) ** 2;
+      hx += ((x - c.x) / d) * push;
+      hy += ((y - c.y) / d) * push;
+    }
+  }
+  const h = Math.hypot(hx, hy) || 1;
+  return [hx / h, hy / h];
 }
 
-function play(level) {
+// A cell is worth heading for unless a fully spread cloud covers it.
+function reachable(game, cell) {
+  return game.clouds.every((c) => Math.hypot(cell.x - c.x, cell.y - c.y) > game.level.size + 12);
+}
+
+// `human` plays more like a person: it picks a new cell to head for only
+// every 0.4 s, steers a little off, and slows down for turns.
+function play(level, human) {
   const game = createGame(level, flo);
   let byPal = 0;
+  let longest = 0;
+  let target = null;
+  let rethink = 0;
   while (!game.over && game.time < 180) {
     const { pal } = game;
-    if (!pal.inside) {
-      const options = game.cells.filter((c) => canEnter(c, true) && safePath(game, pal, c));
-      if (options.length) {
-        const target = options.reduce((a, b) =>
-          Math.hypot(a.x - pal.x, a.y - pal.y) < Math.hypot(b.x - pal.x, b.y - pal.y) ? a : b);
-        const d = Math.hypot(target.x - pal.x, target.y - pal.y);
-        const stepSize = Math.min(d, flo.speed / 60);
-        move(game, ((target.x - pal.x) / d) * stepSize, ((target.y - pal.y) / d) * stepSize);
-      }
+    rethink -= 1 / 60;
+    if (!human || rethink <= 0 || !canEnter(target, true)) {
+      const options = game.cells.filter((c) => canEnter(c, true) && reachable(game, c));
+      target = options.length
+        ? options.reduce((a, b) => (Math.hypot(a.x - pal.x, a.y - pal.y) < Math.hypot(b.x - pal.x, b.y - pal.y) ? a : b))
+        : null;
+      rethink = 0.4;
     }
-    for (const e of step(game, 1 / 60)) if (e.type === 'entered') byPal++;
+    if (target) {
+      let [hx, hy] = heading(game, pal.x, pal.y, target);
+      const speed = human ? flo.speed * 0.6 : flo.speed;
+      if (human) [hx, hy] = [hx + (Math.random() - 0.5) * 0.4, hy + (Math.random() - 0.5) * 0.4];
+      move(game, (hx * speed) / 60, (hy * speed) / 60);
+    }
+    for (const e of step(game, 1 / 60)) if (e.type === 'infected' && e.byPal) byPal++;
+    longest = Math.max(longest, game.copies.length);
   }
-  return { won: game.over === 'won', time: game.time, byPal, taken: game.taken };
+  return {
+    won: game.over === 'won', time: game.time, byPal, taken: game.taken, target: game.target, longest, streak: game.bestStreak,
+  };
 }
 
 const median = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length / 2)];
-for (const [i, level] of LEVELS.entries()) {
-  const games = Array.from({ length: GAMES }, () => play(level));
-  const wins = games.filter((g) => g.won);
-  console.log(
-    `Level ${i + 1} (target ${level.target}): wins ${Math.round((wins.length / GAMES) * 100)}%` +
-      `, seconds ${median(wins.map((g) => g.time))?.toFixed(0)}` +
-      `, cells taken by Flo ${median(games.map((g) => g.byPal))} of ${median(games.map((g) => g.taken))}`,
-  );
+for (const human of [false, true]) {
+  console.log(human ? 'A more human player:' : 'A perfect player:');
+  for (const [i, level] of LEVELS.entries()) {
+    const games = Array.from({ length: GAMES }, () => play(level, human));
+    const wins = games.filter((g) => g.won);
+    console.log(
+      `  Level ${i + 1} (target ${median(games.map((g) => g.target))}): wins ${Math.round((wins.length / GAMES) * 100)}%` +
+        `, seconds ${median(wins.map((g) => g.time))?.toFixed(0)}` +
+        `, Flo took ${median(games.map((g) => g.byPal))} of ${median(games.map((g) => g.taken))}` +
+        `, longest trail ${median(games.map((g) => g.longest))}, best streak ${median(games.map((g) => g.streak))}`,
+    );
+  }
 }

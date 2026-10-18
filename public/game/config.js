@@ -12,7 +12,7 @@ export const FLASK = {
   // The sheet of cells, inside the flask's walls. Below it is the neck of
   // the flask, where your pal starts.
   cells: { left: 12, top: 12, right: 348, bottom: 392 },
-  cellSize: 25, // middle to corner of each hex cell: 7 or 8 across
+  cellSize: 18, // middle to corner of each hex cell: 10 or 11 across
   start: { x: 180, y: 428 },
 };
 
@@ -22,23 +22,20 @@ export const FLASK = {
 //   receptor   what she grabs onto to get into a cell
 //   speed      how fast you can steer her. (Real viruses can't swim at all,
 //              a game liberty, like PetriPals' cocci swimming.)
-//   enterTime  s for her to get into a cell, make copies and get back out
-//   copyTime   s for a cell her copies get into to make more
-//   copies     copies each cell releases. Scaled way down: a real cell
+//   burstTime  s from a cell being infected to it bursting
+//   copies     copies each cell she gets into herself releases (one a copy
+//              gets into releases one). Scaled way down: a real cell
 //              infected with flu releases hundreds or more.
-//   drift      how fast her free copies drift about
-//   lifetime   s a free copy lasts before it stops being able to infect
+//   maxTrail   the most copies that can follow her at once
 //   facts      "Did you know?" facts for the end-of-level pop-up
 export const VIRUSES = {
   flo: {
     species: 'Influenza A virus',
     receptor: 'sialic acid',
-    speed: 110,
-    enterTime: 1,
-    copyTime: 1.4,
-    copies: 3,
-    drift: 40,
-    lifetime: 2.5,
+    speed: 120,
+    burstTime: 0.8,
+    copies: 2,
+    maxTrail: 30,
     color: '#fb7185',
     facts: [
       'Flo has two kinds of spikes. Her HA spikes grab sialic acid on a cell to get in, and her NA spikes snip it away so new copies can get out.',
@@ -51,26 +48,46 @@ export const VIRUSES = {
   },
 };
 
+// Her copies follow her in a trail, like the cells of a PetriPals colony
+// follow their leader: `spacing` flask units apart along the path she took.
+// They sit off to alternate sides, up to `spread` from her path, so a long
+// trail sweeps a wide path. New copies fly from the cell that burst to the
+// end of the trail at `flySpeed`. A copy in the trail that comes within
+// `seek` of a cell it can get into peels off and goes for it at
+// `seekSpeed`, so the longer the trail, the faster the flask is taken.
+export const TRAIL = { spacing: 9, spread: 24, flySpeed: 260, seek: 60, seekSpeed: 80 };
+
 // The cells and how they fight back.
 //
-//   receptors   share of cells with your receptor. The rest won't let you in.
-//   warnChance  when a cell releases its copies, the chance each healthy
-//               neighbor gets the interferon warning. Free copies can't get
-//               into a warned cell; your pal can, but it takes her twice as
-//               long.
+//   receptors   share of cells with your receptor. The rest won't let you in,
+//               so the ones that do are worth steering for.
+//   warnChance  when a cell bursts, the chance each healthy neighbor gets the
+//               interferon warning. Her copies can't get into a warned cell;
+//               she can, but it takes twice as long to burst.
 export const CELLS = {
-  receptors: 0.75,
-  warnChance: 0.6,
+  receptors: 0.35,
+  warnChance: 0.3,
 };
 
-// The levels, like PetriPals': each adds an antibody cloud and needs more
-// cells taken. The immune system keeps making antibodies, so each cloud
-// starts `start` in radius and keeps spreading by `growth` a second, up to
-// `max`: the longer you take, the less room there is. Touching a cloud ends
-// the game, and free copies that drift into one are stopped.
-export const ANTIBODIES = { start: 16, growth: 2, max: 100 };
+// Bursts that follow each other within this many seconds count as a streak.
+export const STREAK_GAP = 1.2;
+
+// The levels, like PetriPals': each adds an antibody cloud, with bigger
+// clouds, and needs more of the flask taken. Like PetriPals' zones of
+// inhibition, each cloud spreads out over the first `growTime` s (quickly,
+// then slowly) to its level's `size` and then stays put, so you can learn
+// the flask and plan a way around. Touching a cloud ends the game; copies
+// that touch one are lost.
+//
+//   antibodies  how many clouds
+//   size        how far each cloud spreads, from its middle
+//   share       how many of the cells with your receptor you need to take,
+//               not counting ones a cloud covers, so a level can always be won
+export const ANTIBODIES = { start: 8, growTime: 4 };
 export const LEVELS = [
-  { target: 28, antibodies: 1 },
-  { target: 30, antibodies: 2 },
-  { target: 32, antibodies: 3 },
+  { antibodies: 2, size: 34, share: 0.75 },
+  { antibodies: 3, size: 38, share: 0.8 },
+  { antibodies: 4, size: 42, share: 0.85 },
+  { antibodies: 5, size: 46, share: 0.9 },
+  { antibodies: 6, size: 50, share: 0.95 },
 ];

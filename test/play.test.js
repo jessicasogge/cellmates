@@ -50,13 +50,18 @@ describe('levelFromSearch', () => {
 });
 
 describe('resultText', () => {
-  const game = (over, taken = 7) => ({ over, taken, level: { target: 20 } });
+  const game = (over, taken = 7, bestStreak = 2) => ({ over, taken, target: 20, bestStreak });
 
   it('says what happened, and what the button does', () => {
     expect(resultText(game('lost'), 0)).toMatchObject({ title: 'Caught by antibodies!', button: 'Try again' });
     expect(resultText(game('lost'), 0).message).toContain('Flo took 7 of 20 cells');
     expect(resultText(game('won', 20), 0)).toEqual({ title: 'You won!', message: 'Flo took 20 cells.', button: 'Next level' });
     expect(resultText(game('won'), LEVELS.length - 1)).toMatchObject({ title: 'You won them all!', button: 'Play again' });
+  });
+
+  it('brags about a streak of three or more', () => {
+    expect(resultText(game('won', 20, 12), 0).message).toBe('Flo took 20 cells. Best streak: ×12!');
+    expect(resultText(game('won', 20, 12), LEVELS.length - 1).message).toContain('Best streak: ×12!');
   });
 });
 
@@ -70,7 +75,7 @@ describe('the page', () => {
   it('starts the level from the address', () => {
     expect(running.game.level).toBe(LEVELS[1]);
     expect($('.cell-count').textContent).toBe(countText(running.game, 1));
-    expect($('.target-cells').textContent).toBe(String(LEVELS[1].target));
+    expect(countText(running.game, 1)).toBe(`Level 2 · 0 / ${running.game.target} cells`);
     expect(ctx.calls.length).toBeGreaterThan(0);
   });
 
@@ -129,14 +134,15 @@ describe('the page', () => {
 
   it('celebrates a win and goes on to the next level, and back to the first after the last', () => {
     running.begin(1);
-    running.game.taken = running.game.level.target;
+    running.game.taken = running.game.target;
     frame();
     expect($('.win-title').textContent).toBe('You won!');
     expect(sporeBurst).toHaveBeenCalledWith(canvas, { big: false });
     $('.play-again').click();
     expect(running.game.level).toBe(LEVELS[2]);
 
-    running.game.taken = running.game.level.target;
+    running.begin(LEVELS.length - 1);
+    running.game.taken = running.game.target;
     frame();
     expect($('.win-title').textContent).toBe('You won them all!');
     expect(sporeBurst).toHaveBeenLastCalledWith(canvas, { big: true });
