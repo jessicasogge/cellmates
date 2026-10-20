@@ -27,10 +27,10 @@
   box-sizing: border-box;
 }
 
-/* The page: a soft sky blue, so CellMates doesn't look like PetriPals' mint or FunGals' purple. */
+/* The page: a soft, pretty pink, so CellMates doesn't look like PetriPals' mint or FunGals' purple. */
 body {
   margin: 0;
-  background: #dcecfb;
+  background: #fbe0ea;
   color: #134e4a;
   font-family: system-ui, sans-serif;
   text-align: center;
@@ -738,7 +738,7 @@ body:not(.picker-page) .signature {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(220, 236, 251, 0.55);
+  background: rgba(251, 224, 234, 0.55);
   animation: loading-in 0.2s ease-out 0.15s both;
 }
 
@@ -751,7 +751,7 @@ body:not(.picker-page) .signature {
    done (an error, say), give up after a while rather than block the page
    forever. */
 .loading-overlay.arriving {
-  background: #dcecfb;
+  background: #fbe0ea;
   animation: loading-give-up 0s linear 8s forwards;
 }
 
