@@ -775,6 +775,15 @@ html.input-keys .for-keys {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Inside a cell (game/swarm.js): she shrinks into it and fades, and holds
+   still until it bursts. */
+.mate-mover.inside .dish-mate {
+  transform: scale(0.6);
+  opacity: 0.55;
+  animation: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
 /* The player's mate after touching a disk. */
 .mate-mover.killed {
   filter: grayscale(1);

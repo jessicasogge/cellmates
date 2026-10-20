@@ -2,15 +2,15 @@
 // game.js runs a level of Plaque Assay: steer, infect cells to make copies of
 // her, and show the level-complete, win or game-over pop-up. These tests
 // load the real petri dish page into jsdom and stand in for the swarm,
-// steering and effects, so each test can say exactly what happens ("there
-// are 4 copies", "she touched a disk") and then check what the player sees.
+// steering and effects, so each test can say exactly what happens ("5 cells
+// have burst", "she touched a disk") and then check what the player sees.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GAME, LEVELS, SPECIES } from '../public/game/config.js';
 import { plainText } from '../public/game/italics.js';
 
-// A stand-in swarm whose count each test sets.
+// A stand-in swarm whose count of cells burst each test sets.
 const fake = vi.hoisted(() => ({ swarm: null, hit: null, keys: [0, 0] }));
 
 vi.mock('../public/game/swarm.js', () => ({ makeSwarm: vi.fn(() => fake.swarm) }));
@@ -42,10 +42,13 @@ let hosts;
 let location;
 
 function makeFakeSwarm() {
-  let count = 1;
+  let burst = 0;
+  let inside = false;
   return {
-    count: () => count,
-    setCount(n) { count = n; },
+    burst: () => burst,
+    setCount(n) { burst = n; },
+    inside: () => inside,
+    setInside(value) { inside = value; },
     reach: 0.05,
     body: () => [[0, 0, 5]],
     step: vi.fn(),
@@ -93,14 +96,14 @@ afterEach(() => {
 });
 
 describe('the counter', () => {
-  it('shows the level and how many copies it takes to win', () => {
+  it('shows the level and how many cells it takes to win', () => {
     start({ level: 2 });
-    expect(document.querySelector('.cell-count').textContent).toBe('Level 2 · 1 / 8 copies');
+    expect(document.querySelector('.cell-count').textContent).toBe('Level 2 · 0 / 10 cells burst');
   });
 
   it('puts the target in the how-to-play line too', () => {
     start({ level: 3 });
-    expect(document.querySelector('.target-copies').textContent).toBe('16');
+    expect(document.querySelector('.target-cells').textContent).toBe('15');
   });
 
   it('updates when the swarm changes, and stops at the target', () => {
@@ -108,10 +111,10 @@ describe('the counter', () => {
     const [{ onChange }] = vi.mocked(makeSwarm).mock.calls[0];
     fake.swarm.setCount(3);
     onChange();
-    expect(document.querySelector('.cell-count').textContent).toBe('Level 1 · 3 / 4 copies');
+    expect(document.querySelector('.cell-count').textContent).toBe('Level 1 · 3 / 5 cells burst');
     fake.swarm.setCount(7);
     onChange();
-    expect(document.querySelector('.cell-count').textContent).toBe('Level 1 · 4 / 4 copies');
+    expect(document.querySelector('.cell-count').textContent).toBe('Level 1 · 5 / 5 cells burst');
   });
 
   it('draws her at her own size', () => {
@@ -119,11 +122,10 @@ describe('the counter', () => {
     expect(document.querySelector('.mate-mover').style.width).toBe(`${SPECIES.phoebe.size * 100}%`);
   });
 
-  it("makes the swarm with her species, the level's target, and her drawing", () => {
+  it('makes the swarm with her species and her drawing', () => {
     start({ level: 2, mate: 'missy' });
     const [options] = vi.mocked(makeSwarm).mock.calls[0];
     expect(options.species).toBe(SPECIES.missy);
-    expect(options.target).toBe(8);
     expect(options.hosts).toBe(hosts);
     expect(options.svg.dataset.mate).toBe('missy');
   });
@@ -151,6 +153,27 @@ describe('playing', () => {
     frame(50);
     expect(player.facing).toBe(-1);
   });
+
+  it("can't steer while she's inside a cell", () => {
+    start();
+    const [{ player }] = vi.mocked(makeSwarm).mock.calls[0];
+    fake.swarm.setInside(true);
+    fake.keys = [-1, 0];
+    frame();
+    frame(50);
+    expect(player.facing).toBe(1);
+  });
+
+  it("is safe from the disks while she's inside a cell", async () => {
+    const { touchedDisk } = await import('../public/game/antiviral.js');
+    const banner = start();
+    fake.swarm.setInside(true);
+    fake.hit = disk(0.05);
+    frame();
+    vi.runAllTimers();
+    expect(touchedDisk).not.toHaveBeenCalled();
+    expect(banner.hidden).toBe(true);
+  });
 });
 
 describe('keeping her in the dish', () => {
@@ -169,9 +192,9 @@ describe('keeping her in the dish', () => {
 });
 
 describe('beating a level', () => {
-  it('waits until there are enough copies', () => {
+  it('waits until enough cells have burst', () => {
     const banner = start({ level: 1 });
-    fake.swarm.setCount(3);
+    fake.swarm.setCount(4);
     frame();
     vi.runAllTimers();
     expect(banner.hidden).toBe(true);
@@ -179,12 +202,12 @@ describe('beating a level', () => {
 
   it('says the level is complete and offers the next one', () => {
     const banner = start({ level: 2 });
-    fake.swarm.setCount(8);
+    fake.swarm.setCount(10);
     frame();
     vi.runAllTimers();
     expect(banner.hidden).toBe(false);
     expect(banner.querySelector('h2').textContent).toBe('Level 2 complete!');
-    expect(banner.querySelector('.win-message').textContent).toBe('You made 8 copies of Tia!');
+    expect(banner.querySelector('.win-message').textContent).toBe('Tia and her copies burst 10 E. coli cells!');
     expect(banner.querySelector('.play-again').textContent).toBe('Play level 3');
     expect(banner.querySelector('.start-over').hidden).toBe(true);
     expect(sporeBurst).toHaveBeenCalledWith(expect.anything(), { big: false });
@@ -199,7 +222,7 @@ describe('beating a level', () => {
     expect(sporeBurst).toHaveBeenCalledWith(expect.anything(), { big: true });
     expect(banner.querySelector('h2').textContent).toBe('You won!');
     expect(banner.querySelector('.win-message').textContent)
-      .toBe(`You beat all ${last} levels with ${LEVELS[last - 1].target} copies of Tia!`);
+      .toBe(`You beat all ${last} levels: Tia and her copies burst ${LEVELS[last - 1].target} E. coli cells!`);
     expect(banner.querySelector('.play-again').textContent).toBe('Play again');
     banner.querySelector('.play-again').click();
     expect(new URL(location.href).searchParams.get('level')).toBe('1');
@@ -207,7 +230,7 @@ describe('beating a level', () => {
 
   it('"Play level N" goes to the next level and keeps the mate', () => {
     const banner = start({ level: 3 });
-    fake.swarm.setCount(16);
+    fake.swarm.setCount(15);
     frame();
     vi.runAllTimers();
     banner.querySelector('.play-again').click();
@@ -218,7 +241,7 @@ describe('beating a level', () => {
 
   it('stops play once the target is reached', () => {
     start({ level: 1 });
-    fake.swarm.setCount(4);
+    fake.swarm.setCount(5);
     frame();
     expect(hosts.stop).toHaveBeenCalled();
     frame();
@@ -259,7 +282,7 @@ describe('touching a disk', () => {
     start({ level: 1 });
     fake.hit = disk(0.05);
     frame();
-    fake.swarm.setCount(4);
+    fake.swarm.setCount(5);
     frame();
     vi.runAllTimers();
     expect(sporeBurst).not.toHaveBeenCalled();
@@ -310,7 +333,7 @@ describe('the fun fact', () => {
 
   it("shows one of the mate's facts when she beats a level", () => {
     start({ level: 1, mate: 'phoebe' });
-    fake.swarm.setCount(4);
+    fake.swarm.setCount(5);
     frame();
     vi.runAllTimers();
     expect(SPECIES.phoebe.facts.map(plainText)).toContain(factShown());

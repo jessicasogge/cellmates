@@ -13,7 +13,7 @@ import { track } from './track.js';
 
 // `mateEl` is her drawing in the dish, `hosts` the lawn (hosts.js) and
 // `disks` the disks (antiviral.js). `level` is which level this is (1 to 7)
-// and `target` how many copies of her it takes to beat it.
+// and `target` how many cells she (and her copies) must burst to beat it.
 export function playGame(mateEl, species, hosts, disks, { level = 1, target = LEVELS[0].target } = {}) {
   const agar = document.querySelector('.agar');
   const counter = document.querySelector('.cell-count');
@@ -25,7 +25,7 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
   playerMover.style.width = `${species.size * 100}%`;
   const player = { x: 0, y: 0, facing: 1, mover: playerMover };
   const swarm = makeSwarm({
-    player, svg: mateEl, hosts, disks, species, target, onChange: () => updateCounter(),
+    player, svg: mateEl, hosts, disks, species, onChange: () => updateCounter(),
   });
 
   let finished = false;
@@ -43,8 +43,8 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
   const banner = levelBanner(level);
 
   function updateCounter() {
-    const shown = Math.min(swarm.count(), target);
-    counter.textContent = `Level ${level} · ${shown} / ${target} copies`;
+    const shown = Math.min(swarm.burst(), target);
+    counter.textContent = `Level ${level} · ${shown} / ${target} cells burst`;
   }
 
   function stop() {
@@ -63,6 +63,9 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
       // The zones keep spreading until the level ends.
       elapsed += seconds;
       spreadZones(disks, elapsed);
+    }
+    // Inside a cell, she can't move until it bursts.
+    if (!finished && !swarm.inside()) {
       steer(player, keys.direction(), touch.target(), GAME.SPEED * radius * seconds, GAME.ARRIVE * radius,
         touch.drag(), GAME.DRAG_SPEED * radius * seconds);
       keepInDish(player, radius, swarm.reach);
@@ -71,14 +74,15 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
     swarm.step(seconds, radius, { infect: !finished });
 
     // Touching a disk, or the zone around it, is game over (except the
-    // antibiotic's: antibiotics can't hurt viruses).
-    const hit = finished ? null : touchedDisk(disks, swarm.body(radius), radius);
+    // antibiotic's: antibiotics can't hurt viruses). Inside a cell, she's
+    // safe.
+    const hit = finished || swarm.inside() ? null : touchedDisk(disks, swarm.body(radius), radius);
     if (hit) {
       stop();
       playerMover.classList.add('killed');
       setTimeout(() => showGameOver(hit), 500);
-    } else if (!finished && swarm.count() >= target) {
-      // Celebrate the moment there are enough copies, and stop play so a
+    } else if (!finished && swarm.burst() >= target) {
+      // Celebrate the moment enough cells have burst, and stop play so a
       // disk can't be touched after winning.
       stop();
       sporeBurst(playerMover, { big: level === LEVELS.length });
@@ -95,10 +99,10 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
     if (level === LEVELS.length) track(`won-all-levels/${mate}`, `${name} beat every level`);
     showFact(mate, species);
     if (level < LEVELS.length) {
-      banner.show(`Level ${level} complete!`, `You made ${target} copies of ${name}!`,
+      banner.show(`Level ${level} complete!`, `${name} and her copies burst ${target} E. coli cells!`,
         `Play level ${level + 1}`, { next: level + 1 });
     } else {
-      banner.show('You won!', `You beat all ${LEVELS.length} levels with ${target} copies of ${name}!`,
+      banner.show('You won!', `You beat all ${LEVELS.length} levels: ${name} and her copies burst ${target} E. coli cells!`,
         'Play again', { next: 1 });
     }
   }
@@ -120,7 +124,7 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
   spreadZones(disks, 0);
 
   // Keep the how-to-play target in step with the real one.
-  for (const el of document.querySelectorAll('.target-copies')) el.textContent = target;
+  for (const el of document.querySelectorAll('.target-cells')) el.textContent = target;
   updateCounter();
   requestAnimationFrame(step);
 }

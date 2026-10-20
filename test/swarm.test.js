@@ -11,12 +11,14 @@ const RADIUS = 200; // px
 const REACH = SPECIES.tia.size * GAME.REACH_SHARE;
 const COPY_REACH = REACH * GAME.COPY_SCALE;
 
-// A stand-in lawn: `bursts` is what the next tick returns, and `healthy`
-// whether there's a cell to infect wherever anything touches.
+// A stand-in lawn: `bursts` is what the next tick returns, `healthy`
+// whether there's a cell to infect wherever a copy touches, and `cell` the
+// cell she goes into when she touches one (null for none).
 function fakeLawn() {
   return {
     bursts: [],
     healthy: false,
+    cell: null,
     tick: vi.fn(function tick() {
       const out = this.bursts;
       this.bursts = [];
@@ -24,6 +26,9 @@ function fakeLawn() {
     }),
     infectNear: vi.fn(function infectNear() {
       return this.healthy ? 1 : 0;
+    }),
+    infectOne: vi.fn(function infectOne() {
+      return this.cell;
     }),
   };
 }
@@ -49,23 +54,68 @@ function swarmWith(options = {}) {
 
 const copies = () => document.querySelectorAll('.mate-mover.copy');
 
-describe('infecting cells', () => {
-  it('infects cells she touches, with her own latent period', () => {
+// Burst a cell at (fx, fy) and return the swarm, with its copies out.
+function withCopies(fx = 0.5, fy = 0, options = {}) {
+  const made = swarmWith(options);
+  made.hosts.bursts = [{ id: 99, fx, fy }];
+  made.swarm.step(0, RADIUS);
+  return made;
+}
+
+describe('going into a cell', () => {
+  it('goes into the nearest cell she touches, with her own latent period', () => {
     const { swarm, hosts } = swarmWith();
     player.x = 40;
     player.y = -20;
     swarm.step(0.016, RADIUS);
-    expect(hosts.infectNear).toHaveBeenCalledWith(0.2, -0.1, REACH, SPECIES.tia.latentMs);
+    expect(hosts.infectOne).toHaveBeenCalledWith(0.2, -0.1, REACH, SPECIES.tia.latentMs);
+    expect(swarm.inside()).toBe(false); // there was no cell there
   });
 
-  it("doesn't infect anything once the level is over", () => {
+  it('moves her into the middle of the cell and holds her there', () => {
+    const { swarm, hosts } = swarmWith();
+    hosts.cell = { id: 1, fx: 0.25, fy: 0.1 };
+    swarm.step(0.016, RADIUS);
+    expect(swarm.inside()).toBe(true);
+    expect([player.x, player.y]).toEqual([50, 20]);
+    expect(player.mover.classList).toContain('inside');
+  });
+
+  it("doesn't infect another cell while she's inside one", () => {
+    const { swarm, hosts } = swarmWith();
+    hosts.cell = { id: 1, fx: 0.25, fy: 0.1 };
+    swarm.step(0.016, RADIUS);
+    swarm.step(0.016, RADIUS);
+    expect(hosts.infectOne).toHaveBeenCalledTimes(1);
+  });
+
+  it('comes out when her cell bursts, with her copies', () => {
+    const { swarm, hosts, onChange } = swarmWith();
+    hosts.cell = { id: 1, fx: 0.25, fy: 0.1 };
+    swarm.step(0.016, RADIUS);
+    hosts.cell = null;
+    hosts.bursts = [{ id: 1, fx: 0.25, fy: 0.1 }];
+    swarm.step(0.016, RADIUS);
+    expect(swarm.inside()).toBe(false);
+    expect(player.mover.classList).not.toContain('inside');
+    expect(copies()).toHaveLength(SPECIES.tia.burst);
+    expect(swarm.burst()).toBe(1);
+    expect(onChange).toHaveBeenCalledWith(1);
+  });
+
+  it("stays in her cell when a different one bursts", () => {
+    const { swarm, hosts } = swarmWith();
+    hosts.cell = { id: 1, fx: 0.25, fy: 0.1 };
+    swarm.step(0.016, RADIUS);
+    hosts.bursts = [{ id: 2, fx: -0.5, fy: 0 }];
+    swarm.step(0.016, RADIUS);
+    expect(swarm.inside()).toBe(true);
+  });
+
+  it("doesn't go into anything once the level is over", () => {
     const { swarm, hosts } = swarmWith();
     swarm.step(0.016, RADIUS, { infect: false });
-    expect(hosts.infectNear).not.toHaveBeenCalled();
-  });
-
-  it('counts her as one, before there are any copies', () => {
-    expect(swarmWith().swarm.count()).toBe(1);
+    expect(hosts.infectOne).not.toHaveBeenCalled();
   });
 
   it('gives her body for touching disks', () => {
@@ -74,28 +124,43 @@ describe('infecting cells', () => {
   });
 });
 
-describe('a cell bursting', () => {
-  it('releases her burst size in new copies, where it burst', () => {
-    const { swarm, hosts, onChange } = swarmWith();
-    hosts.bursts = [{ fx: 0.5, fy: 0 }];
-    swarm.step(0, RADIUS);
-    expect(swarm.count()).toBe(1 + SPECIES.tia.burst);
-    expect(copies()).toHaveLength(SPECIES.tia.burst);
-    expect(swarm.copies[0].x).toBe(100);
-    expect(onChange).toHaveBeenCalledWith(1 + SPECIES.tia.burst);
+describe('counting', () => {
+  it('starts with no cells burst', () => {
+    expect(swarmWith().swarm.burst()).toBe(0);
   });
 
-  it("stops making copies once there are enough to win", () => {
-    const { swarm, hosts } = swarmWith({ target: 2 });
-    hosts.bursts = [{ fx: 0.5, fy: 0 }, { fx: -0.5, fy: 0 }];
+  it("counts every cell that bursts, her copies' too", () => {
+    const { swarm, hosts, onChange } = swarmWith();
+    hosts.bursts = [{ id: 1, fx: 0.5, fy: 0 }, { id: 2, fx: -0.5, fy: 0 }];
     swarm.step(0, RADIUS);
-    expect(swarm.count()).toBe(2);
+    expect(swarm.burst()).toBe(2);
+    expect(onChange).toHaveBeenCalledWith(2);
+  });
+
+  it("doesn't call back on a frame with no bursts", () => {
+    const { swarm, onChange } = swarmWith();
+    swarm.step(0.016, RADIUS);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('a cell bursting', () => {
+  it('releases her burst size in new copies, where it burst', () => {
+    const { swarm } = withCopies(0.5, 0);
+    expect(copies()).toHaveLength(SPECIES.tia.burst);
+    expect(swarm.copies[0].x).toBe(100);
+  });
+
+  it('stops making copies once there are lots, to keep the dish smooth', () => {
+    const { swarm, hosts } = swarmWith();
+    hosts.bursts = Array.from({ length: 40 }, (_, i) => ({ id: i, fx: 0, fy: 0 }));
+    swarm.step(0, RADIUS);
+    expect(swarm.copies).toHaveLength(GAME.MAX_COPIES);
+    expect(swarm.burst()).toBe(40); // every burst still counts
   });
 
   it('copies fly out, slow down, then just drift', () => {
-    const { swarm, hosts } = swarmWith();
-    hosts.bursts = [{ fx: 0, fy: 0 }];
-    swarm.step(0, RADIUS);
+    const { swarm } = withCopies(0, 0);
     const [copy] = swarm.copies;
     const speed = () => Math.hypot(copy.vx, copy.vy);
     const start = speed();
@@ -104,10 +169,8 @@ describe('a cell bursting', () => {
     expect(Math.hypot(copy.x, copy.y)).toBeGreaterThan(0);
   });
 
-  it("copies' drawings are hidden from screen readers and have no face of their own", () => {
-    const { swarm, hosts } = swarmWith();
-    hosts.bursts = [{ fx: 0, fy: 0 }];
-    swarm.step(0, RADIUS);
+  it("copies' drawings are hidden from screen readers", () => {
+    withCopies();
     const art = copies()[0].querySelector('svg');
     expect(art.getAttribute('aria-hidden')).toBe('true');
     expect(art.hasAttribute('role')).toBe(false);
@@ -116,62 +179,47 @@ describe('a cell bursting', () => {
   });
 
   it('draws copies smaller than her', () => {
-    const { swarm, hosts } = swarmWith();
-    hosts.bursts = [{ fx: 0, fy: 0 }];
-    swarm.step(0, RADIUS);
+    withCopies();
     expect(copies()[0].style.width).toBe(`${SPECIES.tia.size * GAME.COPY_SCALE * 100}%`);
   });
 });
 
 describe('copies infecting cells', () => {
   it('a copy that infects a cell goes into it', () => {
-    const { swarm, hosts, onChange } = swarmWith();
-    hosts.bursts = [{ fx: 0.5, fy: 0 }];
-    swarm.step(0, RADIUS);
-    onChange.mockClear();
+    const { swarm, hosts } = withCopies();
     hosts.healthy = true;
     swarm.step(0.016, RADIUS);
-    expect(swarm.count()).toBe(1);
+    expect(swarm.copies).toHaveLength(0);
     expect(copies()).toHaveLength(0);
-    expect(onChange).toHaveBeenCalledWith(1);
+    expect(hosts.infectNear).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), COPY_REACH, SPECIES.tia.latentMs);
   });
 
   it("copies don't infect anything once the level is over", () => {
-    const { swarm, hosts } = swarmWith();
-    hosts.bursts = [{ fx: 0.5, fy: 0 }];
-    swarm.step(0, RADIUS);
+    const { swarm, hosts } = withCopies();
     hosts.healthy = true;
     swarm.step(0.016, RADIUS, { infect: false });
-    expect(swarm.count()).toBe(1 + SPECIES.tia.burst);
+    expect(swarm.copies).toHaveLength(SPECIES.tia.burst);
   });
 });
 
 describe('disks', () => {
   it('stop copies that drift into their zone, with a pop', () => {
-    const disks = [{ fx: 0.5, fy: 0, r: 0.1, zone: 0.05 }];
-    const { swarm, hosts } = swarmWith({ disks });
-    hosts.bursts = [{ fx: 0.5, fy: 0 }];
-    swarm.step(0, RADIUS);
+    const { swarm } = withCopies(0.5, 0, { disks: [{ fx: 0.5, fy: 0, r: 0.1, zone: 0.05 }] });
     swarm.step(0.016, RADIUS);
-    expect(swarm.count()).toBe(1);
+    expect(swarm.copies).toHaveLength(0);
     expect(document.querySelectorAll('.pop')).toHaveLength(SPECIES.tia.burst);
   });
 
   it("don't stop copies when it's the antibiotic", () => {
-    const disks = [{ fx: 0.5, fy: 0, r: 0.1, zone: 0.05, harmless: true }];
-    const { swarm, hosts } = swarmWith({ disks });
-    hosts.bursts = [{ fx: 0.5, fy: 0 }];
-    swarm.step(0, RADIUS);
+    const { swarm } = withCopies(0.5, 0, { disks: [{ fx: 0.5, fy: 0, r: 0.1, zone: 0.05, harmless: true }] });
     swarm.step(0.016, RADIUS);
-    expect(swarm.count()).toBe(1 + SPECIES.tia.burst);
+    expect(swarm.copies).toHaveLength(SPECIES.tia.burst);
   });
 });
 
 describe('the rim', () => {
   it('keeps copies inside the dish, bouncing them back in', () => {
-    const { swarm, hosts } = swarmWith();
-    hosts.bursts = [{ fx: 0.95, fy: 0 }];
-    swarm.step(0, RADIUS);
+    const { swarm } = withCopies(0.95, 0);
     for (const copy of swarm.copies) {
       copy.vx = 1000;
       copy.vy = 0;

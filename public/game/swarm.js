@@ -1,8 +1,10 @@
 // The swarm: the mate the player steers, and every copy of her that has
-// burst out of a cell. She and her copies infect any healthy cell they
-// touch. A copy that infects a cell goes into it (it's used up); the cell
-// then bursts with `species.burst` new copies, which fly out and drift.
-// Viruses can't swim, so copies just jiggle about where they land.
+// burst out of a cell. When she touches a healthy cell she goes into it and
+// stays there until it bursts, then comes out with `species.burst` new
+// copies of her, which fly out and drift. Viruses can't swim, so copies
+// just jiggle about where they land. A copy that touches a cell goes into
+// it too (it's used up), and that cell bursts with more copies. Every cell
+// that bursts, hers or a copy's, counts toward the level.
 //
 // Positions are in px from the dish center, like the steering in touch.js.
 import { touchesDisk } from './antiviral.js';
@@ -10,14 +12,14 @@ import { GAME } from './config.js';
 
 // `player` is { x, y, facing, mover }, the mate the player steers. `svg` is
 // her drawing, copied for each new copy. `hosts` is the lawn (hosts.js) and
-// `disks` the disks (antiviral.js). `target` is how many copies the level
-// needs: no more burst out once there are that many. `onChange` is called
-// whenever the count changes.
+// `disks` the disks (antiviral.js). `onChange` is called whenever a cell
+// bursts.
 export function makeSwarm({
-  player, svg, hosts, disks = [], species, target = Infinity,
-  random = Math.random, onChange = () => {},
+  player, svg, hosts, disks = [], species, random = Math.random, onChange = () => {},
 }) {
   const copies = []; // { x, y, vx, vy, heading, mover }
+  let burst = 0; // how many cells have burst
+  let inside = null; // the cell she's in, { id, fx, fy }, or null
   // How close counts as touching, for her and for a copy (dish radii).
   const reach = species.size * GAME.REACH_SHARE;
   const copyReach = reach * GAME.COPY_SCALE;
@@ -26,7 +28,10 @@ export function makeSwarm({
   const swarm = {
     player,
     copies,
-    count: () => 1 + copies.length,
+    // How many cells have burst so far.
+    burst: () => burst,
+    // Whether she's inside a cell right now.
+    inside: () => inside !== null,
     reach,
     // Her body for touching things, as circles [x, y, r] in px.
     body: (radius) => [[player.x, player.y, reach * radius]],
@@ -34,18 +39,28 @@ export function makeSwarm({
     // One frame. `infect` is false once the level is over: cells still
     // burst, but nothing new gets infected.
     step(seconds, radius, { infect = true } = {}) {
-      let changed = false;
-
-      // Cells whose time is up burst with new copies of her.
-      for (const { fx, fy } of hosts.tick(seconds)) {
-        for (let i = 0; i < species.burst && swarm.count() < target; i++) {
+      // Cells whose time is up burst with new copies of her. If she's in
+      // one, she comes out too.
+      const bursts = hosts.tick(seconds);
+      for (const { id, fx, fy } of bursts) {
+        for (let i = 0; i < species.burst && copies.length < GAME.MAX_COPIES; i++) {
           copies.push(newCopy(fx * radius, fy * radius, radius));
-          changed = true;
+        }
+        if (inside?.id === id) {
+          inside = null;
+          player.mover.classList.remove('inside');
         }
       }
+      burst += bursts.length;
 
-      if (infect) {
-        hosts.infectNear(player.x / radius, player.y / radius, reach, species.latentMs);
+      // She goes into a cell she touches, and stays put until it bursts.
+      if (infect && !inside) {
+        inside = hosts.infectOne(player.x / radius, player.y / radius, reach, species.latentMs);
+        if (inside) {
+          player.x = inside.fx * radius;
+          player.y = inside.fy * radius;
+          player.mover.classList.add('inside');
+        }
       }
 
       for (let i = copies.length - 1; i >= 0; i--) {
@@ -56,20 +71,18 @@ export function makeSwarm({
         if (disks.some((disk) => !disk.harmless && touchesDisk(disk, [circle], radius))) {
           showPop(copy.mover.parentElement, circle, species.color);
           remove(i);
-          changed = true;
           continue;
         }
         // A copy that infects a cell goes into it.
         if (infect && hosts.infectNear(copy.x / radius, copy.y / radius, copyReach, species.latentMs) > 0) {
           remove(i);
-          changed = true;
           continue;
         }
         place(copy);
       }
 
       place(player);
-      if (changed) onChange(swarm.count());
+      if (bursts.length > 0) onChange(burst);
     },
   };
 

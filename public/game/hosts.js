@@ -55,7 +55,8 @@ function ecoli() {
 
 export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random } = {}) {
   const agar = document.querySelector('.agar');
-  const hosts = []; // { el, fx, fy, infected, left } (left: ms to bursting)
+  const hosts = []; // { id, el, fx, fy, infected, left } (left: ms to bursting)
+  let nextId = 1;
   const plaques = []; // { fx, fy }
   // Cells that burst, each growing back `left` ms from now, away from
   // where it burst ({ left, fx, fy }).
@@ -97,7 +98,7 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
     el.style.setProperty('--angle', `${Math.floor(random() * 180)}deg`);
     el.setAttribute('aria-hidden', 'true');
     agar.appendChild(el);
-    hosts.push({ el, ...spot, infected: false, left: 0 });
+    hosts.push({ id: nextId++, el, ...spot, infected: false, left: 0 });
     return true;
   }
 
@@ -118,6 +119,16 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
   // The mate starts in the middle, so the first cells keep away from it.
   for (let i = 0; i < count; i++) grow(0, 0);
 
+  function infect(host, latentMs) {
+    host.infected = true;
+    host.left = latentMs;
+    host.el.classList.add('infected');
+    host.el.style.setProperty('--latent', `${latentMs}ms`);
+  }
+
+  const touching = (host, bx, by, reach) =>
+    !host.infected && Math.hypot(host.fx - bx, host.fy - by) <= reach + GAME.HOST_RADIUS;
+
   return {
     // Infect every healthy cell touching a circle of radius `reach` at
     // (bx, by), all in fractions of the dish radius. Each bursts
@@ -125,19 +136,26 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
     infectNear(bx, by, reach, latentMs) {
       let infected = 0;
       for (const host of hosts) {
-        if (host.infected) continue;
-        if (Math.hypot(host.fx - bx, host.fy - by) > reach + GAME.HOST_RADIUS) continue;
-        host.infected = true;
-        host.left = latentMs;
-        host.el.classList.add('infected');
-        host.el.style.setProperty('--latent', `${latentMs}ms`);
+        if (!touching(host, bx, by, reach)) continue;
+        infect(host, latentMs);
         infected++;
       }
       return infected;
     },
 
+    // Infect just one healthy cell touching that circle, the nearest, for
+    // her to go into. Returns it as { id, fx, fy }, or null if there's none.
+    infectOne(bx, by, reach, latentMs) {
+      const distance = (host) => Math.hypot(host.fx - bx, host.fy - by);
+      const host = hosts.filter((h) => touching(h, bx, by, reach)).sort((a, b) => distance(a) - distance(b))[0];
+      if (!host) return null;
+      infect(host, latentMs);
+      return { id: host.id, fx: host.fx, fy: host.fy };
+    },
+
     // Move time on by `seconds`: infected cells whose time is up burst, and
-    // missing cells grow back. Returns where each burst was, as { fx, fy }.
+    // missing cells grow back. Returns each cell that burst, as
+    // { id, fx, fy }.
     tick(seconds) {
       const ms = seconds * 1000;
       if (!stopped) {
@@ -154,7 +172,7 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
         hosts.splice(i, 1);
         host.el.remove();
         addPlaque(host.fx, host.fy);
-        bursts.push({ fx: host.fx, fy: host.fy });
+        bursts.push({ id: host.id, fx: host.fx, fy: host.fy });
         waiting.push({ left: GAME.HOST_RESPAWN_MS, fx: host.fx, fy: host.fy });
       }
       return bursts;

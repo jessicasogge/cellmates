@@ -109,6 +109,35 @@ describe('infecting', () => {
   });
 });
 
+describe('going into one cell', () => {
+  it('infects just the nearest healthy cell she touches, and says which', () => {
+    const lawn = growLawn({ count: 2 });
+    const [a, b] = lawn.positions();
+    // Touching both, a little nearer to the first.
+    const reach = Math.hypot(a.fx - b.fx, a.fy - b.fy);
+    const x = a.fx + (b.fx - a.fx) * 0.4;
+    const y = a.fy + (b.fy - a.fy) * 0.4;
+    const cell = lawn.infectOne(x, y, reach, 1000);
+    expect(cell).toEqual({ id: expect.any(Number), fx: a.fx, fy: a.fy });
+    expect(lawn.positions().map((p) => p.infected)).toEqual([true, false]);
+  });
+
+  it('gives back null when she touches no healthy cell', () => {
+    const lawn = growLawn({ count: 1 });
+    expect(lawn.infectOne(5, 5, 0.01, 1000)).toBeNull();
+    const [cell] = lawn.positions();
+    lawn.infectOne(cell.fx, cell.fy, 0.01, 1000);
+    expect(lawn.infectOne(cell.fx, cell.fy, 0.01, 1000)).toBeNull();
+  });
+
+  it('bursts that same cell when its time is up', () => {
+    const lawn = growLawn({ count: 3 });
+    const [cell] = lawn.positions();
+    const { id } = lawn.infectOne(cell.fx, cell.fy, 0.01, 500);
+    expect(lawn.tick(0.5).map((b) => b.id)).toEqual([id]);
+  });
+});
+
 describe('bursting', () => {
   function infectedLawn(latentMs = 1000) {
     const lawn = growLawn({ count: 1 });
@@ -120,7 +149,7 @@ describe('bursting', () => {
   it('bursts once her latent period is up, not before', () => {
     const { lawn, cell } = infectedLawn(1000);
     expect(lawn.tick(0.5)).toEqual([]);
-    expect(lawn.tick(0.5)).toEqual([{ fx: cell.fx, fy: cell.fy }]);
+    expect(lawn.tick(0.5)).toEqual([{ id: expect.any(Number), fx: cell.fx, fy: cell.fy }]);
     expect(lawn.positions()).toHaveLength(0);
     expect(cells()).toHaveLength(0);
   });

@@ -14,7 +14,8 @@
 //   small to see.
 // `burst`: how many new copies of her one host cell releases in the game.
 //   Real bursts are much bigger (see `facts`); these are scaled way down.
-// `latentMs`: how long an infected cell takes to burst, in the game.
+// `latentMs`: how long an infected cell takes to burst, in the game. When
+//   she infects a cell herself, she's inside it all that time.
 // `disks`: the disks that stop her, in level order. Phages have no antiviral
 //   drugs, so these are things that wreck or block viruses: antibodies made
 //   against her, bleach, iodine and copper. There's no standard disk test for
@@ -47,7 +48,7 @@ export const SPECIES = {
     color: '#5b3fb0',
     size: 0.052,
     burst: 3,
-    latentMs: 1100,
+    latentMs: 1500,
     colors: { fill: '#e6defc', stroke: '#6d4fc2', highlight: '#f7f3ff', dark: '#33236b' },
     disks: [
       { code: 'AB', name: 'anti-T4 antibodies', zone: 32, stops: 'Antibodies stick to her tail fibers, so she can\'t land on a cell.' },
@@ -73,7 +74,7 @@ export const SPECIES = {
     color: '#0f766e',
     size: 0.038,
     burst: 2,
-    latentMs: 700,
+    latentMs: 1100,
     colors: { fill: '#c9f2ec', stroke: '#0f8a7e', highlight: '#effcfa', dark: '#0b4f48' },
     disks: [
       { code: 'AB', name: 'anti-φX174 antibodies', zone: 30, stops: 'Antibodies stick to her spikes, so she can\'t grab a cell.' },
@@ -99,7 +100,7 @@ export const SPECIES = {
     color: '#c2410c',
     size: 0.036,
     burst: 4,
-    latentMs: 1600,
+    latentMs: 2000,
     colors: { fill: '#ffdccf', stroke: '#d9573a', highlight: '#fff4ef', dark: '#7a2614' },
     disks: [
       { code: 'AB', name: 'anti-MS2 antibodies', zone: 30, stops: 'Antibodies coat her shell, so she can\'t grab a cell.' },
@@ -110,16 +111,17 @@ export const SPECIES = {
   },
 };
 
-// Each level adds a disk and doubles how many copies of her you need. The
-// early levels also get the antibiotic disk; later ones have no room for it.
+// Each level adds a disk and 5 more E. coli cells to burst (`target`),
+// counting the ones her copies burst too. The early levels also get the
+// antibiotic disk; later ones have no room for it.
 export const LEVELS = [
-  { disks: 1, target: 4, antibiotic: true },
-  { disks: 2, target: 8, antibiotic: true },
-  { disks: 3, target: 16, antibiotic: true },
-  { disks: 4, target: 32, antibiotic: true },
-  { disks: 5, target: 64, antibiotic: true },
-  { disks: 6, target: 128, antibiotic: false },
-  { disks: 7, target: 256, antibiotic: false },
+  { disks: 1, target: 5, antibiotic: true },
+  { disks: 2, target: 10, antibiotic: true },
+  { disks: 3, target: 15, antibiotic: true },
+  { disks: 4, target: 20, antibiotic: true },
+  { disks: 5, target: 25, antibiotic: true },
+  { disks: 6, target: 30, antibiotic: false },
+  { disks: 7, target: 35, antibiotic: false },
 ];
 
 export const GAME = {
@@ -132,6 +134,7 @@ export const GAME = {
   // Her copies are drawn COPY_SCALE times her size.
   REACH_SHARE: 0.8,
   COPY_SCALE: 0.7,
+  MAX_COPIES: 60, // no more copies burst out once there are this many
 
   // New copies fly out of a bursting cell at BURST_SPEED (dish radii per
   // second), slow down at SETTLE_RATE, and then just jiggle about at
