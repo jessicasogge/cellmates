@@ -46,6 +46,7 @@ function makeFakeSwarm() {
   return {
     count: () => count,
     setCount(n) { count = n; },
+    reach: 0.05,
     body: () => [[0, 0, 5]],
     step: vi.fn(),
   };
@@ -113,6 +114,11 @@ describe('the counter', () => {
     expect(document.querySelector('.cell-count').textContent).toBe('Level 1 · 4 / 4 copies');
   });
 
+  it('draws her at her own size', () => {
+    start({ mate: 'phoebe' });
+    expect(document.querySelector('.mate-mover').style.width).toBe(`${SPECIES.phoebe.size * 100}%`);
+  });
+
   it("makes the swarm with her species, the level's target, and her drawing", () => {
     start({ level: 2, mate: 'missy' });
     const [options] = vi.mocked(makeSwarm).mock.calls[0];
@@ -150,14 +156,14 @@ describe('playing', () => {
 describe('keeping her in the dish', () => {
   it('leaves her alone inside the dish', () => {
     const player = { x: 10, y: 20 };
-    keepInDish(player, 200);
+    keepInDish(player, 200, 0.05);
     expect(player).toEqual({ x: 10, y: 20 });
   });
 
   it('pulls her back in along the same line when she goes past the rim', () => {
     const player = { x: 300, y: 0 };
-    keepInDish(player, 200);
-    expect(player.x).toBeCloseTo(200 - GAME.PLAYER_REACH * 200);
+    keepInDish(player, 200, 0.05);
+    expect(player.x).toBeCloseTo(190);
     expect(player.y).toBe(0);
   });
 });

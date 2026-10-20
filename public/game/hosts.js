@@ -30,7 +30,7 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
         const fx = Math.cos(angle) * distance;
         const fy = Math.sin(angle) * distance;
         const near = (spots, gap) => spots.some((s) => Math.hypot(fx - s.fx, fy - s.fy) < gap);
-        if (strict && (Math.hypot(fx - awayX, fy - awayY) < 0.3 || near(hosts, 0.12) ||
+        if (strict && (Math.hypot(fx - awayX, fy - awayY) < 0.3 || near(hosts, GAME.HOST_GAP) ||
             near(plaques, GAME.PLAQUE_RADIUS + GAME.HOST_RADIUS))) continue;
         const inZone = avoid.some((a) =>
           Math.hypot(fx - a.fx, fy - a.fy) < a.r + (a.fullZone ?? a.zone ?? 0) + GAME.HOST_RADIUS);
@@ -46,6 +46,7 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
     if (!spot) return false;
     const el = document.createElement('span');
     el.className = 'host';
+    el.style.width = `${GAME.HOST_SIZE * 100}%`;
     el.style.left = `${50 + spot.fx * 50}%`;
     el.style.top = `${50 + spot.fy * 50}%`;
     el.style.setProperty('--angle', `${Math.floor(random() * 180)}deg`);

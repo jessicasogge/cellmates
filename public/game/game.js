@@ -21,6 +21,8 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
 
   const playerMover = document.querySelector('.mate-mover');
   playerMover.classList.add('player');
+  // Drawn at her own size: always smaller than a cell.
+  playerMover.style.width = `${species.size * 100}%`;
   const player = { x: 0, y: 0, facing: 1, mover: playerMover };
   const swarm = makeSwarm({
     player, svg: mateEl, hosts, disks, species, target, onChange: () => updateCounter(),
@@ -63,7 +65,7 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
       spreadZones(disks, elapsed);
       steer(player, keys.direction(), touch.target(), GAME.SPEED * radius * seconds, GAME.ARRIVE * radius,
         touch.drag(), GAME.DRAG_SPEED * radius * seconds);
-      keepInDish(player, radius);
+      keepInDish(player, radius, swarm.reach);
     }
 
     swarm.step(seconds, radius, { infect: !finished });
@@ -123,9 +125,10 @@ export function playGame(mateEl, species, hosts, disks, { level = 1, target = LE
   requestAnimationFrame(step);
 }
 
-// Keep her whole drawing inside the dish, sliding along the rim.
-export function keepInDish(player, radius) {
-  const limit = Math.max(0, radius - GAME.PLAYER_REACH * radius);
+// Keep her inside the dish, sliding along the rim. `reach` is how far she
+// reaches from her center, in dish radii.
+export function keepInDish(player, radius, reach) {
+  const limit = Math.max(0, radius - reach * radius);
   const fromCenter = Math.hypot(player.x, player.y);
   if (fromCenter <= limit) return;
   player.x *= limit / fromCenter;

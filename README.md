@@ -4,7 +4,7 @@ A cute virology game for the browser, and the sister game to [PetriPals](https:/
 
 **[▶ Play CellMates](https://jessicasogge.github.io/cellmates/)**: works on computers, phones and tablets.
 
-<img src="docs/screenshot.png" alt="Plaque Assay: Tia, a lavender T4 phage shaped like a lunar lander, on a hazy lawn of green E. coli cells, with small copies of her drifting nearby, amber plaques where cells burst, and disks labeled AB, BL, I, Cu and a dashed AMP disk" width="400">
+<img src="docs/screenshot.png" alt="Plaque Assay: Tia, a small lavender T4 phage shaped like a lunar lander, landing on one of the much bigger green E. coli cells in a hazy lawn, with small copies of her drifting nearby, amber plaques where cells burst, and disks labeled AB, BL, I, Cu and a dashed AMP disk" width="400">
 
 ## How to play: Plaque Assay
 
@@ -29,6 +29,7 @@ All three infect *Escherichia coli*, so the lawn is drawn as little green-apple 
 ## The real science
 
 - **The plaque assay** is how virologists count viruses. They spread bacteria (or animal cells) over a plate so thickly they grow into a hazy layer, a **lawn**, and add a little virus. Each virus infects a cell, which bursts with copies that infect its neighbors, and so on, until there's a clear hole in the lawn: a **plaque**. Every plaque started from one virus, so counting plaques counts viruses. That's the clear amber agar showing through where cells burst in the game. Real plaques take hours to grow, not seconds.
+- **Phages are much smaller than bacteria.** An *E. coli* cell is about 2 micrometers long. T4 is about a tenth of that, and φX174 and MS2 are only about 25 nanometers across, so about 80 of them would fit along one cell. In the game every mate is smaller than the cells, and Tia is bigger than Phoebe and Missy, but true to scale they'd be too small to see.
 - **Viruses can't swim.** They have no way to move on their own, so they drift and bump into cells by chance. In the game you steer her anyway, and her copies just drift.
 - **Burst sizes** are scaled way down. A cell infected by T4 really bursts with about 100 to 200 copies, φX174 about as many, and MS2 thousands. In the game they're 3, 2 and 4, and her **latent period** (how long a cell takes to burst) is about a second, where the real ones are tens of minutes.
 - **Antibiotics don't work on viruses.** They attack things only bacteria have, like their cell walls, and a virus has none of those. That's why the antibiotic disk can't hurt her. Ampicillin does kill *E. coli*, though, so its zone has no cells to infect. It's Colette's first disk in PetriPals, too.

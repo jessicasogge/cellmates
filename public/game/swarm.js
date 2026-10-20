@@ -18,13 +18,18 @@ export function makeSwarm({
   random = Math.random, onChange = () => {},
 }) {
   const copies = []; // { x, y, vx, vy, heading, mover }
+  // How close counts as touching, for her and for a copy (dish radii).
+  const reach = species.size * GAME.REACH_SHARE;
+  const copyReach = reach * GAME.COPY_SCALE;
+  const copyWidth = `${species.size * GAME.COPY_SCALE * 100}%`;
 
   const swarm = {
     player,
     copies,
     count: () => 1 + copies.length,
+    reach,
     // Her body for touching things, as circles [x, y, r] in px.
-    body: (radius) => [[player.x, player.y, GAME.PLAYER_REACH * radius]],
+    body: (radius) => [[player.x, player.y, reach * radius]],
 
     // One frame. `infect` is false once the level is over: cells still
     // burst, but nothing new gets infected.
@@ -40,13 +45,13 @@ export function makeSwarm({
       }
 
       if (infect) {
-        hosts.infectNear(player.x / radius, player.y / radius, GAME.PLAYER_REACH, species.latentMs);
+        hosts.infectNear(player.x / radius, player.y / radius, reach, species.latentMs);
       }
 
       for (let i = copies.length - 1; i >= 0; i--) {
         const copy = copies[i];
         drift(copy, seconds, radius);
-        const circle = [copy.x, copy.y, GAME.COPY_REACH * radius];
+        const circle = [copy.x, copy.y, copyReach * radius];
         // Disks that stop viruses stop her copies too.
         if (disks.some((disk) => !disk.harmless && touchesDisk(disk, [circle], radius))) {
           showPop(copy.mover.parentElement, circle, species.color);
@@ -55,7 +60,7 @@ export function makeSwarm({
           continue;
         }
         // A copy that infects a cell goes into it.
-        if (infect && hosts.infectNear(copy.x / radius, copy.y / radius, GAME.COPY_REACH, species.latentMs) > 0) {
+        if (infect && hosts.infectNear(copy.x / radius, copy.y / radius, copyReach, species.latentMs) > 0) {
           remove(i);
           changed = true;
           continue;
@@ -82,7 +87,7 @@ export function makeSwarm({
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       heading: angle,
-      mover: copyMover(svg),
+      mover: copyMover(svg, copyWidth),
     };
     place(copy);
     return copy;
@@ -97,7 +102,7 @@ export function makeSwarm({
     const wander = GAME.DRIFT_SPEED * radius;
     copy.x += (copy.vx + Math.cos(copy.heading) * wander) * seconds;
     copy.y += (copy.vy + Math.sin(copy.heading) * wander) * seconds;
-    const limit = radius - GAME.COPY_REACH * radius;
+    const limit = radius - copyReach * radius;
     const fromCenter = Math.hypot(copy.x, copy.y);
     if (fromCenter > limit) {
       copy.x *= limit / fromCenter;
@@ -117,10 +122,12 @@ export function place({ x, y, mover }) {
   mover.style.transform = `translate(${x}px, ${y}px)`;
 }
 
-// A new copy's mover, with a copy of her drawing, added to the dish.
-export function copyMover(svg) {
+// A new copy's mover, `width` wide (a share of the dish's width), with a
+// copy of her drawing, added to the dish.
+export function copyMover(svg, width) {
   const mover = document.createElement('div');
   mover.className = 'mate-mover copy';
+  mover.style.width = width;
   const art = svg.cloneNode(true);
   art.removeAttribute('role');
   art.removeAttribute('aria-label');

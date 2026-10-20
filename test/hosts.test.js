@@ -57,6 +57,7 @@ describe('growing the lawn', () => {
     const [cell] = cells();
     expect(cell.style.getPropertyValue('--angle')).toMatch(/^\d+deg$/);
     expect(cell.getAttribute('aria-hidden')).toBe('true');
+    expect(cell.style.width).toBe(`${GAME.HOST_SIZE * 100}%`);
   });
 });
 

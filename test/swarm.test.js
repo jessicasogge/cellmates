@@ -7,6 +7,9 @@ import { GAME, SPECIES } from '../public/game/config.js';
 import { copyMover, makeSwarm, place, showPop } from '../public/game/swarm.js';
 
 const RADIUS = 200; // px
+// How close counts as touching, for Tia and for one of her copies.
+const REACH = SPECIES.tia.size * GAME.REACH_SHARE;
+const COPY_REACH = REACH * GAME.COPY_SCALE;
 
 // A stand-in lawn: `bursts` is what the next tick returns, and `healthy`
 // whether there's a cell to infect wherever anything touches.
@@ -52,7 +55,7 @@ describe('infecting cells', () => {
     player.x = 40;
     player.y = -20;
     swarm.step(0.016, RADIUS);
-    expect(hosts.infectNear).toHaveBeenCalledWith(0.2, -0.1, GAME.PLAYER_REACH, SPECIES.tia.latentMs);
+    expect(hosts.infectNear).toHaveBeenCalledWith(0.2, -0.1, REACH, SPECIES.tia.latentMs);
   });
 
   it("doesn't infect anything once the level is over", () => {
@@ -67,7 +70,7 @@ describe('infecting cells', () => {
 
   it('gives her body for touching disks', () => {
     player.x = 10;
-    expect(swarmWith().swarm.body(RADIUS)).toEqual([[10, 0, GAME.PLAYER_REACH * RADIUS]]);
+    expect(swarmWith().swarm.body(RADIUS)).toEqual([[10, 0, REACH * RADIUS]]);
   });
 });
 
@@ -110,6 +113,13 @@ describe('a cell bursting', () => {
     expect(art.hasAttribute('role')).toBe(false);
     expect(art.hasAttribute('aria-label')).toBe(false);
     expect(art.hasAttribute('hidden')).toBe(false);
+  });
+
+  it('draws copies smaller than her', () => {
+    const { swarm, hosts } = swarmWith();
+    hosts.bursts = [{ fx: 0, fy: 0 }];
+    swarm.step(0, RADIUS);
+    expect(copies()[0].style.width).toBe(`${SPECIES.tia.size * GAME.COPY_SCALE * 100}%`);
   });
 });
 
@@ -168,7 +178,7 @@ describe('the rim', () => {
     }
     swarm.step(0.05, RADIUS);
     for (const copy of swarm.copies) {
-      expect(Math.hypot(copy.x, copy.y)).toBeLessThanOrEqual(RADIUS * (1 - GAME.COPY_REACH) + 1e-9);
+      expect(Math.hypot(copy.x, copy.y)).toBeLessThanOrEqual(RADIUS * (1 - COPY_REACH) + 1e-9);
       expect(copy.vx).toBeLessThan(0);
     }
   });
@@ -181,9 +191,10 @@ describe('drawing', () => {
     expect(mover.style.transform).toBe('translate(12px, -3px)');
   });
 
-  it('adds a copy to the dish', () => {
-    const mover = copyMover(svg);
+  it('adds a copy to the dish, at the size given', () => {
+    const mover = copyMover(svg, '4%');
     expect(mover.className).toBe('mate-mover copy');
+    expect(mover.style.width).toBe('4%');
     expect(mover.parentElement).toBe(document.querySelector('.agar'));
   });
 

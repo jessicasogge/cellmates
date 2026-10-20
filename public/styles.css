@@ -430,8 +430,8 @@ a.mate-card:active {
 
 /* Positioned by game/swarm.js; the mate's own idle animation stays on the SVG. */
 .mate-mover {
-  grid-area: 1 / 1; /* stack in the dish center, even after dividing into two */
-  width: 18%;
+  grid-area: 1 / 1; /* stack in the dish center */
+  width: 7%; /* each mate's own size is set by game/game.js and game/swarm.js */
   position: relative;
   z-index: 1; /* over the cells */
   will-change: transform;
@@ -566,10 +566,10 @@ a.mate-card:active {
     drop-shadow(0 0 7px rgba(15, 118, 110, 0.45));
 }
 
-/* Copies of her that burst out of cells: small, a little paler, and
-   without the idle wiggle, which also keeps a dish full of them smooth. */
+/* Copies of her that burst out of cells: smaller (game/swarm.js), a little
+   paler, and without the idle wiggle, which also keeps a dish full of them
+   smooth. */
 .mate-mover.copy {
-  width: 8%;
   opacity: 0.85;
 }
 
@@ -582,11 +582,11 @@ a.mate-card:active {
   animation: none;
 }
 
-/* An E. coli cell in the lawn (game/hosts.js): a little green-apple rod,
-   like Colette in PetriPals, turned a random way (--angle). */
+/* An E. coli cell in the lawn (game/hosts.js): a green-apple rod, like
+   Colette in PetriPals, turned a random way (--angle). Sized by
+   game/hosts.js: bigger than any phage. */
 .host {
   position: absolute;
-  width: 4.6%;
   aspect-ratio: 2.2;
   border-radius: 999px;
   background: #abee64;
@@ -604,7 +604,7 @@ a.mate-card:active {
   to {
     background: #f9a8d4;
     border-color: #be185d;
-    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(1.5);
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(1.25);
   }
 }
 

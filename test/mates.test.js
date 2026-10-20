@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { SPECIES } from '../public/game/config.js';
+import { GAME, SPECIES } from '../public/game/config.js';
 import { dishMate, HOME_MATES, homeMate, mateById, MATES, mateTile, polygon } from '../public/game/mates.js';
 
 describe('every mate', () => {
@@ -26,6 +26,25 @@ describe('every mate', () => {
 
   it('shows up once on the home page', () => {
     expect(HOME_MATES.map((mate) => mate.id).sort()).toEqual(MATES.map((mate) => mate.id).sort());
+  });
+});
+
+describe('sizes', () => {
+  it('draws every phage smaller than the E. coli cells she infects', () => {
+    for (const [mate, { size }] of Object.entries(SPECIES)) {
+      expect(size, mate).toBeLessThan(GAME.HOST_SIZE * 0.75);
+      // Her copies, smaller still, are big enough to see.
+      expect(size * GAME.COPY_SCALE, mate).toBeGreaterThanOrEqual(0.02);
+    }
+  });
+
+  it('draws T4 bigger than the tiny tailless phages, as she really is', () => {
+    expect(SPECIES.tia.size).toBeGreaterThan(SPECIES.phoebe.size);
+    expect(SPECIES.tia.size).toBeGreaterThan(SPECIES.missy.size);
+  });
+
+  it("makes a plaque bigger than the cell that burst", () => {
+    expect(GAME.PLAQUE_RADIUS * 2).toBeGreaterThan(GAME.HOST_SIZE * 2);
   });
 });
 

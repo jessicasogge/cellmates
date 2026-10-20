@@ -6,6 +6,12 @@
 //   italics; *asterisks* mark the parts that are (a host's species name).
 // `color`: her name above the dish.
 // `colors`: her drawing's colors (mates.js).
+// `size`: how wide she's drawn in the dish, as a fraction of the dish's
+//   width. Phages are far smaller than the bacteria they infect: E. coli is
+//   about 2 micrometers long, T4 about a tenth of that, and φX174 and MS2
+//   only about 25 nanometers across. So she's always smaller than a cell,
+//   and T4 bigger than the other two, though true to scale she'd be too
+//   small to see.
 // `burst`: how many new copies of her one host cell releases in the game.
 //   Real bursts are much bigger (see `facts`); these are scaled way down.
 // `latentMs`: how long an infected cell takes to burst, in the game.
@@ -39,6 +45,7 @@ export const SPECIES = {
     ],
     scientific: 'Bacteriophage T4',
     color: '#5b3fb0',
+    size: 0.07,
     burst: 3,
     latentMs: 1100,
     colors: { fill: '#e6defc', stroke: '#6d4fc2', highlight: '#f7f3ff', dark: '#33236b' },
@@ -64,6 +71,7 @@ export const SPECIES = {
     ],
     scientific: 'Bacteriophage φX174',
     color: '#0f766e',
+    size: 0.045,
     burst: 2,
     latentMs: 700,
     colors: { fill: '#c9f2ec', stroke: '#0f8a7e', highlight: '#effcfa', dark: '#0b4f48' },
@@ -89,6 +97,7 @@ export const SPECIES = {
     ],
     scientific: 'Bacteriophage MS2',
     color: '#c2410c',
+    size: 0.042,
     burst: 4,
     latentMs: 1600,
     colors: { fill: '#ffdccf', stroke: '#d9573a', highlight: '#fff4ef', dark: '#7a2614' },
@@ -118,9 +127,11 @@ export const GAME = {
   ARRIVE: 0.01, // pointer tolerance, relative to dish radius
   DRAG_SPEED: 2, // drag cap in radii/sec; prevents skipping zones
 
-  // How close counts as touching, for her and for her copies (dish radii).
-  PLAYER_REACH: 0.11,
-  COPY_REACH: 0.045,
+  // How close counts as touching: this share of her drawn half-width (her
+  // `size`, in dish radii), since her drawing doesn't fill its whole box.
+  // Her copies are drawn COPY_SCALE times her size.
+  REACH_SHARE: 0.8,
+  COPY_SCALE: 0.6,
 
   // New copies fly out of a bursting cell at BURST_SPEED (dish radii per
   // second), slow down at SETTLE_RATE, and then just jiggle about at
@@ -131,12 +142,14 @@ export const GAME = {
 
   // Host cells: how many are on the lawn at a time, and how soon a new one
   // turns up after one bursts.
-  HOSTS: 9,
+  HOSTS: 8,
   HOST_RESPAWN_MS: 2000,
-  HOST_RADIUS: 0.03, // how close counts as touching one (dish radii)
+  HOST_SIZE: 0.12, // how long a cell is drawn, as a fraction of the dish's width
+  HOST_RADIUS: 0.08, // how close counts as touching one (dish radii)
+  HOST_GAP: 0.22, // how far apart cells grow, if there's room (dish radii)
   // A plaque, the clear hole a burst cell leaves in the lawn: its radius
   // (dish radii).
-  PLAQUE_RADIUS: 0.08,
+  PLAQUE_RADIUS: 0.14,
 
   // Disk size, center distance, and center-to-center gap in dish radii.
   DISK_RADIUS: 0.085,
