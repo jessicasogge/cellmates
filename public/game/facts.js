@@ -1,8 +1,8 @@
-// "Did you know?" facts on the end-of-level pop-up, win or lose: a random fact about your pal from
-// her `facts`, never the same one twice in a row.
+// "Did you know?" facts on the end-of-level pop-up, win or lose: a random fact about your mate from
+// her `facts` in config.js, never the same one twice in a row.
 //
 // A fact can put words in italics between asterisks, for scientific names
-// of other bacteria: "Ceres's cousin *Bacillus thuringiensis* is ...".
+// of other species: "Tia lands on *E. coli* on six long, bendy tail fibers."
 
 import { withItalics } from './italics.js';
 
@@ -18,13 +18,13 @@ export function pickFact(facts = [], last = null, random = Math.random) {
   return choices[Math.floor(random() * choices.length)];
 }
 
-// Show a random fact about `pal` (her key, e.g. "flo") in the pop-up, or
+// Show a random fact about `mate` (her key, e.g. "tia") in the pop-up, or
 // hide the fact line if `species` has none. Remembers the fact for the rest
 // of the visit, since every level loads a fresh page.
-export function showFact(pal, species) {
+export function showFact(mate, species) {
   const line = document.querySelector('.fun-fact');
   if (!line) return;
-  const key = `cellmates-last-fact-${pal}`;
+  const key = `cellmates-last-fact-${mate}`;
   let last = null;
   try {
     last = sessionStorage.getItem(key);

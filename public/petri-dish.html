@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CellMates | Plaque Assay</title>
+    <meta name="description" content="Infect a lawn of E. coli to make copies of your virus, and steer clear of the disks." />
+    <link rel="canonical" href="https://jessicasogge.github.io/cellmates/petri-dish.html" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="picker-page">
+    <!-- "Finding host cells…" covers the page until game/main.js has
+         filled it in (see game/loading.js). -->
+    <div class="loading-overlay arriving">
+      <div class="loading-card" role="status">
+        <span class="loading-cells" aria-hidden="true"><span></span><span></span></span>
+        <span class="loading-text">Finding host cells…</span>
+      </div>
+    </div>
+    <main class="picker-shell dish-shell">
+      <header class="dish-title">
+        <h1 class="mate-name"></h1>
+        <p class="species"><span class="species-name"></span></p>
+      </header>
+      <div class="petri-dish">
+        <div class="agar">
+          <!-- Every mate's drawing goes in here, hidden; main.js shows the one picked -->
+          <div class="mate-mover"></div>
+        </div>
+        <div class="win-banner" role="status" hidden>
+          <h2>You won!</h2>
+          <p class="win-message"></p>
+          <p class="fun-fact" hidden><strong>Did you know?</strong> <span class="fun-fact-text"></span></p>
+          <div class="banner-buttons">
+            <button class="pick-btn play-again" type="button">Play again</button>
+            <button class="pick-btn start-over" type="button" hidden>Start over</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="cell-count" aria-live="polite">Level 1 · 1 / 4 copies</p>
+
+      <p class="how-to-play">
+        <span class="for-keys">Use the arrow keys to move.</span>
+        <span class="for-touch">Touch the dish and slide your finger to move.</span>
+        Touch the <i>E. coli</i> cells to infect them. Each one bursts with new copies of you, which infect cells nearby on their own. Make <span class="target-copies">4</span> copies.<br />
+        Don't touch the disks or the clear zones around them: they stop viruses, and the zones spread! The antibiotic disk (AMP) is the exception. Antibiotics can't hurt viruses, so you can swim right through it, but it killed the cells around it.
+      </p>
+
+      <a class="back-link" href="./pick-a-mate.html">Pick a different mate</a>
+    </main>
+    <footer class="signature">jsogge 2026</footer>
+    <script type="module" src="./game/main.js"></script>
+    <script data-goatcounter="https://petripals.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+  </body>
+</html>

@@ -30,6 +30,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:coverage # the tests, plus a check that they cover the game
+      # Browsers keep a copy of styles.css for a while, so after a change they
+      # can show new pages with old styles. Stamping each page's link with a
+      # fingerprint of the file (styles.css?v=1a2b3c4d) makes them fetch the
+      # new copy whenever it changes, with nothing to remember to bump.
+      - name: Stamp the stylesheet link
+        run: |
+          v=$(sha256sum public/styles.css | cut -c1-8)
+          sed -i "s#href=\"./styles.css\"#href=\"./styles.css?v=$v\"#" public/*.html
+          # Fail if a page links styles.css some other way and missed the stamp.
+          for f in $(grep -l 'styles.css' public/*.html); do
+            grep -q "styles.css?v=$v" "$f" || { echo "$f wasn't stamped"; exit 1; }
+          done
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
