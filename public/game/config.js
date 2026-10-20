@@ -124,6 +124,11 @@ export const GAME = {
   HOST_ROD: 0.69,
   HOST_RADIUS: 0.05, // how close counts as touching one (dish radii)
   HOST_GAP: 0.17, // how far apart cells grow, if there's room (dish radii)
+  // Healthy cells glide very slowly (dish radii per second), turning a
+  // little as they go and never past HOST_EDGE from the middle. Infected
+  // ones stop.
+  HOST_SPEED: 0.025,
+  HOST_EDGE: 0.85,
   // A plaque, the clear hole a burst cell leaves in the lawn: its radius
   // (dish radii).
   PLAQUE_RADIUS: 0.1,

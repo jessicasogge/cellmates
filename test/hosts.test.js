@@ -92,6 +92,33 @@ describe('infecting', () => {
   });
 });
 
+describe('gliding', () => {
+  it('moves healthy cells very slowly, pointing the way they go', () => {
+    const lawn = growLawn({ count: 1 });
+    const [before] = lawn.positions();
+    lawn.tick(1);
+    const [after] = lawn.positions();
+    const moved = Math.hypot(after.fx - before.fx, after.fy - before.fy);
+    expect(moved).toBeGreaterThan(0);
+    expect(moved).toBeLessThanOrEqual(GAME.HOST_SPEED + 1e-9);
+    expect(cells()[0].style.left).toBe(`${50 + after.fx * 50}%`);
+  });
+
+  it("stops a cell once it's infected, so she stays inside it", () => {
+    const lawn = growLawn({ count: 1 });
+    const [cell] = lawn.positions();
+    lawn.infectNear(cell.fx, cell.fy, 0.01, 5000);
+    lawn.tick(1);
+    expect(lawn.positions()[0]).toMatchObject({ fx: cell.fx, fy: cell.fy });
+  });
+
+  it('keeps cells inside the dish, turning them back at the edge', () => {
+    const lawn = growLawn({ count: 3 });
+    for (let i = 0; i < 2000; i++) lawn.tick(0.05);
+    for (const { fx, fy } of lawn.positions()) expect(Math.hypot(fx, fy)).toBeLessThanOrEqual(GAME.HOST_EDGE + 1e-9);
+  });
+});
+
 describe('going into one cell', () => {
   it('infects just the nearest healthy cell she touches, and says which', () => {
     const lawn = growLawn({ count: 2 });

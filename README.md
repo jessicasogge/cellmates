@@ -22,7 +22,7 @@ Make enough copies of her to finish the level, counting every copy that bursts o
 | **Phoebe** | Bacteriophage φX174 | Little teal twenty-sided gem with no tail and a knobby spike on every corner | Bursts fastest (1.1 seconds), with 2 copies |
 | **Missy** | Bacteriophage MS2 | Small, round, bumpy coral shell with one little tab on top | Bursts slowest (2 seconds), with 4 copies |
 
-All three infect *Escherichia coli*, so the cells in the lawn are drawn and sized like Colette's offspring in PetriPals: pale green-apple rods with flagella all around.
+All three infect *Escherichia coli*, so the cells in the lawn are drawn and sized like Colette's offspring in PetriPals: pale green-apple rods with flagella all around. Healthy cells glide very slowly, wandering a little; an infected one stops.
 
 ## The real science
 

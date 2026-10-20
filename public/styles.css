@@ -567,8 +567,8 @@ a.mate-card:active {
 }
 
 /* An E. coli cell in the lawn (game/hosts.js): drawn and sized like one of
-   Colette's offspring in PetriPals, paler and a little washed out, turned a
-   random way (--angle). Bigger than any phage. */
+   Colette's offspring in PetriPals, paler and a little washed out, pointing
+   the way it's gliding (--angle). Bigger than any phage. */
 .host {
   position: absolute;
   aspect-ratio: 1;
