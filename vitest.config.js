@@ -10,6 +10,8 @@ export default defineConfig({
       include: ['public/**/*.js'],
       exclude: ['public/game/vendor/**'], // confetti, copied in as is
       reporter: ['text-summary', 'text'],
+      // Every line is tested today; a few rare branches (drifting and
+      // crowded-lawn edge cases) aren't, hence the slightly lower numbers.
       thresholds: { lines: 100, statements: 99, functions: 99, branches: 95 },
     },
   },

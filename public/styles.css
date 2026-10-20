@@ -1,6 +1,7 @@
-/* The title and tagline fonts: Fredoka and Nunito, both under the SIL Open
-   Font License (public/fonts/*-OFL.txt). They're kept here rather than loaded
-   from Google Fonts, so the page doesn't wait on, or tell, another site. */
+/* The home page's title, tagline and Start button fonts: Fredoka and Nunito,
+   both under the SIL Open Font License (public/fonts/*-OFL.txt). They're kept
+   here rather than loaded from Google Fonts, so the page doesn't wait on, or
+   tell, another site. Until they load, the page uses its usual font. */
 @font-face {
   font-family: Fredoka;
   font-weight: 600;
@@ -26,37 +27,62 @@
   box-sizing: border-box;
 }
 
-/* The pale pink of cell culture medium (it has a pH dye, phenol red). */
+/* The page: a soft sky blue, so CellMates doesn't look like PetriPals' mint or FunGals' purple. */
 body {
   margin: 0;
-  background: #ffe4e6;
-  color: #4a044e;
+  background: #dcecfb;
+  color: #134e4a;
   font-family: system-ui, sans-serif;
   text-align: center;
-  padding: 3rem 1rem 2rem;
+  padding-top: 3rem;
 }
 
-a {
-  color: #0f766e;
-}
-
-/* The row of pals at the top of the home page. */
 .friends {
   display: flex;
-  flex-wrap: wrap; /* on narrow screens, pals wrap onto a second row */
+  flex-wrap: wrap; /* on narrow screens, mates wrap onto a second row */
   justify-content: center;
   align-items: flex-end;
   gap: 0.5rem;
+  padding: 0 1rem;
 }
 
-.pal {
-  /* All four in one row, shrinking to fit on a phone. */
-  width: calc((100% - 1.5rem) / 4);
-  max-width: 112px;
+.mate {
+  width: 120px;
+}
+
+/* Wider than a phone, keep every mate on one row: they shrink a little to
+   fit instead of leaving one alone on a second row. */
+@media (min-width: 521px) {
+  .friends {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.mate .cell {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .bob {
   animation: bob 2.4s ease-in-out infinite;
+}
+
+.squish {
+  animation: squish 2s ease-in-out infinite 0.5s;
+  transform-origin: bottom center;
+}
+
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+
+  50% {
+    transform: rotate(4deg);
+  }
 }
 
 @keyframes bob {
@@ -70,145 +96,392 @@ a {
   }
 }
 
-/* Pals hold still for anyone who'd rather not have motion. */
-@media (prefers-reduced-motion: reduce) {
-  .bob {
-    animation: none;
+@keyframes squish {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+
+  50% {
+    transform: scale(1.08, 0.92);
   }
 }
 
+/* The game's name on the home page, big and round like a game logo. */
 .logo {
-  margin: 0;
+  margin: 1.6rem 0 0.4rem;
   font-family: Fredoka, system-ui, sans-serif;
+  font-size: clamp(3.2rem, 15vw, 5.2rem);
   font-weight: 700;
-  font-size: 3.75rem;
-  color: #be185d;
+  line-height: 1;
+  letter-spacing: 0.01em;
 }
 
+/* What the game is, in a few words, under its name. */
 .tagline {
+  margin: 0 0 1.4rem;
+  padding: 0 1rem;
   font-family: Nunito, system-ui, sans-serif;
+  font-size: clamp(1.05rem, 4.6vw, 1.3rem);
   font-weight: 700;
-  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+  color: #0f766e;
 }
 
-.about,
-.sister-game,
-.signature {
-  max-width: 22rem;
-  margin: 1rem auto;
+/* A sentence or two under the Start button saying what the game is, for
+   new players (and search engines). */
+.about {
+  max-width: 34rem;
+  margin: 2rem auto 0;
+  padding: 0 1.25rem;
   line-height: 1.5;
-  color: #6b2149;
+  opacity: 0.85;
 }
 
-.signature {
-  font-size: 0.85rem;
-}
-
-/* The home page's way into the game. */
-.play-button {
-  display: inline-block;
-  margin: 0.5rem 0 0;
-  padding: 0.7rem 2.2rem;
-  border-radius: 999px;
-  background: #be185d;
-  color: #fff;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.4rem;
-  text-decoration: none;
-  box-shadow: 0 4px 0 #831843;
-}
-
-.play-button:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #831843;
-}
-
-/* The game page. */
-body.play {
-  padding: 1rem 1rem 2rem;
-}
-
-.dish-title .pal-name {
-  margin: 0;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 2.2rem;
-  color: #be185d;
-}
-
-.dish-title .species {
-  margin: 0 0 0.75rem;
-  color: #6b2149;
-}
-
-/* The flask, as big as fits. */
-.stage {
-  position: relative;
-  width: min(100%, calc((100vh - 9rem) * 360 / 460));
-  min-width: 16rem;
-  margin: 0 auto;
-}
-
-#flask {
-  display: block;
-  width: 100%;
-  aspect-ratio: 360 / 460;
-  touch-action: none; /* dragging steers Flo instead of scrolling the page */
-  user-select: none;
-}
-
-.cell-count {
-  margin: 0.75rem 0 0;
-  font-family: Nunito, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.how-to-play {
-  max-width: 26rem;
-  margin: 0.75rem auto;
-  line-height: 1.5;
-  color: #6b2149;
-}
-
-.teal {
+/* The link to the sister game, PetriPals, in the game's own teal. */
+.about a {
   color: #0f766e;
   font-weight: 700;
 }
 
-.amber {
-  color: #b45309;
-  font-weight: 700;
+.start-btn {
+  margin-top: 1rem;
+  padding: 0.8rem 2rem;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: white;
+  background: #0f766e;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 4px 0 #134e4a;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.blue {
-  color: #1d4ed8;
-  font-weight: 700;
+.start-btn:hover {
+  background: #14b8a6;
 }
 
-/* Steering directions for the way you're playing (see touch.js). */
-.input-touch .for-keys,
-.input-keys .for-touch {
+.start-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #134e4a;
+}
+
+.start-btn:disabled {
+  cursor: wait;
+  opacity: 0.8;
+}
+
+.picker-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  /* Keep the card and the signature under it together in the middle, even
+     on a page whose card is short. */
+  align-content: center;
+  padding: 2rem 1rem;
+}
+
+.picker-shell {
+  width: min(760px, 100%);
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(19, 78, 74, 0.15);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(19, 78, 74, 0.08);
+}
+
+/* A heading at the very top of the card sits on the card's own padding,
+   without the browser's extra margin on top. */
+.picker-shell > h1:first-child {
+  margin-top: 0;
+}
+
+/* Three cards across, each the same width. Flex instead of grid so a row
+   that isn't full keeps its cards in the middle. */
+.picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.picker-grid[hidden] {
   display: none;
+}
+
+.picker-grid > .mate-card {
+  flex: 0 0 calc((100% - 1.5rem) / 3);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* On a phone, still three across: a little less room between cards, and
+   smaller pictures and names. */
+@media (max-width: 520px) {
+  .picker-grid {
+    gap: 0.5rem;
+  }
+
+  .picker-grid > .mate-card {
+    flex-basis: calc((100% - 1rem) / 3);
+    padding: 1rem 0.4rem 0.7rem;
+  }
+
+  .picker-grid .mate-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+  }
+
+  .picker-grid .mate-icon svg {
+    width: 62px;
+    height: 62px;
+  }
+
+  .picker-grid .mate-card h2 {
+    font-size: 1.1rem;
+  }
+
+  .picker-grid .species {
+    font-size: 0.8rem;
+  }
+}
+
+.mate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(15, 118, 110, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem 0.75rem 0.85rem;
+}
+
+/* In the picker the whole card is the button that picks her. */
+a.mate-card {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+a.mate-card:hover,
+a.mate-card:focus-visible {
+  border-color: #0f766e;
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-3px);
+}
+
+a.mate-card:focus-visible {
+  outline: 3px solid #14b8a6;
+  outline-offset: 2px;
+}
+
+a.mate-card:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.mate-card,
+  a.mate-card:hover,
+  a.mate-card:focus-visible {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Each mate's name, with her virus right under it. */
+.picker-grid .mate-card h2 {
+  margin: 0.2rem 0 0.1rem;
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+/* Her virus, right under her name. Every card keeps room for two lines,
+   so a long one that wraps doesn't make her card look different from the
+   rest. */
+.picker-grid .species {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  min-height: 2.6em;
+}
+
+.mate-icon {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 0.4rem;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 2px rgba(19, 78, 74, 0.06);
+}
+
+.mate-icon svg {
+  width: 76px;
+  height: 76px;
+  display: block;
+}
+
+/* Each mate's tile, in a pale tint of her own color. */
+.tia {
+  background: #efeaff;
+}
+
+.phoebe {
+  background: #ddf7f2;
+}
+
+.missy {
+  background: #ffe9e1;
+}
+
+.pick-btn {
+  margin-top: 0.75rem;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: #0f766e;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.pick-btn:hover {
+  background: #14b8a6;
 }
 
 .back-link {
   display: inline-block;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
+  color: #0f766e;
+  font-weight: 700;
+  text-decoration: none;
 }
 
-/* The end-of-level pop-up, over the flask. */
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.dish-shell {
+  width: min(760px, 100%);
+  /* Nothing on the game page needs selecting, and on an iPhone a finger
+     that slips off the dish onto the words around it would otherwise bring
+     up the text magnifier mid-game. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The agar keeps itself square (below) and the glass rim wraps around it.
+   Don't size the agar from the dish's height instead: Safari (so every
+   browser on an iPhone) can ignore a percentage height when the parent's
+   height only comes from aspect-ratio, which squashes the agar into an oval. */
+.petri-dish {
+  position: relative;
+  width: min(600px, 100%);
+  margin: 0 auto;
+  padding: 18px;
+  border-radius: 50%;
+  /* A finger drags the mate from anywhere on the dish, rim included
+     (game/touch.js): don't scroll or zoom the page, select text, or pop up
+     the magnifier or long-press menu instead. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  /* glass rim */
+  background: rgba(255, 255, 255, 0.55);
+  border: 3px solid rgba(15, 118, 110, 0.35);
+  box-shadow:
+    0 18px 36px rgba(19, 78, 74, 0.15),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.agar {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  /* A lawn: E. coli grown so thick it's one smooth, cloudy, cream layer over
+     the whole agar, like frosted glass, with a soft glass highlight. The
+     plaques are clear holes in it. */
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), transparent 32%),
+    radial-gradient(circle at 50% 50%, #f1ecd8, #e2dbbd);
+  border: 2px solid rgba(180, 83, 9, 0.2);
+  /* Touch and hold on the agar to steer (game/touch.js): don't scroll or zoom
+     the page, select text, or pop up the long-press menu instead. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Positioned by game/swarm.js; the mate's own idle animation stays on the SVG. */
+.mate-mover {
+  grid-area: 1 / 1; /* stack in the dish center */
+  width: 7%; /* each mate's own size is set by game/game.js and game/swarm.js */
+  position: relative;
+  z-index: 1; /* over the cells */
+  will-change: transform;
+}
+
+.dish-mate {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dish-mate[hidden] {
+  display: none;
+}
+
+.wobble {
+  animation: wobble 3s ease-in-out infinite;
+}
+
+.species {
+  font-size: 0.95rem;
+}
+
+/* The mate's name and virus above the dish. */
+.dish-title {
+  margin-bottom: 1.25rem;
+}
+
+.dish-title .mate-name {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.dish-title .species {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+}
+
 .win-banner {
   position: absolute;
-  left: 50%;
   top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: min(320px, 85%);
+  padding: 1.25rem 1.5rem 1.5rem;
   transform: translate(-50%, -50%);
-  width: min(20rem, calc(100% - 1rem));
-  padding: 1.25rem 1.25rem 1.5rem;
-  border-radius: 1.25rem;
-  background: #fff;
-  box-shadow: 0 10px 40px rgb(131 24 67 / 0.3);
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid rgba(15, 118, 110, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(19, 78, 74, 0.2);
+  animation: pop-in 0.35s ease-out;
 }
 
 .win-banner[hidden] {
@@ -216,31 +489,352 @@ body.play {
 }
 
 .win-banner h2 {
+  margin: 0 0 0.5rem;
+}
+
+.win-banner p {
   margin: 0;
-  font-family: Fredoka, system-ui, sans-serif;
-  font-size: 1.8rem;
-  color: #be185d;
 }
 
-.win-message,
-.fun-fact {
-  line-height: 1.45;
+/* The "Did you know?" fact about your mate when you win. */
+.win-banner .fun-fact {
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(15, 118, 110, 0.08);
+  font-size: 0.92rem;
+  line-height: 1.4;
 }
 
-.fun-fact {
-  padding: 0.6rem 0.75rem;
-  border-radius: 0.75rem;
-  background: #fff1f2;
-  font-size: 0.9rem;
-  text-align: left;
+.win-banner .fun-fact[hidden] {
+  display: none;
 }
 
-.play-again {
-  padding: 0.6rem 1.4rem;
-  border: 0;
+.win-banner .fun-fact strong {
+  color: #0f766e;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.banner-buttons {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.banner-buttons .pick-btn {
+  margin-top: 0;
+  font: inherit;
+  font-weight: 700;
+}
+
+/* The group the player steers stays on top, in full color with a soft halo;
+   the offspring left behind are paler and a little washed out. */
+.mate-mover.player {
+  z-index: 2;
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 3px #fff)
+    drop-shadow(0 0 7px rgba(15, 118, 110, 0.45));
+}
+
+/* Copies of her that burst out of cells: smaller (game/swarm.js), a little
+   paler, and without the idle wiggle, which also keeps a dish full of them
+   smooth. */
+.mate-mover.copy {
+  opacity: 0.85;
+}
+
+/* Only the player's mate has a face. */
+.mate-mover.copy .face {
+  display: none;
+}
+
+.mate-mover.copy .dish-mate {
+  animation: none;
+}
+
+/* An E. coli cell in the lawn (game/hosts.js): drawn and sized like one of
+   Colette's offspring in PetriPals, paler and a little washed out, turned a
+   random way (--angle). Bigger than any phage. */
+.host {
+  position: absolute;
+  aspect-ratio: 1;
+  opacity: 0.75;
+  filter: saturate(0.45) brightness(1.08);
+  transform: translate(-50%, -50%) rotate(var(--angle, 0deg));
+}
+
+.host svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Infected: she's taken it over, so it swells and blushes pink until it
+   bursts (--latent, her latent period, set in game/hosts.js). */
+.host.infected {
+  animation: infected var(--latent, 1s) ease-in forwards;
+}
+
+@keyframes infected {
+  to {
+    opacity: 0.95;
+    filter: saturate(0.6) brightness(1.05) drop-shadow(0 0 3px #ec4899) drop-shadow(0 0 2px #ec4899);
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(1.25);
+  }
+}
+
+/* A plaque (game/hosts.js): a clear hole in the lawn where a cell burst and
+   the copies killed it. It opens up from nothing. */
+.plaque {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  /* A hole in the lawn: the clear amber agar underneath shows through, a
+     little darker than the cloudy lawn and see-through, fading out at a
+     soft, hazy edge where the lawn thins. A faint inner shadow makes it
+     read as a dip in the lawn, not a dot on top of it. Each plaque gets a
+     slightly uneven outline (set in game/hosts.js). */
+  background: radial-gradient(
+    closest-side,
+    rgba(214, 160, 52, 0.5) 0%,
+    rgba(214, 160, 52, 0.45) 55%,
+    rgba(214, 160, 52, 0.25) 80%,
+    rgba(214, 160, 52, 0) 100%
+  );
+  box-shadow: inset 0 1px 4px rgba(120, 80, 10, 0.18);
+  filter: blur(0.6px);
+  pointer-events: none;
+  animation: plaque-open 1.2s ease-out both;
+}
+
+@keyframes plaque-open {
+  from {
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .host.infected,
+  .plaque {
+    animation-duration: 0.01s;
+  }
+}
+
+.cell-count {
+  margin: 1rem 0 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.how-to-play {
+  margin: 0.75rem 0 0;
+  line-height: 1.6;
+  color: #334155;
+}
+
+/* Arrow-key directions on a computer, touch directions on a phone or tablet.
+   The media query picks from the device before any script runs (a finger is a
+   "coarse" pointer); then game/touch.js switches them to match whatever the
+   player actually uses, for devices with both. */
+.for-touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .for-keys {
+    display: none;
+  }
+
+  .for-touch {
+    display: inline;
+  }
+}
+
+html.input-touch .for-keys,
+html.input-keys .for-touch {
+  display: none;
+}
+
+html.input-touch .for-touch,
+html.input-keys .for-keys {
+  display: inline;
+}
+
+/* Inside a cell (game/swarm.js): she shrinks into it and fades, and holds
+   still until it bursts. */
+.mate-mover.inside .dish-mate {
+  transform: scale(0.6);
+  opacity: 0.55;
+  animation: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Jess's signature at the foot of every page. */
+.signature {
+  margin: 2rem 0 1.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.picker-page .signature {
+  margin: 1rem 0 0;
+}
+
+/* On the home page, push it down to the bottom of the screen instead of
+   right under the start button. */
+body:not(.picker-page) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+body:not(.picker-page) .signature {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+/* On a phone, give the dish as much of the screen as we can: less padding
+   around the card and a thinner glass rim. */
+@media (max-width: 600px) {
+  .picker-page:has(.dish-shell) {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .dish-shell {
+    padding: 1rem 0.5rem;
+  }
+
+  .dish-shell .petri-dish {
+    padding: 8px;
+  }
+}
+
+/* "Finding host cells…": the small card that shows while the next screen
+   loads (game/loading.js). It waits a moment before fading in, so a quick
+   page change never flashes it. The see-through cover behind it keeps a
+   second tap from starting a second trip. */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(220, 236, 251, 0.55);
+  animation: loading-in 0.2s ease-out 0.15s both;
+}
+
+.loading-overlay[hidden] {
+  display: none;
+}
+
+/* On a page that's still being filled in, the cover is solid, so the half
+   built page doesn't show through. If its script never gets to say it's
+   done (an error, say), give up after a while rather than block the page
+   forever. */
+.loading-overlay.arriving {
+  background: #dcecfb;
+  animation: loading-give-up 0s linear 8s forwards;
+}
+
+.loading-overlay.arriving .loading-card {
+  animation: loading-in 0.2s ease-out 0.15s both;
+}
+
+.loading-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1.25rem;
+  background: white;
+  border: 2px solid rgba(15, 118, 110, 0.25);
   border-radius: 999px;
-  background: #be185d;
-  color: #fff;
-  font: 700 1.05rem Fredoka, system-ui, sans-serif;
-  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(19, 78, 74, 0.18);
+  color: #134e4a;
+  font-family: Fredoka, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+/* A little cell pinching into two daughter cells, over and over. */
+.loading-cells {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 18px;
+}
+
+.loading-cells span {
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #14b8a6;
+  animation: loading-split-left 0.9s ease-in-out infinite alternate;
+}
+
+.loading-cells span:last-child {
+  background: #0f766e;
+  animation-name: loading-split-right;
+}
+
+@keyframes loading-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loading-give-up {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes loading-split-left {
+  to {
+    transform: translateX(-6px);
+  }
+}
+
+@keyframes loading-split-right {
+  to {
+    transform: translateX(6px);
+  }
+}
+
+/* No moving cells for anyone who'd rather not have motion: just the two
+   daughters, side by side. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-cells span {
+    animation: none;
+    transform: translateX(-6px);
+  }
+
+  .loading-cells span:last-child {
+    transform: translateX(6px);
+  }
 }

@@ -1,0 +1,193 @@
+// The lawn: E. coli cells scattered over the agar for the mate to infect.
+// A cell she (or a copy of her) touches gets infected, swells for her
+// latent period, then bursts, leaving a plaque: a clear hole in the lawn.
+// A new cell turns up somewhere else a moment later, never in a plaque
+// while there's room elsewhere.
+//
+// Positions are kept relative to the dish center, as fractions of the dish
+// radius (-1 to 1), so they stay put when the window is resized.
+import { GAME } from './config.js';
+
+const SVG = 'http://www.w3.org/2000/svg';
+const SPLINES = 'calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"';
+
+// One wavy flagellum, as in PetriPals: from (x, y), pointing `angle`
+// degrees, `length` long, waving once every `duration`.
+function flagellum(x, y, angle, length, duration) {
+  const a = (angle * Math.PI) / 180;
+  const [ux, uy] = [Math.cos(a), Math.sin(a)];
+  const at = (t, wave) => `${(x + ux * length * t - uy * wave).toFixed(1)} ${(y + uy * length * t + ux * wave).toFixed(1)}`;
+  const d = (wave) => `M${x} ${y} C${at(0.33, wave)} ${at(0.66, -wave)} ${at(1, 0)}`;
+  const frames = [12, 3, -12, -3, 12].map(d).join(';');
+  return `<path d="${d(12)}" stroke="#2e6b0e" stroke-width="3.5" fill="none" stroke-linecap="round">` +
+    `<animate attributeName="d" dur="${duration}" repeatCount="indefinite" ${SPLINES} values="${frames}" /></path>`;
+}
+
+// Each cell is drawn like one of Colette's offspring in PetriPals (she's
+// E. coli too): a long, slim green-apple rod with flagella all around, and
+// no face.
+export const ECOLI_ART = [
+  [60, 80, -115, 34, '0.7s'],
+  [100, 78, -90, 32, '0.64s'],
+  [140, 80, -65, 34, '0.74s'],
+  [60, 120, 115, 34, '0.72s'],
+  [100, 122, 90, 32, '0.68s'],
+  [140, 120, 65, 34, '0.7s'],
+  [36, 100, 180, 32, '0.6s'],
+  [164, 100, 0, 30, '0.66s'],
+].map((f) => flagellum(...f)).join('') + `
+  <rect x="34" y="78" width="132" height="44" rx="22" fill="#abee64" stroke="#2e6b0e" stroke-width="4" />
+  <path d="M118 85 Q136 81 152 88" stroke="#effde0" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.95" />
+  <circle cx="148" cy="113" r="2.8" fill="#effde0" />`;
+
+// One cell's drawing. Its flagella wave, unless someone has asked for less
+// motion (CSS can't pause <animate>).
+function ecoli() {
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('viewBox', '4 4 192 192');
+  svg.innerHTML = ECOLI_ART;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    for (const wave of svg.querySelectorAll('animate')) wave.remove();
+  }
+  return svg;
+}
+
+export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
+  const agar = document.querySelector('.agar');
+  const hosts = []; // { id, el, fx, fy, infected, left } (left: ms to bursting)
+  let nextId = 1;
+  const plaques = []; // { fx, fy }
+  // Cells that burst, each growing back `left` ms from now ({ left }).
+  let waiting = [];
+  let stopped = false;
+
+  // Pick a spot for a new cell, away from other cells and plaques, and at
+  // the start, from the middle, where she starts. If the lawn is too
+  // crowded for that, anywhere will do.
+  function randomSpot(clearOfMiddle) {
+    let spot;
+    for (let tries = 0; tries < 100; tries++) {
+      // Uniform over the dish, kept away from the rim.
+      const angle = random() * Math.PI * 2;
+      const distance = Math.sqrt(random()) * 0.82;
+      spot = { fx: Math.cos(angle) * distance, fy: Math.sin(angle) * distance };
+      const near = (spots, gap) => spots.some((s) => Math.hypot(spot.fx - s.fx, spot.fy - s.fy) < gap);
+      if (!(clearOfMiddle && Math.hypot(spot.fx, spot.fy) < 0.3) && !near(hosts, GAME.HOST_GAP) &&
+          !near(plaques, GAME.PLAQUE_RADIUS + GAME.HOST_RADIUS)) return spot;
+    }
+    return spot;
+  }
+
+  // Grow a cell somewhere with room, clear of the middle if asked.
+  function grow(clearOfMiddle = false) {
+    const spot = randomSpot(clearOfMiddle);
+    const el = document.createElement('div');
+    el.className = 'host';
+    el.style.width = `${GAME.HOST_SIZE * 100}%`;
+    el.append(ecoli());
+    el.style.left = `${50 + spot.fx * 50}%`;
+    el.style.top = `${50 + spot.fy * 50}%`;
+    el.style.setProperty('--angle', `${Math.floor(random() * 180)}deg`);
+    el.setAttribute('aria-hidden', 'true');
+    agar.appendChild(el);
+    hosts.push({ id: nextId++, el, ...spot, infected: false, left: 0 });
+  }
+
+  // The clear hole a burst cell leaves. It opens up from nothing (see
+  // .plaque in styles.css). Real plaques are round but never perfect
+  // circles, so each gets a slightly uneven edge of its own.
+  function addPlaque(fx, fy) {
+    const el = document.createElement('div');
+    el.className = 'plaque';
+    el.style.left = `${50 + fx * 50}%`;
+    el.style.top = `${50 + fy * 50}%`;
+    el.style.width = `${GAME.PLAQUE_RADIUS * 100}%`;
+    const wobble = () => `${44 + Math.floor(random() * 12)}%`;
+    el.style.borderRadius =
+      `${wobble()} ${wobble()} ${wobble()} ${wobble()} / ${wobble()} ${wobble()} ${wobble()} ${wobble()}`;
+    el.setAttribute('aria-hidden', 'true');
+    // Under the cells, so they're never hidden.
+    agar.prepend(el);
+    plaques.push({ fx, fy, el });
+  }
+
+  // The mate starts in the middle, so the first cells keep away from it.
+  for (let i = 0; i < count; i++) grow(true);
+
+  function infect(host, latentMs) {
+    host.infected = true;
+    host.left = latentMs;
+    host.el.classList.add('infected');
+    host.el.style.setProperty('--latent', `${latentMs}ms`);
+  }
+
+  const touching = (host, bx, by, reach) =>
+    !host.infected && Math.hypot(host.fx - bx, host.fy - by) <= reach + GAME.HOST_RADIUS;
+
+  return {
+    // Infect every healthy cell touching a circle of radius `reach` at
+    // (bx, by), all in fractions of the dish radius. Each bursts
+    // `latentMs` from now. Returns how many were infected.
+    infectNear(bx, by, reach, latentMs) {
+      let infected = 0;
+      for (const host of hosts) {
+        if (!touching(host, bx, by, reach)) continue;
+        infect(host, latentMs);
+        infected++;
+      }
+      return infected;
+    },
+
+    // Infect just one healthy cell touching that circle, the nearest, for
+    // her to go into. Returns it as { id, fx, fy }, or null if there's none.
+    infectOne(bx, by, reach, latentMs) {
+      const distance = (host) => Math.hypot(host.fx - bx, host.fy - by);
+      const host = hosts.filter((h) => touching(h, bx, by, reach)).sort((a, b) => distance(a) - distance(b))[0];
+      if (!host) return null;
+      infect(host, latentMs);
+      return { id: host.id, fx: host.fx, fy: host.fy };
+    },
+
+    // Move time on by `seconds`: infected cells whose time is up burst, and
+    // missing cells grow back. Returns each cell that burst, as
+    // { id, fx, fy }.
+    tick(seconds) {
+      const ms = seconds * 1000;
+      if (!stopped) {
+        for (const cell of waiting) {
+          cell.left -= ms;
+          if (cell.left <= 0) grow();
+        }
+        waiting = waiting.filter((cell) => cell.left > 0);
+      }
+      const bursts = [];
+      for (let i = hosts.length - 1; i >= 0; i--) {
+        const host = hosts[i];
+        if (!host.infected) continue;
+        host.left -= ms;
+        if (host.left > 0) continue;
+        hosts.splice(i, 1);
+        host.el.remove();
+        addPlaque(host.fx, host.fy);
+        bursts.push({ id: host.id, fx: host.fx, fy: host.fy });
+        waiting.push({ left: GAME.HOST_RESPAWN_MS });
+      }
+      return bursts;
+    },
+
+    // Where every cell is, as { fx, fy, infected }.
+    positions() {
+      return hosts.map(({ fx, fy, infected }) => ({ fx, fy, infected }));
+    },
+
+    // Where every plaque is, as { fx, fy }.
+    plaques() {
+      return plaques.map(({ fx, fy }) => ({ fx, fy }));
+    },
+
+    // No new cells once the game is over. Infected ones still burst.
+    stop() {
+      stopped = true;
+    },
+  };
+}

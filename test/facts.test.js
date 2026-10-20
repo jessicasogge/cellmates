@@ -1,25 +1,53 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SPECIES } from '../public/game/config.js';
 import { hideFact, pickFact, showFact, writeFact } from '../public/game/facts.js';
+import { plainText } from '../public/game/italics.js';
 
-// Stand-in pals until the real ones (and their facts) are added.
-const SPECIES = {
-  flo: { facts: ['Flo changes her spikes a little every year.', 'Flo has two kinds of spikes, called HA and NA.', 'Flo can only get into cells with sialic acid.'] },
-  tess: { facts: ['Tess has six tail fibers.', 'Tess injects her DNA like a syringe.'] },
-};
+describe('every mate\'s facts', () => {
+  it.each(Object.keys(SPECIES))('%s has at least 10 short, different facts', (mate) => {
+    const { facts } = SPECIES[mate];
+    expect(facts.length).toBeGreaterThanOrEqual(10);
+    expect(new Set(facts).size).toBe(facts.length);
+    const name = mate[0].toUpperCase() + mate.slice(1);
+    for (const raw of facts) {
+      // Italics markers come in pairs, around at least one word.
+      expect(raw.split('*').length % 2, raw).toBe(1);
+      expect(raw, raw).not.toMatch(/\*\s*\*/);
+      const fact = plainText(raw); // as it reads on screen
+      expect(fact.length, fact).toBeLessThanOrEqual(90); // fits the pop-up
+      // Says whose fact it is.
+      expect(fact, fact).toContain(name);
+      expect(fact, fact).toMatch(/^["A-Z0-9].*[.!"]$/); // a full sentence
+      // Commas and other punctuation instead of dashes (hyphenated words,
+      // like whip-like, are fine).
+      expect(fact, fact).not.toMatch(/[\u2013\u2014]|\s-\s|\d-\d/);
+    }
+  });
+});
+
+describe('scientific names of other species', () => {
+  it('puts E. coli in italics wherever a fact names it', () => {
+    for (const [mate, { facts }] of Object.entries(SPECIES)) {
+      for (const fact of facts) {
+        if (fact.includes('E. coli')) expect(fact, `${mate}: ${fact}`).toContain('*E. coli*');
+      }
+    }
+  });
+});
 
 describe('writeFact', () => {
   it('writes the parts between asterisks in italics, and the rest as plain text', () => {
     const el = document.createElement('span');
-    writeFact(el, "Ceres's cousin *Bacillus thuringiensis* is used by farmers.");
-    expect(el.textContent).toBe("Ceres's cousin Bacillus thuringiensis is used by farmers.");
-    expect([...el.querySelectorAll('i')].map((i) => i.textContent)).toEqual(['Bacillus thuringiensis']);
+    writeFact(el, 'Tia lands on *E. coli* on six long tail fibers.');
+    expect(el.textContent).toBe('Tia lands on E. coli on six long tail fibers.');
+    expect([...el.querySelectorAll('i')].map((i) => i.textContent)).toEqual(['E. coli']);
   });
 
   it('copes with italics at the start or end, and with none', () => {
     const el = document.createElement('span');
-    writeFact(el, '*Bacillus* means little rod.');
-    expect(el.innerHTML).toBe('<i>Bacillus</i> means little rod.');
+    writeFact(el, '*E. coli* lives in the gut.');
+    expect(el.innerHTML).toBe('<i>E. coli</i> lives in the gut.');
     writeFact(el, 'Plain words.');
     expect(el.innerHTML).toBe('Plain words.');
   });
@@ -63,25 +91,25 @@ describe('the pop-up line', () => {
   });
   const line = () => document.querySelector('.fun-fact');
 
-  it('shows one of the pal\'s facts', () => {
-    showFact('flo', SPECIES.flo);
+  it('shows one of the mate\'s facts', () => {
+    showFact('tia', SPECIES.tia);
     expect(line().hidden).toBe(false);
-    expect(SPECIES.flo.facts).toContain(line().querySelector('.fun-fact-text').textContent);
+    expect(SPECIES.tia.facts.map(plainText)).toContain(line().querySelector('.fun-fact-text').textContent);
   });
 
-  it('shows the names of other bacteria in italics, without the asterisks', () => {
-    const species = { facts: ["Ceres is a close cousin of *Bacillus anthracis*, the bacterium that causes anthrax."] };
-    showFact('ceres', species);
+  it('shows the names of other species in italics, without the asterisks', () => {
+    const species = { facts: ['Tia infects *E. coli*.'] };
+    showFact('tia', species);
     const text = line().querySelector('.fun-fact-text');
-    expect(text.querySelector('i').textContent).toBe('Bacillus anthracis');
+    expect(text.querySelector('i').textContent).toBe('E. coli');
     expect(text.textContent).not.toContain('*');
   });
 
   it('shows a different fact on the next win', () => {
     for (let i = 0; i < 20; i++) {
-      showFact('tess', SPECIES.tess);
+      showFact('missy', SPECIES.missy);
       const first = line().textContent;
-      showFact('tess', SPECIES.tess);
+      showFact('missy', SPECIES.missy);
       expect(line().textContent).not.toBe(first);
     }
   });
@@ -93,9 +121,9 @@ describe('the pop-up line', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
     try {
-      expect(() => showFact('flo', SPECIES.flo)).not.toThrow();
+      expect(() => showFact('tia', SPECIES.tia)).not.toThrow();
       expect(line().hidden).toBe(false);
-      expect(SPECIES.flo.facts).toContain(line().querySelector('.fun-fact-text').textContent);
+      expect(SPECIES.tia.facts.map(plainText)).toContain(line().querySelector('.fun-fact-text').textContent);
     } finally {
       vi.restoreAllMocks();
     }
@@ -103,14 +131,14 @@ describe('the pop-up line', () => {
 
   it('does nothing on a page without the fact line', () => {
     document.body.innerHTML = '';
-    expect(() => showFact('flo', SPECIES.flo)).not.toThrow();
+    expect(() => showFact('tia', SPECIES.tia)).not.toThrow();
     expect(() => hideFact()).not.toThrow();
   });
 
-  it('stays hidden for a pal with no facts, and hides on a game over', () => {
+  it('stays hidden for a mate with no facts, and hides when asked', () => {
     showFact('nobody', {});
     expect(line().hidden).toBe(true);
-    showFact('flo', SPECIES.flo);
+    showFact('tia', SPECIES.tia);
     hideFact();
     expect(line().hidden).toBe(true);
   });

@@ -1,76 +1,130 @@
-// The numbers the game is built on. Most of these are tuning knobs for
-// playtesting, so they're all in one place.
+// Every mate is a bacteriophage, a virus that infects bacteria. All three
+// infect Escherichia coli, so the dish is a lawn of E. coli (drawn like
+// Colette, PetriPals' E. coli), and each mate bursts its cells open.
 //
-// Distances are in flask units: the flask is FLASK.width x FLASK.height, and
-// the page scales it to fit the screen. Times are in seconds, speeds in
-// flask units per second. The real science is sped up a lot: flu takes about
-// 6 to 8 hours to make copies inside a cell.
+// `scientific`: the virus's name above the dish. Virus names aren't in
+//   italics; *asterisks* mark the parts that are (a host's species name).
+// `color`: her name above the dish.
+// `colors`: her drawing's colors (mates.js).
+// `size`: how wide she's drawn in the dish, as a fraction of the dish's
+//   width. Phages are far smaller than the bacteria they infect: E. coli is
+//   about 2 micrometers long, T4 about a tenth of that, and φX174 and MS2
+//   only about 25 nanometers across. So she's always smaller than a cell,
+//   and T4 bigger than the other two, though true to scale she'd be too
+//   small to see.
+// `burst`: how many new copies of her one host cell releases in the game.
+//   Real bursts are much bigger (see `facts`); these are scaled way down.
+// `latentMs`: how long an infected cell takes to burst, in the game. When
+//   she infects a cell herself, she's inside it all that time.
+// `facts`: random win/lose pop-up facts (game/facts.js); *names* italicize.
 
-export const FLASK = {
-  width: 360,
-  height: 460,
-  // The sheet of cells, inside the flask's walls. Below it is the neck of
-  // the flask, where your pal starts.
-  cells: { left: 12, top: 12, right: 348, bottom: 392 },
-  cellSize: 25, // middle to corner of each hex cell: 7 or 8 across
-  start: { x: 180, y: 428 },
-};
-
-// Each virus, keyed by pal id. Only Flo for the prototype.
-//
-//   species    her real name, shown under her name
-//   receptor   what she grabs onto to get into a cell
-//   speed      how fast you can steer her. (Real viruses can't swim at all,
-//              a game liberty, like PetriPals' cocci swimming.)
-//   enterTime  s for her to get into a cell, make copies and get back out
-//   copyTime   s for a cell her copies get into to make more
-//   copies     copies each cell releases. Scaled way down: a real cell
-//              infected with flu releases hundreds or more.
-//   drift      how fast her free copies drift about
-//   lifetime   s a free copy lasts before it stops being able to infect
-//   facts      "Did you know?" facts for the end-of-level pop-up
-export const VIRUSES = {
-  flo: {
-    species: 'Influenza A virus',
-    receptor: 'sialic acid',
-    speed: 110,
-    enterTime: 1,
-    copyTime: 1.4,
-    copies: 3,
-    drift: 40,
-    lifetime: 2.5,
-    color: '#fb7185',
+export const SPECIES = {
+  tia: {
     facts: [
-      'Flo has two kinds of spikes. Her HA spikes grab sialic acid on a cell to get in, and her NA spikes snip it away so new copies can get out.',
-      'Flo keeps her genes in eight separate pieces. When two flu viruses get into the same cell, they can swap pieces.',
-      'Flo’s spikes change a little every year. That’s why there’s a new flu vaccine every year too.',
-      'Cells that are infected send out a warning called interferon, and the cells around them switch on their defenses.',
-      'Scientists grow flu in flasks of cells, and count the clear holes it leaves, called plaques, to see how much virus there is.',
-      'Antibodies stick to Flo’s spikes so she can’t grab onto cells anymore. That’s how a flu vaccine protects you.',
+      "Tia is a bacteriophage: a virus that infects bacteria. Phage means \"eater.\"",
+      "Tia lands on *E. coli* on six long, bendy tail fibers, like a lunar lander's legs.",
+      "Once Tia lands, her tail squeezes down and pushes a tube through the cell's wall.",
+      "Tia injects only her DNA into the cell. Her empty head and tail stay outside.",
+      "Inside the cell, Tia's genes shut down the cell's own genes and make it build more Tias.",
+      "One cell infected by Tia bursts open with about 100 to 200 new copies of her.",
+      "Tia's head is a stretched-out icosahedron, a shape with 20 triangle faces.",
+      "In 1952, Hershey and Chase used T2, Tia's close cousin, to show genes are made of DNA.",
+      "Tia's DNA swaps cytosine for a look-alike base, which helps her dodge the cell's defenses.",
+      "Doctors are testing phages like Tia to treat infections antibiotics can't cure.",
+      "Phages like Tia were first seen in 1915, and named by Félix d'Hérelle in 1917.",
+      "Phages like Tia outnumber every other kind of biological thing on Earth.",
     ],
+    scientific: 'Bacteriophage T4',
+    color: '#5b3fb0',
+    size: 0.052,
+    burst: 3,
+    latentMs: 1500,
+    colors: { fill: '#e6defc', stroke: '#6d4fc2', highlight: '#f7f3ff', dark: '#33236b' },
+  },
+  phoebe: {
+    facts: [
+      "Phoebe's name comes from φX174: φ is the Greek letter phi.",
+      "In 1977, Fred Sanger's lab made Phoebe's the first DNA genome ever read from end to end.",
+      "Phoebe's genome is tiny: just 5,386 letters long, with 11 genes.",
+      "Some of Phoebe's genes overlap, read two ways at once, to fit more into her tiny genome.",
+      "Phoebe's DNA is single-stranded: one strand, not the usual two.",
+      "In 2003, scientists built Phoebe's genome from scratch in two weeks, and it worked.",
+      "Phoebe has no tail. She's a tiny 20-sided shell with a spike on each of her 12 corners.",
+      "Phoebe bursts her cell with just one protein, E, which stops it from building its wall.",
+      "Labs add a little of Phoebe's DNA to DNA-sequencing runs to check the machine.",
+      "Phoebe infects a strain of *E. coli* called C, grabbing onto its outer coat.",
+    ],
+    scientific: 'Bacteriophage φX174',
+    color: '#0f766e',
+    size: 0.038,
+    burst: 2,
+    latentMs: 1100,
+    colors: { fill: '#c9f2ec', stroke: '#0f8a7e', highlight: '#effcfa', dark: '#0b4f48' },
+  },
+  missy: {
+    facts: [
+      "Missy's genes are made of RNA, not DNA.",
+      "In 1976, Walter Fiers's lab made Missy's the first genome of any kind ever read in full.",
+      "Missy has just four genes.",
+      "Missy gets into *E. coli* by grabbing its F pilus, a long, thin hair some cells grow.",
+      "One cell infected by Missy can burst with thousands of new copies of her.",
+      "Missy's shell is only about 27 nanometers across, small even for a virus.",
+      "Missy bursts her cell with one tiny protein, L.",
+      "Missy's coat protein grabs a hairpin in her RNA, so scientists use it to tag RNA.",
+      "Missy is harmless to people, so she's used to test how well filters stop viruses.",
+      "Lined up side by side, about 2,500 Missys would stretch across one human hair.",
+    ],
+    scientific: 'Bacteriophage MS2',
+    color: '#c2410c',
+    size: 0.036,
+    burst: 4,
+    latentMs: 2000,
+    colors: { fill: '#ffdccf', stroke: '#d9573a', highlight: '#fff4ef', dark: '#7a2614' },
   },
 };
 
-// The cells and how they fight back.
-//
-//   receptors   share of cells with your receptor. The rest won't let you in.
-//   warnChance  when a cell releases its copies, the chance each healthy
-//               neighbor gets the interferon warning. Free copies can't get
-//               into a warned cell; your pal can, but it takes her twice as
-//               long.
-export const CELLS = {
-  receptors: 0.75,
-  warnChance: 0.6,
-};
-
-// The levels, like PetriPals': each adds an antibody cloud and needs more
-// cells taken. The immune system keeps making antibodies, so each cloud
-// starts `start` in radius and keeps spreading by `growth` a second, up to
-// `max`: the longer you take, the less room there is. Touching a cloud ends
-// the game, and free copies that drift into one are stopped.
-export const ANTIBODIES = { start: 16, growth: 2, max: 100 };
+// Each level doubles how many copies of her you need to make, counting
+// the ones her copies make too.
 export const LEVELS = [
-  { target: 28, antibodies: 1 },
-  { target: 30, antibodies: 2 },
-  { target: 32, antibodies: 3 },
+  { target: 4 },
+  { target: 8 },
+  { target: 16 },
+  { target: 32 },
+  { target: 64 },
+  { target: 128 },
+  { target: 256 },
 ];
+
+export const GAME = {
+  SPEED: 0.8, // dish radii per second
+  ARRIVE: 0.01, // pointer tolerance, relative to dish radius
+  DRAG_SPEED: 2, // drag cap in radii/sec, so a fast swipe doesn't fling her
+
+  // How close counts as touching: this share of her drawn half-width (her
+  // `size`, in dish radii), since her drawing doesn't fill its whole box.
+  // Her copies are drawn COPY_SCALE times her size.
+  REACH_SHARE: 0.8,
+  COPY_SCALE: 0.7,
+  MAX_COPIES: 100, // no more copies burst out once there are this many
+
+  // New copies fly out of a bursting cell at BURST_SPEED (dish radii per
+  // second), slow down at SETTLE_RATE, and then just jiggle about at
+  // DRIFT_SPEED: viruses can't swim, they drift.
+  BURST_SPEED: 0.6,
+  SETTLE_RATE: 3,
+  DRIFT_SPEED: 0.09,
+
+  // Host cells: how many are on the lawn at a time, and how soon a new one
+  // turns up after one bursts.
+  HOSTS: 12,
+  HOST_RESPAWN_MS: 1200,
+  // How wide each cell's drawing is, as a fraction of the dish's width: the
+  // same as Colette's offspring in PetriPals. Her rod is HOST_ROD of that.
+  HOST_SIZE: 0.105,
+  HOST_ROD: 0.69,
+  HOST_RADIUS: 0.05, // how close counts as touching one (dish radii)
+  HOST_GAP: 0.17, // how far apart cells grow, if there's room (dish radii)
+  // A plaque, the clear hole a burst cell leaves in the lawn: its radius
+  // (dish radii).
+  PLAQUE_RADIUS: 0.1,
+};

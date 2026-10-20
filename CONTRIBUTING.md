@@ -1,6 +1,6 @@
 # Contributing to CellMates
 
-Thanks for your interest in CellMates! Bug reports, ideas for new pals or game modes, and fixes are all welcome.
+Thanks for your interest in CellMates! Bug reports, ideas for new mates or game modes, and fixes are all welcome.
 
 Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
@@ -21,7 +21,7 @@ Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT
    npm run dev
    ```
 
-   Then open http://localhost:3000.
+   Then open http://localhost:3005.
 
 3. Make your change. The game is plain HTML, CSS and JavaScript in `public/`, with no build step. See the [README](README.md#project-layout) for where things live.
 4. Add or update tests for what you changed, and make sure they all pass and still cover the game:
@@ -30,14 +30,14 @@ Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT
    npm run test:coverage
    ```
 
-5. Open a pull request saying what you changed and why. For anything you can see, such as how a pal looks or moves, include a screenshot.
+5. Open a pull request saying what you changed and why. For anything you can see, such as how a mate looks or moves, include a screenshot.
 
 ## Style
 
 - **Keep pull requests small and focused.** One fix or feature per pull request is easiest to review.
 - **Write comments in plain English** that explain why, not just what, like the existing code does.
 - **Check it on a phone as well as a computer.** The game works with both arrow keys and touch.
-- **Keep the science honest.** If a pal, receptor or burst size is simplified or made up for the game, say so in a comment.
+- **Keep the science honest.** If a mate, host or burst size is simplified or made up for the game, say so in a comment.
 
 ## License
 

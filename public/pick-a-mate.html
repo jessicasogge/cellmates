@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CellMates | Pick a Mate</title>
+    <meta name="description" content="Pick your CellMate: real viruses, from phage T4 to MS2, drawn as cute cartoons." />
+    <link rel="canonical" href="https://jessicasogge.github.io/cellmates/pick-a-mate.html" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="picker-page">
+    <!-- "Finding host cells…" covers the page until game/picker.js has
+         filled it in (see game/loading.js). -->
+    <div class="loading-overlay arriving">
+      <div class="loading-card" role="status">
+        <span class="loading-cells" aria-hidden="true"><span></span><span></span></span>
+        <span class="loading-text">Finding host cells…</span>
+      </div>
+    </div>
+    <main class="picker-shell">
+      <h1>Pick a Mate</h1>
+
+      <!-- A card for each mate, made by game/picker.js from game/mates.js -->
+      <div class="picker-grid"></div>
+
+      <a class="back-link" href="./index.html">Back to home</a>
+    </main>
+    <footer class="signature">jsogge 2026</footer>
+    <script type="module" src="./game/picker.js"></script>
+    <script data-goatcounter="https://petripals.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+  </body>
+</html>

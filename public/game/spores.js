@@ -1,6 +1,5 @@
-// The spore burst: when a colony wins (you beating a level, or whichever
-// colony wins a mixed culture race), it "sporulates" and little blobs in agar
-// colors burst out from it and drift down. Uses canvas-confetti
+// The win burst: when you beat a level, little blobs in agar colors burst
+// out of her, like copies bursting from a cell, and drift down. Uses canvas-confetti
 // (vendor/confetti.js, v1.9.4, ISC license), copied in because the game is
 // plain files with no build step.
 import confetti from './vendor/confetti.js';
@@ -42,7 +41,7 @@ export function burstOrigin(rect, width, height) {
   };
 }
 
-// Burst spores out of `el` (the player's colony). Beating a level gets a
+// Burst spores out of `el` (the player's mate). Beating a level gets a
 // quick little puff; `big` is for beating the last level: a full burst in
 // three waves that floats down slowly.
 export function sporeBurst(el, { big = false } = {}) {

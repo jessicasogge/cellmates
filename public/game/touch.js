@@ -2,7 +2,7 @@
 // trackpad. Touch anywhere on the dish and she stays put, then slide your
 // finger and she moves the same way, as far as your finger moves (up to a top
 // speed). Nothing jumps when you touch down, and your finger can stay well
-// away from her and the antibiotic disks. Lift and touch again to keep going.
+// away from her. Lift and touch again to keep going.
 //
 // A mouse steers right where it points instead: press and hold, and she
 // swims there at her normal speed, stopping when she gets there.
@@ -116,14 +116,13 @@ export function watchInputMode(root = document.documentElement, win = window) {
   });
 }
 
-// Move `group` (the player's pal) for one frame: the arrow keys win if any
+// Move `group` (the player's mate) for one frame: the arrow keys win if any
 // are held ([dx, dy] from keyboard.js); otherwise a dragging finger moves her
 // the same way it moved (`dragged`, [dx, dy] px from touchSteering's drag(),
 // at most `dragStep`: a really fast swipe moves her less than the finger);
 // otherwise she swims toward the finger, if one is down ([x, y] or null, from
 // touchSteering's target()). The arrow keys and the finger share a top speed,
-// `maxStep`; `arrive` is how close to the finger counts as there. Both game
-// modes use this.
+// `maxStep`; `arrive` is how close to the finger counts as there.
 export function steer(group, [dx, dy], finger, maxStep, arrive = 0, dragged = [0, 0], dragStep = maxStep) {
   if (dx !== 0 || dy !== 0) {
     const length = Math.hypot(dx, dy); // same speed on diagonals

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The spore burst when a colony wins: where it comes from, how big it is,
+// The confetti burst when she wins: where it comes from, how big it is,
 // and that it can never break the game. The confetti library is swapped for
 // a stand-in that records each burst.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,9 +34,9 @@ describe('AGAR_COLORS', () => {
 });
 
 describe('sporeBurst', () => {
-  // The player's pal: 100 x 100px with its top left at (300, 100), in a
+  // The player's mate: 100 x 100px with its top left at (300, 100), in a
   // 1000 x 500 window, so its middle is at (0.35, 0.3).
-  const pal = { getBoundingClientRect: () => ({ left: 300, top: 100, width: 100, height: 100 }) };
+  const mate = { getBoundingClientRect: () => ({ left: 300, top: 100, width: 100, height: 100 }) };
 
   beforeEach(() => {
     vi.stubGlobal('innerWidth', 1000);
@@ -51,8 +51,8 @@ describe('sporeBurst', () => {
 
   const bursts = () => confetti.mock.calls.map(([options]) => options);
 
-  it('beating a level: one quick little puff from your pal', () => {
-    sporeBurst(pal);
+  it('beating a level: one quick little puff from your mate', () => {
+    sporeBurst(mate);
     vi.runAllTimers();
     expect(bursts()).toHaveLength(1);
     const [puff] = bursts();
@@ -62,7 +62,7 @@ describe('sporeBurst', () => {
   });
 
   it('beating the last level: a big burst in three waves', () => {
-    sporeBurst(pal, { big: true });
+    sporeBurst(mate, { big: true });
     expect(bursts()).toHaveLength(1); // the first wave right away
     vi.advanceTimersByTime(180);
     expect(bursts()).toHaveLength(2);
@@ -73,7 +73,7 @@ describe('sporeBurst', () => {
   });
 
   it('uses agar colors, bursts every direction, and respects reduced motion', () => {
-    sporeBurst(pal, { big: true });
+    sporeBurst(mate, { big: true });
     vi.runAllTimers();
     for (const burst of bursts()) {
       expect(burst.colors).toBe(AGAR_COLORS);
@@ -83,7 +83,7 @@ describe('sporeBurst', () => {
     }
   });
 
-  it('bursts from the middle of the screen without a pal to burst from', () => {
+  it('bursts from the middle of the screen without a mate to burst from', () => {
     sporeBurst(null);
     expect(bursts()[0].origin).toEqual({ x: 0.5, y: 0.5 });
   });
@@ -92,7 +92,7 @@ describe('sporeBurst', () => {
     confetti.mockImplementationOnce(() => {
       throw new Error('no canvas');
     });
-    expect(() => sporeBurst(pal)).not.toThrow();
+    expect(() => sporeBurst(mate)).not.toThrow();
   });
 });
 

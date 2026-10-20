@@ -2,6 +2,8 @@
 // touch.js: steering by dragging a finger on the dish (or toward a mouse
 // pointer), and showing touch or arrow-key directions to match the device.
 // These run in jsdom, a simulated browser page.
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   fromCenter, steer, stepToward, touchSteering, watchInputMode,
@@ -32,79 +34,79 @@ describe('stepToward', () => {
 });
 
 describe('steer', () => {
-  const pal = (x = 0, y = 0, facing = 1) => ({ x, y, facing });
+  const mate = (x = 0, y = 0, facing = 1) => ({ x, y, facing });
 
   it('moves with the arrow keys at full speed, the same on diagonals', () => {
-    const p = pal();
+    const p = mate();
     steer(p, [1, 1], null, 10);
     expect(Math.hypot(p.x, p.y)).toBeCloseTo(10);
     expect(p.x).toBeCloseTo(p.y);
   });
 
   it('turns to face the way the arrow keys point', () => {
-    const p = pal();
+    const p = mate();
     steer(p, [-1, 0], null, 5);
     expect([p.x, p.facing]).toEqual([-5, -1]);
   });
 
   it('swims toward the finger when no arrow key is held', () => {
-    const p = pal();
+    const p = mate();
     steer(p, [0, 0], [30, 40], 5);
     expect(p.x).toBeCloseTo(3);
     expect(p.y).toBeCloseTo(4);
   });
 
   it('lets the arrow keys win over a finger', () => {
-    const p = pal();
+    const p = mate();
     steer(p, [0, 1], [100, 0], 5);
     expect([p.x, p.y]).toEqual([0, 5]);
   });
 
   it("doesn't flip her around while swimming nearly straight up or down", () => {
-    const p = pal(0, 0, 1);
+    const p = mate(0, 0, 1);
     steer(p, [0, 0], [-1, 50], 5);
     expect(p.facing).toBe(1);
   });
 
   it('stays put with no keys and no finger', () => {
-    const p = pal(7, 8);
+    const p = mate(7, 8);
     steer(p, [0, 0], null, 5);
     expect([p.x, p.y]).toEqual([7, 8]);
   });
 
   describe('dragging', () => {
     it('moves her the same way the finger moved', () => {
-      const p = pal(10, 10);
+      const p = mate(10, 10);
       steer(p, [0, 0], null, 5, 1, [6, -8], 20);
       expect([p.x, p.y]).toEqual([16, 2]);
     });
 
     it('keeps up with a finger faster than her normal speed', () => {
-      const p = pal();
+      const p = mate();
       steer(p, [0, 0], null, 5, 1, [15, 0], 20);
       expect(p.x).toBe(15);
     });
 
     it('moves her less than a really fast swipe, at her top drag speed', () => {
-      const p = pal();
+      const p = mate();
       steer(p, [0, 0], null, 5, 1, [0, 100], 20);
       expect([p.x, p.y]).toEqual([0, 20]);
     });
 
     it('turns her to face the way she is dragged', () => {
-      const p = pal(0, 0, 1);
+      const p = mate(0, 0, 1);
       steer(p, [0, 0], null, 5, 1, [-10, 2], 20);
       expect(p.facing).toBe(-1);
     });
 
     it('stays put while a dragging finger is held still', () => {
-      const p = pal(7, 8);
+      const p = mate(7, 8);
       steer(p, [0, 0], null, 5, 1, [0, 0], 20);
       expect([p.x, p.y]).toEqual([7, 8]);
     });
 
     it('lets the arrow keys win over dragging', () => {
-      const p = pal();
+      const p = mate();
       steer(p, [0, 1], null, 5, 1, [15, 0], 20);
       expect([p.x, p.y]).toEqual([0, 5]);
     });
@@ -312,5 +314,35 @@ describe('watchInputMode', () => {
     const win = new EventTarget();
     watchInputMode(root, win);
     expect(mode()).toBe('keys');
+  });
+});
+
+describe('the directions on the dish page', () => {
+  // (jsdom changes import.meta.url to a web address, so find files from the project folder.)
+  const page = readFileSync(resolve(process.cwd(), 'public/petri-dish.html'), 'utf8');
+  const css = readFileSync(resolve(process.cwd(), 'public/styles.css'), 'utf8');
+
+  it('has both touch and arrow-key wording', () => {
+    expect(page).toContain('<span class="for-keys">Use the arrow keys to move.</span>');
+    expect(page).toContain('<span class="for-touch">Touch the dish and slide your finger to move.</span>');
+  });
+
+  it('picks touch wording on a touch screen even before any script runs', () => {
+    expect(css).toMatch(/@media \(pointer: coarse\)\s*\{[^@]*\.for-keys\s*\{\s*display: none;/);
+  });
+
+  it("doesn't let a finger near the dish's edge select text or bring up the magnifier", () => {
+    const dish = css.match(/\n\.petri-dish \{([^}]*)\}/)[1];
+    expect(dish).toMatch(/touch-action: none/);
+    expect(dish).toMatch(/-webkit-user-select: none/);
+    expect(dish).toMatch(/-webkit-touch-callout: none/);
+    const shell = css.match(/\n\.dish-shell \{([^}]*)\}/)[1];
+    expect(shell).toMatch(/-webkit-user-select: none/);
+    expect(shell).toMatch(/-webkit-touch-callout: none/);
+  });
+
+  it("doesn't let touching the dish scroll or zoom the page", () => {
+    const agar = css.match(/\n\.agar \{([^}]*)\}/)[1];
+    expect(agar).toMatch(/touch-action: none/);
   });
 });
