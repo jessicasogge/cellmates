@@ -45,7 +45,7 @@ export const SPECIES = {
     ],
     scientific: 'Bacteriophage T4',
     color: '#5b3fb0',
-    size: 0.07,
+    size: 0.045,
     burst: 3,
     latentMs: 1100,
     colors: { fill: '#e6defc', stroke: '#6d4fc2', highlight: '#f7f3ff', dark: '#33236b' },
@@ -71,7 +71,7 @@ export const SPECIES = {
     ],
     scientific: 'Bacteriophage φX174',
     color: '#0f766e',
-    size: 0.045,
+    size: 0.032,
     burst: 2,
     latentMs: 700,
     colors: { fill: '#c9f2ec', stroke: '#0f8a7e', highlight: '#effcfa', dark: '#0b4f48' },
@@ -97,7 +97,7 @@ export const SPECIES = {
     ],
     scientific: 'Bacteriophage MS2',
     color: '#c2410c',
-    size: 0.042,
+    size: 0.03,
     burst: 4,
     latentMs: 1600,
     colors: { fill: '#ffdccf', stroke: '#d9573a', highlight: '#fff4ef', dark: '#7a2614' },
@@ -131,7 +131,7 @@ export const GAME = {
   // `size`, in dish radii), since her drawing doesn't fill its whole box.
   // Her copies are drawn COPY_SCALE times her size.
   REACH_SHARE: 0.8,
-  COPY_SCALE: 0.6,
+  COPY_SCALE: 0.7,
 
   // New copies fly out of a bursting cell at BURST_SPEED (dish radii per
   // second), slow down at SETTLE_RATE, and then just jiggle about at
@@ -144,12 +144,15 @@ export const GAME = {
   // turns up after one bursts.
   HOSTS: 8,
   HOST_RESPAWN_MS: 2000,
-  HOST_SIZE: 0.12, // how long a cell is drawn, as a fraction of the dish's width
-  HOST_RADIUS: 0.08, // how close counts as touching one (dish radii)
-  HOST_GAP: 0.22, // how far apart cells grow, if there's room (dish radii)
+  // How wide each cell's drawing is, as a fraction of the dish's width: the
+  // same as Colette's offspring in PetriPals. Her rod is HOST_ROD of that.
+  HOST_SIZE: 0.105,
+  HOST_ROD: 0.69,
+  HOST_RADIUS: 0.05, // how close counts as touching one (dish radii)
+  HOST_GAP: 0.2, // how far apart cells grow, if there's room (dish radii)
   // A plaque, the clear hole a burst cell leaves in the lawn: its radius
   // (dish radii).
-  PLAQUE_RADIUS: 0.14,
+  PLAQUE_RADIUS: 0.1,
 
   // Disk size, center distance, and center-to-center gap in dish radii.
   DISK_RADIUS: 0.085,

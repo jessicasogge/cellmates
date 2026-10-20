@@ -412,13 +412,12 @@ a.mate-card:active {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  /* A lawn: a hazy, even layer of E. coli grown over the whole agar, with a
-     soft glass highlight. The plaques and zones are clear holes in it. */
+  /* A lawn: E. coli grown so thick it's one smooth, cloudy, cream layer over
+     the whole agar, like frosted glass, with a soft glass highlight. The
+     plaques and zones are clear holes in it. */
   background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.6), transparent 32%),
-    radial-gradient(circle, rgba(120, 140, 70, 0.14) 1px, transparent 1.6px) 0 0 / 9px 9px,
-    radial-gradient(circle, rgba(120, 140, 70, 0.1) 1px, transparent 1.6px) 4px 5px / 11px 11px,
-    radial-gradient(circle at 50% 50%, #eef0cf, #dfe3b4);
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), transparent 32%),
+    radial-gradient(circle at 50% 50%, #f1ecd8, #e2dbbd);
   border: 2px solid rgba(180, 83, 9, 0.2);
   /* Touch and hold on the agar to steer (game/touch.js): don't scroll or zoom
      the page, select text, or pop up the long-press menu instead. */
@@ -582,28 +581,33 @@ a.mate-card:active {
   animation: none;
 }
 
-/* An E. coli cell in the lawn (game/hosts.js): a green-apple rod, like
-   Colette in PetriPals, turned a random way (--angle). Sized by
-   game/hosts.js: bigger than any phage. */
+/* An E. coli cell in the lawn (game/hosts.js): drawn and sized like one of
+   Colette's offspring in PetriPals, paler and a little washed out, turned a
+   random way (--angle). Bigger than any phage. */
 .host {
   position: absolute;
-  aspect-ratio: 2.2;
-  border-radius: 999px;
-  background: #abee64;
-  border: 2px solid #2e6b0e;
+  aspect-ratio: 1;
+  opacity: 0.75;
+  filter: saturate(0.45) brightness(1.08);
   transform: translate(-50%, -50%) rotate(var(--angle, 0deg));
 }
 
-/* Infected: she's taken it over, so it swells and blushes until it bursts
-   (--latent, her latent period, set in game/hosts.js). */
+.host svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Infected: she's taken it over, so it swells and blushes pink until it
+   bursts (--latent, her latent period, set in game/hosts.js). */
 .host.infected {
   animation: infected var(--latent, 1s) ease-in forwards;
 }
 
 @keyframes infected {
   to {
-    background: #f9a8d4;
-    border-color: #be185d;
+    opacity: 0.95;
+    filter: saturate(0.6) brightness(1.05) drop-shadow(0 0 3px #ec4899) drop-shadow(0 0 2px #ec4899);
     transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(1.25);
   }
 }

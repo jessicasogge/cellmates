@@ -59,6 +59,25 @@ describe('growing the lawn', () => {
     expect(cell.getAttribute('aria-hidden')).toBe('true');
     expect(cell.style.width).toBe(`${GAME.HOST_SIZE * 100}%`);
   });
+
+  it("draws each cell like Colette's offspring in PetriPals: a green rod with waving flagella and no face", () => {
+    growLawn({ count: 1 });
+    const svg = cells()[0].querySelector('svg');
+    expect(svg.getAttribute('viewBox')).toBe('4 4 192 192');
+    expect(svg.querySelector('rect').getAttribute('fill')).toBe('#abee64');
+    expect(svg.querySelectorAll('path animate')).toHaveLength(8);
+    expect(svg.querySelector('.face')).toBeNull();
+  });
+
+  it('keeps the flagella still for anyone who asked for less motion', () => {
+    window.matchMedia = (query) => ({ matches: query === '(prefers-reduced-motion: reduce)' });
+    try {
+      growLawn({ count: 1 });
+      expect(cells()[0].querySelectorAll('animate')).toHaveLength(0);
+    } finally {
+      delete window.matchMedia;
+    }
+  });
 });
 
 describe('infecting', () => {

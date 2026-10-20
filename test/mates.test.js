@@ -32,7 +32,8 @@ describe('every mate', () => {
 describe('sizes', () => {
   it('draws every phage smaller than the E. coli cells she infects', () => {
     for (const [mate, { size }] of Object.entries(SPECIES)) {
-      expect(size, mate).toBeLessThan(GAME.HOST_SIZE * 0.75);
+      // Shorter than an E. coli rod.
+      expect(size, mate).toBeLessThan(GAME.HOST_SIZE * GAME.HOST_ROD * 0.75);
       // Her copies, smaller still, are big enough to see.
       expect(size * GAME.COPY_SCALE, mate).toBeGreaterThanOrEqual(0.02);
     }
@@ -44,7 +45,8 @@ describe('sizes', () => {
   });
 
   it("makes a plaque bigger than the cell that burst", () => {
-    expect(GAME.PLAQUE_RADIUS * 2).toBeGreaterThan(GAME.HOST_SIZE * 2);
+    // Both in dish radii: a plaque's width, and a rod's length.
+    expect(GAME.PLAQUE_RADIUS * 2).toBeGreaterThan(GAME.HOST_SIZE * GAME.HOST_ROD * 2);
   });
 });
 
