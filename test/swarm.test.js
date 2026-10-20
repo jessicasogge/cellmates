@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// swarm.js runs her and her copies: infecting cells, bursting copies out of
-// them, drifting, and getting stopped by disks. These tests use a stand-in
-// lawn, so each can say exactly which cells are where and when they burst.
+// swarm.js runs her and her copies: getting into cells, bursting copies out
+// of them, and drifting. These tests use a stand-in lawn, so each can say
+// exactly which cells are where and when they burst.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GAME, SPECIES } from '../public/game/config.js';
-import { copyMover, makeSwarm, place, showPop } from '../public/game/swarm.js';
+import { copyMover, makeSwarm, place } from '../public/game/swarm.js';
 
 const RADIUS = 200; // px
 // How close counts as touching, for Tia and for one of her copies.
@@ -99,8 +99,8 @@ describe('going into a cell', () => {
     expect(swarm.inside()).toBe(false);
     expect(player.mover.classList).not.toContain('inside');
     expect(copies()).toHaveLength(SPECIES.tia.burst);
-    expect(swarm.burst()).toBe(1);
-    expect(onChange).toHaveBeenCalledWith(1);
+    expect(swarm.made()).toBe(SPECIES.tia.burst);
+    expect(onChange).toHaveBeenCalledWith(SPECIES.tia.burst);
   });
 
   it("stays in her cell when a different one bursts", () => {
@@ -117,24 +117,27 @@ describe('going into a cell', () => {
     swarm.step(0.016, RADIUS, { infect: false });
     expect(hosts.infectOne).not.toHaveBeenCalled();
   });
-
-  it('gives her body for touching disks', () => {
-    player.x = 10;
-    expect(swarmWith().swarm.body(RADIUS)).toEqual([[10, 0, REACH * RADIUS]]);
-  });
 });
 
 describe('counting', () => {
-  it('starts with no cells burst', () => {
-    expect(swarmWith().swarm.burst()).toBe(0);
+  it('starts with no copies made', () => {
+    expect(swarmWith().swarm.made()).toBe(0);
   });
 
-  it("counts every cell that bursts, her copies' too", () => {
+  it("counts every copy that bursts out, from her copies' cells too", () => {
     const { swarm, hosts, onChange } = swarmWith();
     hosts.bursts = [{ id: 1, fx: 0.5, fy: 0 }, { id: 2, fx: -0.5, fy: 0 }];
     swarm.step(0, RADIUS);
-    expect(swarm.burst()).toBe(2);
-    expect(onChange).toHaveBeenCalledWith(2);
+    expect(swarm.made()).toBe(2 * SPECIES.tia.burst);
+    expect(onChange).toHaveBeenCalledWith(2 * SPECIES.tia.burst);
+  });
+
+  it('keeps counting copies that have since gone into cells', () => {
+    const { swarm, hosts } = withCopies();
+    hosts.healthy = true;
+    swarm.step(0.016, RADIUS);
+    expect(swarm.copies).toHaveLength(0);
+    expect(swarm.made()).toBe(SPECIES.tia.burst);
   });
 
   it("doesn't call back on a frame with no bursts", () => {
@@ -156,7 +159,7 @@ describe('a cell bursting', () => {
     hosts.bursts = Array.from({ length: 40 }, (_, i) => ({ id: i, fx: 0, fy: 0 }));
     swarm.step(0, RADIUS);
     expect(swarm.copies).toHaveLength(GAME.MAX_COPIES);
-    expect(swarm.burst()).toBe(40); // every burst still counts
+    expect(swarm.made()).toBe(40 * SPECIES.tia.burst); // every copy still counts
   });
 
   it('copies fly out, slow down, then just drift', () => {
@@ -202,21 +205,6 @@ describe('copies infecting cells', () => {
   });
 });
 
-describe('disks', () => {
-  it('stop copies that drift into their zone, with a pop', () => {
-    const { swarm } = withCopies(0.5, 0, { disks: [{ fx: 0.5, fy: 0, r: 0.1, zone: 0.05 }] });
-    swarm.step(0.016, RADIUS);
-    expect(swarm.copies).toHaveLength(0);
-    expect(document.querySelectorAll('.pop')).toHaveLength(SPECIES.tia.burst);
-  });
-
-  it("don't stop copies when it's the antibiotic", () => {
-    const { swarm } = withCopies(0.5, 0, { disks: [{ fx: 0.5, fy: 0, r: 0.1, zone: 0.05, harmless: true }] });
-    swarm.step(0.016, RADIUS);
-    expect(swarm.copies).toHaveLength(SPECIES.tia.burst);
-  });
-});
-
 describe('the rim', () => {
   it('keeps copies inside the dish, bouncing them back in', () => {
     const { swarm } = withCopies(0.95, 0);
@@ -244,27 +232,5 @@ describe('drawing', () => {
     expect(mover.className).toBe('mate-mover copy');
     expect(mover.style.width).toBe('4%');
     expect(mover.parentElement).toBe(document.querySelector('.agar'));
-  });
-
-  it('shows a pop in her color, which cleans itself up', () => {
-    vi.useFakeTimers();
-    try {
-      const dish = document.querySelector('.agar');
-      showPop(dish, [10, 20, 5], 'rgb(255, 0, 0)');
-      const ring = dish.querySelector('.pop');
-      expect(ring.style.width).toBe('10px');
-      expect(ring.style.borderColor).toBe('rgb(255, 0, 0)');
-      ring.dispatchEvent(new Event('animationend'));
-      expect(dish.querySelector('.pop')).toBeNull();
-      showPop(dish, [0, 0, 5], 'red');
-      vi.advanceTimersByTime(1000);
-      expect(dish.querySelector('.pop')).toBeNull();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("does nothing for a pop with no dish to show it in", () => {
-    expect(() => showPop(null, [0, 0, 5], 'red')).not.toThrow();
   });
 });

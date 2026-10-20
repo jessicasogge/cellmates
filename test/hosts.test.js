@@ -31,25 +31,8 @@ describe('growing the lawn', () => {
     }
   });
 
-  it('never grows a cell in a zone, the antibiotic\'s included', () => {
-    const avoid = [{ fx: 0.5, fy: 0, r: 0.085, fullZone: 0.075 }, { fx: -0.5, fy: 0, r: 0.085, zone: 0.07 }];
-    for (let i = 0; i < 20; i++) {
-      for (const { fx, fy } of growLawn({ avoid }).positions()) {
-        for (const a of avoid) {
-          expect(Math.hypot(fx - a.fx, fy - a.fy)).toBeGreaterThan(a.r + (a.fullZone ?? a.zone));
-        }
-      }
-    }
-  });
-
   it('crowds cells closer together rather than leaving any out', () => {
     expect(growLawn({ count: 60 }).positions()).toHaveLength(60);
-  });
-
-  it('leaves out a cell there is no room for at all', () => {
-    // A disk whose zone covers the whole dish.
-    const lawn = growLawn({ avoid: [{ fx: 0, fy: 0, r: 0.5, zone: 0.5 }] });
-    expect(lawn.positions()).toHaveLength(0);
   });
 
   it('turns each cell a random way, and hides them from screen readers', () => {
@@ -161,6 +144,13 @@ describe('bursting', () => {
     const [plaque] = plaques();
     expect(plaque).toBe(document.querySelector('.agar').firstElementChild);
     expect(plaque.style.width).toBe(`${GAME.PLAQUE_RADIUS * 100}%`);
+    // Round-ish, with a slightly uneven edge of its own.
+    const corners = plaque.style.borderRadius.match(/\d+%/g).map(parseFloat);
+    expect(corners).toHaveLength(8);
+    for (const corner of corners) {
+      expect(corner).toBeGreaterThanOrEqual(44);
+      expect(corner).toBeLessThan(56);
+    }
   });
 
   it("doesn't burst healthy cells", () => {
@@ -174,25 +164,9 @@ describe('bursting', () => {
     lawn.tick(1);
     lawn.tick(GAME.HOST_RESPAWN_MS / 1000 - 0.1);
     expect(lawn.positions()).toHaveLength(0);
-    lawn.tick(0.1);
+    lawn.tick(0.11);
     const [grown] = lawn.positions();
     expect(Math.hypot(grown.fx - cell.fx, grown.fy - cell.fy)).toBeGreaterThan(GAME.PLAQUE_RADIUS);
-  });
-
-  it('keeps trying to grow a cell back while there is no room for it', () => {
-    const avoid = [{ fx: 0.6, fy: 0, r: 0.05, zone: 0 }];
-    const lawn = growLawn({ count: 1, avoid });
-    const [cell] = lawn.positions();
-    lawn.infectNear(cell.fx, cell.fy, 0.01, 0);
-    lawn.tick(0);
-    // Now the zone fills the dish: nowhere to grow.
-    avoid[0] = { fx: 0, fy: 0, r: 0.5, zone: 0.5 };
-    lawn.tick(GAME.HOST_RESPAWN_MS / 1000);
-    expect(lawn.positions()).toHaveLength(0);
-    // Room again: it grows on the next frame.
-    avoid[0] = { fx: 0.6, fy: 0, r: 0.05, zone: 0 };
-    lawn.tick(0.016);
-    expect(lawn.positions()).toHaveLength(1);
   });
 
   it('stops growing new cells once the game is over, but infected ones still burst', () => {

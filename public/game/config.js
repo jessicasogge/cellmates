@@ -16,17 +16,7 @@
 //   Real bursts are much bigger (see `facts`); these are scaled way down.
 // `latentMs`: how long an infected cell takes to burst, in the game. When
 //   she infects a cell herself, she's inside it all that time.
-// `disks`: the disks that stop her, in level order. Phages have no antiviral
-//   drugs, so these are things that wreck or block viruses: antibodies made
-//   against her, bleach, iodine and copper. There's no standard disk test for
-//   any of them on phages, so the zone sizes (mm, scaled by ZONE_*) are made
-//   up, roughly by how strongly each one works on her.
 // `facts`: random win/lose pop-up facts (game/facts.js); *names* italicize.
-
-// The antibiotic disk on the early levels: it kills the E. coli lawn around
-// it, but can't hurt a virus. Ampicillin, since it's an E. coli drug (and
-// Colette's first disk in PetriPals).
-export const ANTIBIOTIC = { code: 'AMP', name: 'ampicillin', zone: 19 };
 
 export const SPECIES = {
   tia: {
@@ -50,12 +40,6 @@ export const SPECIES = {
     burst: 3,
     latentMs: 1500,
     colors: { fill: '#e6defc', stroke: '#6d4fc2', highlight: '#f7f3ff', dark: '#33236b' },
-    disks: [
-      { code: 'AB', name: 'anti-T4 antibodies', zone: 32, stops: 'Antibodies stick to her tail fibers, so she can\'t land on a cell.' },
-      { code: 'BL', name: 'bleach', zone: 28, stops: 'Bleach breaks her protein shell apart.' },
-      { code: 'I', name: 'iodine', zone: 24, stops: 'Iodine wrecks her proteins.' },
-      { code: 'Cu', name: 'copper', zone: 18, stops: 'Copper damages her shell and her DNA.' },
-    ],
   },
   phoebe: {
     facts: [
@@ -76,12 +60,6 @@ export const SPECIES = {
     burst: 2,
     latentMs: 1100,
     colors: { fill: '#c9f2ec', stroke: '#0f8a7e', highlight: '#effcfa', dark: '#0b4f48' },
-    disks: [
-      { code: 'AB', name: 'anti-φX174 antibodies', zone: 30, stops: 'Antibodies stick to her spikes, so she can\'t grab a cell.' },
-      { code: 'BL', name: 'bleach', zone: 28, stops: 'Bleach breaks her protein shell apart.' },
-      { code: 'Cu', name: 'copper', zone: 20, stops: 'Copper damages her shell and her DNA.' },
-      { code: 'I', name: 'iodine', zone: 24, stops: 'Iodine wrecks her proteins.' },
-    ],
   },
   missy: {
     facts: [
@@ -102,76 +80,51 @@ export const SPECIES = {
     burst: 4,
     latentMs: 2000,
     colors: { fill: '#ffdccf', stroke: '#d9573a', highlight: '#fff4ef', dark: '#7a2614' },
-    disks: [
-      { code: 'AB', name: 'anti-MS2 antibodies', zone: 30, stops: 'Antibodies coat her shell, so she can\'t grab a cell.' },
-      { code: 'Cu', name: 'copper', zone: 28, stops: 'Copper damages her shell and her RNA.' },
-      { code: 'BL', name: 'bleach', zone: 26, stops: 'Bleach breaks her protein shell apart.' },
-      { code: 'I', name: 'iodine', zone: 18, stops: 'Iodine wrecks her proteins.' },
-    ],
   },
 };
 
-// Each level adds a disk and 5 more E. coli cells to burst (`target`),
-// counting the ones her copies burst too. The early levels also get the
-// antibiotic disk; later ones have no room for it.
+// Each level doubles how many copies of her you need to make, counting
+// the ones her copies make too.
 export const LEVELS = [
-  { disks: 1, target: 5, antibiotic: true },
-  { disks: 2, target: 10, antibiotic: true },
-  { disks: 3, target: 15, antibiotic: true },
-  { disks: 4, target: 20, antibiotic: true },
-  { disks: 5, target: 25, antibiotic: true },
-  { disks: 6, target: 30, antibiotic: false },
-  { disks: 7, target: 35, antibiotic: false },
+  { target: 4 },
+  { target: 8 },
+  { target: 16 },
+  { target: 32 },
+  { target: 64 },
+  { target: 128 },
+  { target: 256 },
 ];
 
 export const GAME = {
   SPEED: 0.8, // dish radii per second
   ARRIVE: 0.01, // pointer tolerance, relative to dish radius
-  DRAG_SPEED: 2, // drag cap in radii/sec; prevents skipping zones
+  DRAG_SPEED: 2, // drag cap in radii/sec, so a fast swipe doesn't fling her
 
   // How close counts as touching: this share of her drawn half-width (her
   // `size`, in dish radii), since her drawing doesn't fill its whole box.
   // Her copies are drawn COPY_SCALE times her size.
   REACH_SHARE: 0.8,
   COPY_SCALE: 0.7,
-  MAX_COPIES: 60, // no more copies burst out once there are this many
+  MAX_COPIES: 100, // no more copies burst out once there are this many
 
   // New copies fly out of a bursting cell at BURST_SPEED (dish radii per
   // second), slow down at SETTLE_RATE, and then just jiggle about at
   // DRIFT_SPEED: viruses can't swim, they drift.
-  BURST_SPEED: 0.35,
+  BURST_SPEED: 0.6,
   SETTLE_RATE: 3,
-  DRIFT_SPEED: 0.04,
+  DRIFT_SPEED: 0.09,
 
   // Host cells: how many are on the lawn at a time, and how soon a new one
   // turns up after one bursts.
-  HOSTS: 8,
-  HOST_RESPAWN_MS: 2000,
+  HOSTS: 12,
+  HOST_RESPAWN_MS: 1200,
   // How wide each cell's drawing is, as a fraction of the dish's width: the
   // same as Colette's offspring in PetriPals. Her rod is HOST_ROD of that.
   HOST_SIZE: 0.105,
   HOST_ROD: 0.69,
   HOST_RADIUS: 0.05, // how close counts as touching one (dish radii)
-  HOST_GAP: 0.2, // how far apart cells grow, if there's room (dish radii)
+  HOST_GAP: 0.17, // how far apart cells grow, if there's room (dish radii)
   // A plaque, the clear hole a burst cell leaves in the lawn: its radius
   // (dish radii).
   PLAQUE_RADIUS: 0.1,
-
-  // Disk size, center distance, and center-to-center gap in dish radii.
-  DISK_RADIUS: 0.085,
-  DISK_MIN_DISTANCE: 0.4,
-  DISK_MAX_DISTANCE: 0.65,
-  DISK_MIN_GAP: 0.4,
-
-  // mm maps linearly to zone width, clamped to these limits. Widths are
-  // fractions of the dish radius.
-  ZONE_MM_SMALL: 13,
-  ZONE_MM_BIG: 40,
-  ZONE_MIN_WIDTH: 0.02,
-  ZONE_MAX_WIDTH: 0.075,
-
-  // Zones grow from this fraction to full width over this many seconds.
-  ZONE_START: 0.1,
-  ZONE_SPREAD_SECONDS: 20,
-  SWIM_ROOM: 0.13, // minimum gap between zones, in dish radii
 };

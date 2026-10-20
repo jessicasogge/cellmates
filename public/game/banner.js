@@ -1,5 +1,5 @@
-// The end-of-level pop-up (game.js).
-// Main button advances, restarts, or retries; "Start over" returns to level 1.
+// The end-of-level pop-up (game.js). Its button goes on to the next level,
+// or back to level 1 after the last one.
 import { goTo } from './loading.js';
 
 export function levelBanner(level) {
@@ -10,17 +10,15 @@ export function levelBanner(level) {
     goTo(url.toString());
   }
   document.querySelector('.play-again').addEventListener('click', () => goToLevel(nextLevel));
-  document.querySelector('.start-over').addEventListener('click', () => goToLevel(1));
 
   return {
     // Show the pop-up; its main button says `button` and goes to level `next`.
-    show(title, message, button, { next = level, startOver = false } = {}) {
+    show(title, message, button, { next = level } = {}) {
       nextLevel = next;
       const banner = document.querySelector('.win-banner');
       banner.querySelector('h2').textContent = title;
       banner.querySelector('.win-message').textContent = message;
       banner.querySelector('.play-again').textContent = button;
-      banner.querySelector('.start-over').hidden = !startOver;
       banner.removeAttribute('hidden');
       banner.querySelector('.play-again').focus();
     },

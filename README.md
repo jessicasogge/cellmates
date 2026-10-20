@@ -1,20 +1,18 @@
 # CellMates 🦠
 
-A cute virology game for the browser, and the sister game to [PetriPals](https://github.com/jessicasogge/petripals) and [FunGals](https://github.com/jessicasogge/fungals). Bacteria and fungi grow on their own, but viruses can't: they need a living cell. Pick a real virus, get inside bacteria and burst them open, and steer clear of the disks.
+A cute virology game for the browser, and the sister game to [PetriPals](https://github.com/jessicasogge/petripals) and [FunGals](https://github.com/jessicasogge/fungals). Bacteria and fungi grow on their own, but viruses can't: they need a living cell. Pick a real virus, get inside bacteria and burst them open to make copies of her.
 
 **[▶ Play CellMates](https://jessicasogge.github.io/cellmates/)**: works on computers, phones and tablets.
 
-<img src="docs/screenshot.png" alt="Plaque Assay: tiny lavender T4 phages and amber plaques on a smooth cream lawn, among bigger pale green E. coli rods with flagella, and disks labeled AB, BL, I, Cu and a dashed AMP disk" width="400">
+<img src="docs/screenshot.png" alt="Plaque Assay: tiny lavender T4 phages drifting on a smooth cream lawn, with soft amber plaques where cells burst, among bigger pale green E. coli rods with flagella" width="400">
 
 ## How to play: Plaque Assay
 
 1. **Pick a mate.** Each one is a real virus, drawn as a cartoon. So far they're all bacteriophages: viruses that infect bacteria.
 2. **Move around the dish.** Use the arrow keys, or on a touch screen, drag like a trackpad, just like PetriPals and FunGals.
-3. **Touch an *E. coli* cell to get inside it.** She's stuck in there while the cell swells and blushes, then it bursts open and she comes out with new copies of her, leaving a clear hole in the lawn: a **plaque**. The copies drift off and get into cells they bump into on their own (a copy that does is used up), and those cells burst too. While she's inside a cell, the disks can't touch her.
-4. **Don't touch the disks.** A disk soaked in something that stops viruses (antibodies, bleach, iodine or copper), or the blue zone around it, ends the game. Copies that drift in are stopped. The zones spread over the first few seconds.
-5. **The antibiotic disk (AMP) is the exception.** It's dashed, and antibiotics can't hurt viruses, so you can move right through it. But it killed the bacteria around it, so there's nothing to infect there.
+3. **Touch an *E. coli* cell to get inside it.** She's stuck in there while the cell swells and blushes, then it bursts open and she comes out with new copies of her, leaving a clear hole in the lawn: a **plaque**. The copies drift off and get into cells they bump into on their own (a copy that does is used up), and those cells burst with more copies.
 
-Burst enough cells to finish the level, counting the ones her copies burst. There are seven levels. Each adds a disk and 5 more cells to burst, from 5 up to 35. The first five also have the antibiotic disk.
+Make enough copies of her to finish the level, counting every copy that bursts out, her copies' copies included. There are seven levels, and each doubles the copies you need, from 4 up to 256. There's nothing to dodge, so no way to lose.
 
 ## The mates
 
@@ -32,8 +30,6 @@ All three infect *Escherichia coli*, so the cells in the lawn are drawn and size
 - **Phages are much smaller than bacteria.** An *E. coli* cell is about 2 micrometers long. T4 is about a tenth of that, and φX174 and MS2 are only about 25 nanometers across, so about 80 of them would fit along one cell. In the game every mate is smaller than the cells, and Tia is bigger than Phoebe and Missy, but true to scale they'd be too small to see.
 - **Viruses can't swim.** They have no way to move on their own, so they drift and bump into cells by chance. In the game you steer her anyway, and her copies just drift.
 - **Burst sizes** are scaled way down. A cell infected by T4 really bursts with about 100 to 200 copies, φX174 about as many, and MS2 thousands. In the game they're 3, 2 and 4, and her **latent period** (how long a cell takes to burst, while she's inside) is 1 to 2 seconds, where the real ones are tens of minutes.
-- **Antibiotics don't work on viruses.** They attack things only bacteria have, like their cell walls, and a virus has none of those. That's why the antibiotic disk can't hurt her. Ampicillin does kill *E. coli*, though, so its zone has no cells to infect. It's Colette's first disk in PetriPals, too.
-- **The disks that do stop her** are things that wreck or block viruses: **antibodies** made against her (AB), which stick to the parts she uses to grab a cell; **bleach** (BL); **iodine** (I); and **copper** (Cu). There's no standard disk test for any of these on phages, so the zones are illustrative game values, not lab results.
 - **Tia's legs** are her six long tail fibers. She lands on *E. coli* with them, then her tail squeezes down and drives a tube through the cell's wall, and she injects her DNA, leaving her empty head and tail outside.
 - **Phoebe's spikes** are on all 12 corners of her shell. φX174 was the first DNA genome ever read from end to end (Fred Sanger's lab, 1977), and in 2003 scientists built its genome from scratch in two weeks, and it worked.
 - **Missy's tab** is her one maturation protein, which grabs the F pilus, a long hair some *E. coli* cells grow. MS2's genome is RNA, and in 1976 it was the first genome of any kind ever read in full.
@@ -60,7 +56,7 @@ The tests use [Vitest](https://vitest.dev/), and most run in [jsdom](https://git
 
 ## Project layout
 
-CellMates started from the FunGals engine (steering, disks and zones, the loading card, the end-of-level pop-up and the win confetti), with the fungi swapped for viruses and the nutrients for a lawn of cells.
+CellMates started from the FunGals engine (steering, the loading card, the end-of-level pop-up and the win confetti), with the fungi swapped for viruses and the nutrients for a lawn of cells.
 
 | Path | What's there |
 |---|---|
@@ -69,10 +65,9 @@ CellMates started from the FunGals engine (steering, disks and zones, the loadin
 | `public/petri-dish.html` | The game; `game/main.js` starts it |
 | `public/game/config.js` | Every mate's settings and facts, the levels, and the numbers the game is built on |
 | `public/game/mates.js` | Every mate's name and drawing, in one place. To add a mate, see the notes at the top. |
-| `public/game/game.js` | The game loop: steering, winning and game over |
+| `public/game/game.js` | The game loop: steering and winning |
 | `public/game/swarm.js` | Her and her copies: infecting, bursting out and drifting |
 | `public/game/hosts.js` | The lawn: *E. coli* cells, infected cells bursting, and plaques |
-| `public/game/antiviral.js` | The disks and their zones, the antibiotic disk included |
 | `public/game/` | Also: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the end-of-level pop-up (`banner.js`), the fun-fact pop-up (`facts.js`, with italics from `italics.js`), the loading card (`loading.js`), visit counting (`track.js`) and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `test/` | Tests |
 | `src/index.ts` | Small Express server for local development |

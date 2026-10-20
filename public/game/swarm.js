@@ -3,22 +3,21 @@
 // stays there until it bursts, then comes out with `species.burst` new
 // copies of her, which fly out and drift. Viruses can't swim, so copies
 // just jiggle about where they land. A copy that touches a cell goes into
-// it too (it's used up), and that cell bursts with more copies. Every cell
-// that bursts, hers or a copy's, counts toward the level.
+// it too (it's used up), and that cell bursts with more copies. Every copy
+// that bursts out, from her cells or her copies', counts toward the level.
 //
 // Positions are in px from the dish center, like the steering in touch.js.
-import { touchesDisk } from './antiviral.js';
 import { GAME } from './config.js';
 
 // `player` is { x, y, facing, mover }, the mate the player steers. `svg` is
-// her drawing, copied for each new copy. `hosts` is the lawn (hosts.js) and
-// `disks` the disks (antiviral.js). `onChange` is called whenever a cell
+// her drawing, copied for each new copy. `hosts` is the lawn (hosts.js).
+// `onChange` is called with how many copies she's made whenever a cell
 // bursts.
 export function makeSwarm({
-  player, svg, hosts, disks = [], species, random = Math.random, onChange = () => {},
+  player, svg, hosts, species, random = Math.random, onChange = () => {},
 }) {
   const copies = []; // { x, y, vx, vy, heading, mover }
-  let burst = 0; // how many cells have burst
+  let made = 0; // how many copies of her have burst out, in all
   let inside = null; // the cell she's in, { id, fx, fy }, or null
   // How close counts as touching, for her and for a copy (dish radii).
   const reach = species.size * GAME.REACH_SHARE;
@@ -28,13 +27,12 @@ export function makeSwarm({
   const swarm = {
     player,
     copies,
-    // How many cells have burst so far.
-    burst: () => burst,
+    // How many copies of her have burst out so far, in all (the ones that
+    // have since gone into cells too).
+    made: () => made,
     // Whether she's inside a cell right now.
     inside: () => inside !== null,
     reach,
-    // Her body for touching things, as circles [x, y, r] in px.
-    body: (radius) => [[player.x, player.y, reach * radius]],
 
     // One frame. `infect` is false once the level is over: cells still
     // burst, but nothing new gets infected.
@@ -51,7 +49,7 @@ export function makeSwarm({
           player.mover.classList.remove('inside');
         }
       }
-      burst += bursts.length;
+      made += bursts.length * species.burst;
 
       // She goes into a cell she touches, and stays put until it bursts.
       if (infect && !inside) {
@@ -66,13 +64,6 @@ export function makeSwarm({
       for (let i = copies.length - 1; i >= 0; i--) {
         const copy = copies[i];
         drift(copy, seconds, radius);
-        const circle = [copy.x, copy.y, copyReach * radius];
-        // Disks that stop viruses stop her copies too.
-        if (disks.some((disk) => !disk.harmless && touchesDisk(disk, [circle], radius))) {
-          showPop(copy.mover.parentElement, circle, species.color);
-          remove(i);
-          continue;
-        }
         // A copy that infects a cell goes into it.
         if (infect && hosts.infectNear(copy.x / radius, copy.y / radius, copyReach, species.latentMs) > 0) {
           remove(i);
@@ -82,7 +73,7 @@ export function makeSwarm({
       }
 
       place(player);
-      if (bursts.length > 0) onChange(burst);
+      if (bursts.length > 0) onChange(made);
     },
   };
 
@@ -149,22 +140,4 @@ export function copyMover(svg, width) {
   mover.appendChild(art);
   document.querySelector('.agar').appendChild(mover);
   return mover;
-}
-
-// A little "pop" where a copy was stopped: a ring in her color that bursts
-// outward and fades (see .pop in styles.css). `circle` is [x, y, r] in px
-// from the dish center.
-export function showPop(dish, [x, y, r], color) {
-  if (!dish) return;
-  const ring = document.createElement('div');
-  ring.className = 'pop';
-  ring.setAttribute('aria-hidden', 'true');
-  ring.style.left = `calc(50% + ${x}px)`;
-  ring.style.top = `calc(50% + ${y}px)`;
-  ring.style.width = `${2 * r}px`;
-  ring.style.borderColor = color;
-  dish.appendChild(ring);
-  const remove = () => ring.remove();
-  ring.addEventListener('animationend', remove);
-  setTimeout(remove, 1000); // in case the animation never runs
 }

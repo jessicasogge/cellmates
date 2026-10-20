@@ -414,7 +414,7 @@ a.mate-card:active {
   place-items: center;
   /* A lawn: E. coli grown so thick it's one smooth, cloudy, cream layer over
      the whole agar, like frosted glass, with a soft glass highlight. The
-     plaques and zones are clear holes in it. */
+     plaques are clear holes in it. */
   background:
     radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), transparent 32%),
     radial-gradient(circle at 50% 50%, #f1ecd8, #e2dbbd);
@@ -540,21 +540,6 @@ a.mate-card:active {
   font-weight: 700;
 }
 
-.banner-buttons .pick-btn[hidden] {
-  display: none;
-}
-
-/* The second choice in the pop-up: outlined instead of filled. */
-.start-over {
-  background: white;
-  color: #0f766e;
-  box-shadow: inset 0 0 0 2px #0f766e;
-}
-
-.start-over:hover {
-  background: #ccfbf1;
-}
-
 /* The group the player steers stays on top, in full color with a soft halo;
    the offspring left behind are paler and a little washed out. */
 .mate-mover.player {
@@ -619,9 +604,20 @@ a.mate-card:active {
   aspect-ratio: 1;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  /* Clear amber agar showing through, with a hazy edge where the lawn
-     thins out. */
-  background: radial-gradient(closest-side, #f9e08f 0 66%, rgba(249, 224, 143, 0.75) 84%, rgba(249, 224, 143, 0));
+  /* A hole in the lawn: the clear amber agar underneath shows through, a
+     little darker than the cloudy lawn and see-through, fading out at a
+     soft, hazy edge where the lawn thins. A faint inner shadow makes it
+     read as a dip in the lawn, not a dot on top of it. Each plaque gets a
+     slightly uneven outline (set in game/hosts.js). */
+  background: radial-gradient(
+    closest-side,
+    rgba(214, 160, 52, 0.5) 0%,
+    rgba(214, 160, 52, 0.45) 55%,
+    rgba(214, 160, 52, 0.25) 80%,
+    rgba(214, 160, 52, 0) 100%
+  );
+  box-shadow: inset 0 1px 4px rgba(120, 80, 10, 0.18);
+  filter: blur(0.6px);
   pointer-events: none;
   animation: plaque-open 1.2s ease-out both;
 }
@@ -679,102 +675,6 @@ html.input-keys .for-keys {
   display: inline;
 }
 
-/* The disk: a small white paper disk with the drug's code on it,
-   like the disks used in the lab. Placed by game/antiviral.js. */
-.disk {
-  position: absolute;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, #f1f5f9);
-  border: 2px solid #cbd5e1;
-  box-shadow: 0 2px 4px rgba(19, 78, 74, 0.2);
-  color: #475569;
-  font-size: clamp(8px, 1.3vw, 14px);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-/* The zone of inhibition around each disk: clear agar where the drug has
-   soaked in and nothing can grow. Sized by game/antiviral.js. */
-.zone {
-  position: absolute;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  /* Real zones are clear, slightly glassy agar with a soft, hazy edge where
-     the growth thins out, not a crisp ring. Each zone also gets a slightly
-     uneven shape (set in game/antiviral.js). */
-  border-radius: 50%;
-  /* The disk covers the inner ~65%, so the visible ring is the outer third:
-     clear agar, then a thin hazy rim right at the outside. The rim has to
-     sit at the very edge, because that's where touching it ends the game
-     (see touchesDisk in game/antiviral.js); a rim that faded out early
-     made the game end with a gap still showing. */
-  background: radial-gradient(
-    closest-side,
-    rgba(255, 255, 252, 0.85) 0%,
-    rgba(255, 255, 252, 0.8) 88%,
-    rgba(255, 255, 248, 0.65) 93%,
-    rgba(206, 192, 110, 0.4) 97%,
-    rgba(206, 192, 110, 0.3) 99%,
-    rgba(206, 192, 110, 0) 100%
-  );
-  filter: blur(0.5px);
-  pointer-events: none;
-}
-
-/* A zone that stops viruses gets a soft blue wash, so it doesn't look like
-   a plaque (clear agar you made yourself). The antibiotic's zone stays
-   plain clear agar: it can't hurt her. */
-.zone:not(.antibiotic-zone) {
-  background: radial-gradient(
-    closest-side,
-    rgba(219, 234, 254, 0.9) 0%,
-    rgba(219, 234, 254, 0.85) 88%,
-    rgba(147, 197, 253, 0.6) 94%,
-    rgba(59, 130, 246, 0.35) 98%,
-    rgba(59, 130, 246, 0) 100%
-  );
-}
-
-/* The antibiotic disk: dashed, so it reads as the odd one out. */
-.disk.antibiotic {
-  border-style: dashed;
-  border-color: #65a30d;
-  color: #3f6212;
-}
-
-/* Hover over a disk to see what it's soaked in. */
-.disk::after {
-  content: attr(data-name);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%) translateY(3px);
-  padding: 0.25rem 0.55rem;
-  border-radius: 8px;
-  background: #134e4a;
-  color: white;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: normal;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.12s ease, transform 0.12s ease;
-}
-
-.disk:hover {
-  z-index: 4; /* above the mates, so the label isn't hidden behind them */
-}
-
-.disk:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
 /* Inside a cell (game/swarm.js): she shrinks into it and fades, and holds
    still until it bursts. */
 .mate-mover.inside .dish-mate {
@@ -782,20 +682,6 @@ html.input-keys .for-keys {
   opacity: 0.55;
   animation: none;
   transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-/* The player's mate after touching a disk. */
-.mate-mover.killed {
-  filter: grayscale(1);
-  opacity: 0.45;
-  transition: filter 0.4s ease, opacity 0.4s ease;
-}
-
-/* Freeze her mid-wiggle rather than turning the animation off: switching it
-   off snaps her back to her resting pose (up to 10px away for a bob), so she
-   would look like she never touched the zone. */
-.mate-mover.killed .dish-mate {
-  animation-play-state: paused;
 }
 
 /* Jess's signature at the foot of every page. */
@@ -837,31 +723,6 @@ body:not(.picker-page) .signature {
 
   .dish-shell .petri-dish {
     padding: 8px;
-  }
-}
-
-/* A copy stopped in a zone (game/swarm.js): a ring
-   in the mate's color that bursts outward and fades. */
-.pop {
-  position: absolute;
-  aspect-ratio: 1;
-  border: 3px solid;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  animation: pop 0.35s ease-out forwards;
-}
-
-@keyframes pop {
-  from {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(0.7);
-  }
-
-  to {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.8);
-    border-width: 1px;
   }
 }
 

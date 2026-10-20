@@ -1,12 +1,11 @@
 // The lawn: E. coli cells scattered over the agar for the mate to infect.
 // A cell she (or a copy of her) touches gets infected, swells for her
 // latent period, then bursts, leaving a plaque: a clear hole in the lawn.
-// A new cell turns up somewhere else a moment later, never in a plaque or a
-// zone while there's room elsewhere.
+// A new cell turns up somewhere else a moment later, never in a plaque
+// while there's room elsewhere.
 //
 // Positions are kept relative to the dish center, as fractions of the dish
-// radius (-1 to 1), so they stay put when the window is resized. `avoid`
-// lists the disks, { fx, fy, r, fullZone }: nothing grows in their zones.
+// radius (-1 to 1), so they stay put when the window is resized.
 import { GAME } from './config.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -53,42 +52,35 @@ function ecoli() {
   return svg;
 }
 
-export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random } = {}) {
+export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
   const agar = document.querySelector('.agar');
   const hosts = []; // { id, el, fx, fy, infected, left } (left: ms to bursting)
   let nextId = 1;
   const plaques = []; // { fx, fy }
-  // Cells that burst, each growing back `left` ms from now, away from
-  // where it burst ({ left, fx, fy }).
+  // Cells that burst, each growing back `left` ms from now ({ left }).
   let waiting = [];
   let stopped = false;
 
-  // Pick a spot for a new cell. At first, keep it well away from where the
-  // mate starts (or the cell that just burst), other cells and plaques; if
-  // the lawn is too crowded for that, just keep it out of the zones.
-  function randomSpot(awayX, awayY) {
-    for (const strict of [true, false]) {
-      for (let tries = 0; tries < 100; tries++) {
-        // Uniform over the disk, kept away from the rim.
-        const angle = random() * Math.PI * 2;
-        const distance = Math.sqrt(random()) * 0.82;
-        const fx = Math.cos(angle) * distance;
-        const fy = Math.sin(angle) * distance;
-        const near = (spots, gap) => spots.some((s) => Math.hypot(fx - s.fx, fy - s.fy) < gap);
-        if (strict && (Math.hypot(fx - awayX, fy - awayY) < 0.3 || near(hosts, GAME.HOST_GAP) ||
-            near(plaques, GAME.PLAQUE_RADIUS + GAME.HOST_RADIUS))) continue;
-        const inZone = avoid.some((a) =>
-          Math.hypot(fx - a.fx, fy - a.fy) < a.r + (a.fullZone ?? a.zone ?? 0) + GAME.HOST_RADIUS);
-        if (!inZone) return { fx, fy };
-      }
+  // Pick a spot for a new cell, away from other cells and plaques, and at
+  // the start, from the middle, where she starts. If the lawn is too
+  // crowded for that, anywhere will do.
+  function randomSpot(clearOfMiddle) {
+    let spot;
+    for (let tries = 0; tries < 100; tries++) {
+      // Uniform over the dish, kept away from the rim.
+      const angle = random() * Math.PI * 2;
+      const distance = Math.sqrt(random()) * 0.82;
+      spot = { fx: Math.cos(angle) * distance, fy: Math.sin(angle) * distance };
+      const near = (spots, gap) => spots.some((s) => Math.hypot(spot.fx - s.fx, spot.fy - s.fy) < gap);
+      if (!(clearOfMiddle && Math.hypot(spot.fx, spot.fy) < 0.3) && !near(hosts, GAME.HOST_GAP) &&
+          !near(plaques, GAME.PLAQUE_RADIUS + GAME.HOST_RADIUS)) return spot;
     }
-    return null;
+    return spot;
   }
 
-  // Grow a cell, if there's room for one.
-  function grow(awayX, awayY) {
-    const spot = randomSpot(awayX, awayY);
-    if (!spot) return false;
+  // Grow a cell somewhere with room, clear of the middle if asked.
+  function grow(clearOfMiddle = false) {
+    const spot = randomSpot(clearOfMiddle);
     const el = document.createElement('div');
     el.className = 'host';
     el.style.width = `${GAME.HOST_SIZE * 100}%`;
@@ -99,25 +91,28 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
     el.setAttribute('aria-hidden', 'true');
     agar.appendChild(el);
     hosts.push({ id: nextId++, el, ...spot, infected: false, left: 0 });
-    return true;
   }
 
   // The clear hole a burst cell leaves. It opens up from nothing (see
-  // .plaque in styles.css).
+  // .plaque in styles.css). Real plaques are round but never perfect
+  // circles, so each gets a slightly uneven edge of its own.
   function addPlaque(fx, fy) {
     const el = document.createElement('div');
     el.className = 'plaque';
     el.style.left = `${50 + fx * 50}%`;
     el.style.top = `${50 + fy * 50}%`;
     el.style.width = `${GAME.PLAQUE_RADIUS * 100}%`;
+    const wobble = () => `${44 + Math.floor(random() * 12)}%`;
+    el.style.borderRadius =
+      `${wobble()} ${wobble()} ${wobble()} ${wobble()} / ${wobble()} ${wobble()} ${wobble()} ${wobble()}`;
     el.setAttribute('aria-hidden', 'true');
-    // Under the cells and the disks, so they're never hidden.
+    // Under the cells, so they're never hidden.
     agar.prepend(el);
     plaques.push({ fx, fy, el });
   }
 
   // The mate starts in the middle, so the first cells keep away from it.
-  for (let i = 0; i < count; i++) grow(0, 0);
+  for (let i = 0; i < count; i++) grow(true);
 
   function infect(host, latentMs) {
     host.infected = true;
@@ -159,9 +154,11 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
     tick(seconds) {
       const ms = seconds * 1000;
       if (!stopped) {
-        for (const cell of waiting) cell.left -= ms;
-        // A cell with no room to grow tries again next frame.
-        waiting = waiting.filter((cell) => cell.left > 0 || !grow(cell.fx, cell.fy));
+        for (const cell of waiting) {
+          cell.left -= ms;
+          if (cell.left <= 0) grow();
+        }
+        waiting = waiting.filter((cell) => cell.left > 0);
       }
       const bursts = [];
       for (let i = hosts.length - 1; i >= 0; i--) {
@@ -173,7 +170,7 @@ export function growLawn({ avoid = [], count = GAME.HOSTS, random = Math.random 
         host.el.remove();
         addPlaque(host.fx, host.fy);
         bursts.push({ id: host.id, fx: host.fx, fy: host.fy });
-        waiting.push({ left: GAME.HOST_RESPAWN_MS, fx: host.fx, fy: host.fy });
+        waiting.push({ left: GAME.HOST_RESPAWN_MS });
       }
       return bursts;
     },

@@ -68,6 +68,11 @@ describe('picking the mate', () => {
     expect(typeof hosts.infectNear).toBe('function');
   });
 
+  it('puts no disks on the dish: there is nothing to dodge', async () => {
+    await open('?mate=tia&level=7');
+    expect(document.querySelectorAll('.agar .disk, .agar .zone')).toHaveLength(0);
+  });
+
   it('grows a lawn of cells to infect', async () => {
     await open('?mate=tia');
     expect(document.querySelectorAll('.agar .host')).toHaveLength(GAME.HOSTS);
@@ -78,7 +83,7 @@ describe('picking the level', () => {
   // The level and target the game was started with.
   async function startedAt(search) {
     const playGame = await open(search);
-    return playGame.mock.calls[0][4];
+    return playGame.mock.calls[0][3];
   }
 
   it('starts at level 1 when the address has no level', async () => {
@@ -86,11 +91,9 @@ describe('picking the level', () => {
   });
 
   it.each(LEVELS.map((level, i) => [i + 1, level]))(
-    'level %i uses its own target and disks',
+    'level %i uses its own target',
     async (n, level) => {
       expect(await startedAt(`?mate=tia&level=${n}`)).toEqual({ level: n, target: level.target });
-      expect(document.querySelectorAll('.agar .disk:not(.antibiotic)')).toHaveLength(level.disks);
-      expect(document.querySelectorAll('.agar .disk.antibiotic')).toHaveLength(level.antibiotic ? 1 : 0);
     },
   );
 

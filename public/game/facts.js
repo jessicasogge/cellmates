@@ -45,7 +45,7 @@ export function showFact(mate, species) {
   }
 }
 
-// Hide the fact line (e.g. on a game over).
+// Hide the fact line.
 export function hideFact() {
   const line = document.querySelector('.fun-fact');
   if (line) line.hidden = true;

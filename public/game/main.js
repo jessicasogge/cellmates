@@ -1,8 +1,7 @@
 // Entry point for the petri dish page: find the mate and level picked in the
 // address and start the game with them:
 //   petri-dish.html?mate=tia&level=2
-import { disksFor, placeDisks } from './antiviral.js';
-import { ANTIBIOTIC, LEVELS, SPECIES } from './config.js';
+import { LEVELS, SPECIES } from './config.js';
 import { playGame } from './game.js';
 import { growLawn } from './hosts.js';
 import { withItalics } from './italics.js';
@@ -45,7 +44,5 @@ function start() {
   title.textContent = mate.dataset.name;
   title.style.color = species.color;
   document.querySelector('.species-name').replaceChildren(...withItalics(species.scientific));
-  const disks = placeDisks(disksFor(species.disks, level.disks, level.antibiotic ? ANTIBIOTIC : null));
-  const hosts = growLawn({ avoid: disks });
-  playGame(mate, species, hosts, disks, { level: levelNumber, target: level.target });
+  playGame(mate, species, growLawn(), { level: levelNumber, target: level.target });
 }

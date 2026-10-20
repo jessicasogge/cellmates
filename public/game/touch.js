@@ -2,7 +2,7 @@
 // trackpad. Touch anywhere on the dish and she stays put, then slide your
 // finger and she moves the same way, as far as your finger moves (up to a top
 // speed). Nothing jumps when you touch down, and your finger can stay well
-// away from her and the disks. Lift and touch again to keep going.
+// away from her. Lift and touch again to keep going.
 //
 // A mouse steers right where it points instead: press and hold, and she
 // swims there at her normal speed, stopping when she gets there.

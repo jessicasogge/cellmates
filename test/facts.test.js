@@ -135,7 +135,7 @@ describe('the pop-up line', () => {
     expect(() => hideFact()).not.toThrow();
   });
 
-  it('stays hidden for a mate with no facts, and hides on a game over', () => {
+  it('stays hidden for a mate with no facts, and hides when asked', () => {
     showFact('nobody', {});
     expect(line().hidden).toBe(true);
     showFact('tia', SPECIES.tia);

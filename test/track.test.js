@@ -30,7 +30,7 @@ describe('track', () => {
   });
 
   it("quietly does nothing when GoatCounter didn't load (an ad blocker, or offline)", () => {
-    expect(() => track('game-over/tia/level-1/AB')).not.toThrow();
+    expect(() => track('level-complete/tia/level-1')).not.toThrow();
   });
 
   it('quietly does nothing while GoatCounter is still loading', () => {
