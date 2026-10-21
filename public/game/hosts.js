@@ -1,4 +1,5 @@
 // The lawn: E. coli cells scattered over the agar for the mate to infect.
+// Healthy ones glide very slowly, wandering a little as they go.
 // A cell she (or a copy of her) touches gets infected, swells for her
 // latent period, then bursts, leaving a plaque: a clear hole in the lawn.
 // A new cell turns up somewhere else a moment later, never in a plaque
@@ -54,7 +55,9 @@ function ecoli() {
 
 export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
   const agar = document.querySelector('.agar');
-  const hosts = []; // { id, el, fx, fy, infected, left } (left: ms to bursting)
+  // { id, el, fx, fy, heading, infected, left }: heading is the way it's
+  // going, in radians, and left the ms until it bursts.
+  const hosts = [];
   let nextId = 1;
   const plaques = []; // { fx, fy }
   // Cells that burst, each growing back `left` ms from now ({ left }).
@@ -85,12 +88,33 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
     el.className = 'host';
     el.style.width = `${GAME.HOST_SIZE * 100}%`;
     el.append(ecoli());
-    el.style.left = `${50 + spot.fx * 50}%`;
-    el.style.top = `${50 + spot.fy * 50}%`;
-    el.style.setProperty('--angle', `${Math.floor(random() * 180)}deg`);
     el.setAttribute('aria-hidden', 'true');
     agar.appendChild(el);
-    hosts.push({ id: nextId++, el, ...spot, infected: false, left: 0 });
+    const host = { id: nextId++, el, ...spot, heading: random() * Math.PI * 2, infected: false, left: 0 };
+    place(host);
+    hosts.push(host);
+  }
+
+  // Put a cell's drawing where it is, pointing the way it's going.
+  function place(host) {
+    host.el.style.left = `${50 + host.fx * 50}%`;
+    host.el.style.top = `${50 + host.fy * 50}%`;
+    host.el.style.setProperty('--angle', `${Math.round((host.heading * 180) / Math.PI)}deg`);
+  }
+
+  // Glide a healthy cell along for `seconds`, turning a little at random.
+  // At the edge it turns back toward the middle.
+  function glide(host, seconds) {
+    host.heading += (random() - 0.5) * 1.5 * seconds;
+    host.fx += Math.cos(host.heading) * GAME.HOST_SPEED * seconds;
+    host.fy += Math.sin(host.heading) * GAME.HOST_SPEED * seconds;
+    const fromCenter = Math.hypot(host.fx, host.fy);
+    if (fromCenter > GAME.HOST_EDGE) {
+      host.fx *= GAME.HOST_EDGE / fromCenter;
+      host.fy *= GAME.HOST_EDGE / fromCenter;
+      host.heading = Math.atan2(-host.fy, -host.fx) + (random() - 0.5);
+    }
+    place(host);
   }
 
   // The clear hole a burst cell leaves. It opens up from nothing (see
@@ -148,8 +172,8 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
       return { id: host.id, fx: host.fx, fy: host.fy };
     },
 
-    // Move time on by `seconds`: infected cells whose time is up burst, and
-    // missing cells grow back. Returns each cell that burst, as
+    // Move time on by `seconds`: healthy cells glide, infected cells whose
+    // time is up burst, and missing cells grow back. Returns each cell that burst, as
     // { id, fx, fy }.
     tick(seconds) {
       const ms = seconds * 1000;
@@ -163,7 +187,10 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
       const bursts = [];
       for (let i = hosts.length - 1; i >= 0; i--) {
         const host = hosts[i];
-        if (!host.infected) continue;
+        if (!host.infected) {
+          glide(host, seconds);
+          continue;
+        }
         host.left -= ms;
         if (host.left > 0) continue;
         hosts.splice(i, 1);

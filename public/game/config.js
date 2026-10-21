@@ -1,38 +1,29 @@
-// Every mate is a bacteriophage, a virus that infects bacteria. All three
-// infect Escherichia coli, so the dish is a lawn of E. coli (drawn like
-// Colette, PetriPals' E. coli), and each mate bursts its cells open.
+// All mates are phages that infect and burst E. coli cells.
+// The lawn uses Colette's E. coli art.
 //
-// `scientific`: the virus's name above the dish. Virus names aren't in
-//   italics; *asterisks* mark the parts that are (a host's species name).
-// `color`: her name above the dish.
-// `colors`: her drawing's colors (mates.js).
-// `size`: how wide she's drawn in the dish, as a fraction of the dish's
-//   width. Phages are far smaller than the bacteria they infect: E. coli is
-//   about 2 micrometers long, T4 about a tenth of that, and φX174 and MS2
-//   only about 25 nanometers across. So she's always smaller than a cell,
-//   and T4 bigger than the other two, though true to scale she'd be too
-//   small to see.
-// `burst`: how many new copies of her one host cell releases in the game.
-//   Real bursts are much bigger (see `facts`); these are scaled way down.
-// `latentMs`: how long an infected cell takes to burst, in the game. When
-//   she infects a cell herself, she's inside it all that time.
-// `facts`: random win/lose pop-up facts (game/facts.js); *names* italicize.
-
+// `scientific`: virus name above dish; only *marked parts* italicize.
+// `color`: name color.
+// `colors`: drawing palette (mates.js).
+// `size`: width relative to dish; smaller than cells, T4 larger than the
+//   others. Enlarged for visibility, not true scale.
+// `burst`: copies released per cell; scaled down from real bursts.
+// `latentMs`: delay before bursting; she stays inside cells she infects.
+// `facts`: random win/lose facts (game/facts.js); *names* italicize.
 export const SPECIES = {
   tia: {
     facts: [
       "Tia is a bacteriophage: a virus that infects bacteria. Phage means \"eater.\"",
-      "Tia lands on *E. coli* on six long, bendy tail fibers, like a lunar lander's legs.",
-      "Once Tia lands, her tail squeezes down and pushes a tube through the cell's wall.",
-      "Tia injects only her DNA into the cell. Her empty head and tail stay outside.",
-      "Inside the cell, Tia's genes shut down the cell's own genes and make it build more Tias.",
-      "One cell infected by Tia bursts open with about 100 to 200 new copies of her.",
-      "Tia's head is a stretched-out icosahedron, a shape with 20 triangle faces.",
-      "In 1952, Hershey and Chase used T2, Tia's close cousin, to show genes are made of DNA.",
-      "Tia's DNA swaps cytosine for a look-alike base, which helps her dodge the cell's defenses.",
-      "Doctors are testing phages like Tia to treat infections antibiotics can't cure.",
-      "Phages like Tia were first seen in 1915, and named by Félix d'Hérelle in 1917.",
-      "Phages like Tia outnumber every other kind of biological thing on Earth.",
+      "Tia grips *E. coli* with six long, jointed tail fibers, like a lunar lander's legs.",
+      "Tia's tail sheath contracts, pushing a tube through the cell's outer layers.",
+      "Tia delivers her DNA into the cell. Her empty head and tail stay outside.",
+      "Tia takes over the cell's machinery and makes it build more Tias.",
+      "An infected cell can burst open with roughly 100 to 200 new Tias.",
+      "Tia's DNA-filled head is an elongated, roughly icosahedral shell.",
+      "In 1952, Hershey and Chase used Tia's cousin T2 to help show DNA carries genes.",
+      "Tia uses a modified DNA base that helps protect her from bacterial defenses.",
+      "Phages like Tia are being tested against antibiotic-resistant bacterial infections.",
+      "Tia's fellow phages were described in 1915 and named by Félix d'Hérelle in 1917.",
+      "Tia belongs to the phages, thought to be among Earth's most abundant biological entities.",
     ],
     scientific: 'Bacteriophage T4',
     color: '#5b3fb0',
@@ -44,15 +35,15 @@ export const SPECIES = {
   phoebe: {
     facts: [
       "Phoebe's name comes from φX174: φ is the Greek letter phi.",
-      "In 1977, Fred Sanger's lab made Phoebe's the first DNA genome ever read from end to end.",
-      "Phoebe's genome is tiny: just 5,386 letters long, with 11 genes.",
-      "Some of Phoebe's genes overlap, read two ways at once, to fit more into her tiny genome.",
-      "Phoebe's DNA is single-stranded: one strand, not the usual two.",
-      "In 2003, scientists built Phoebe's genome from scratch in two weeks, and it worked.",
-      "Phoebe has no tail. She's a tiny 20-sided shell with a spike on each of her 12 corners.",
-      "Phoebe bursts her cell with just one protein, E, which stops it from building its wall.",
-      "Labs add a little of Phoebe's DNA to DNA-sequencing runs to check the machine.",
-      "Phoebe infects a strain of *E. coli* called C, grabbing onto its outer coat.",
+      "In 1977, Sanger's team read Phoebe's genome, the first DNA genome fully sequenced.",
+      "Phoebe's genome has just 5,386 DNA letters and 11 genes.",
+      "Some of Phoebe's genes overlap, reusing DNA letters to make different proteins.",
+      "Phoebe carries her DNA in a single-stranded circle, not a double strand.",
+      "In 2003, scientists assembled Phoebe's working genome from synthetic DNA in 14 days.",
+      "Phoebe has no tail: her 20-sided shell has a spike at each of its 12 corners.",
+      "Phoebe's protein E makes her host burst by blocking cell-wall construction.",
+      "Labs add prepared Phoebe DNA to Illumina sequencing runs as a control.",
+      "Phoebe infects *E. coli* C by binding to sugars on its outer surface.",
     ],
     scientific: 'Bacteriophage φX174',
     color: '#0f766e',
@@ -64,15 +55,15 @@ export const SPECIES = {
   missy: {
     facts: [
       "Missy's genes are made of RNA, not DNA.",
-      "In 1976, Walter Fiers's lab made Missy's the first genome of any kind ever read in full.",
+      "In 1976, Fiers's team fully read Missy's genome, the first genome ever sequenced.",
       "Missy has just four genes.",
-      "Missy gets into *E. coli* by grabbing its F pilus, a long, thin hair some cells grow.",
+      "Missy grabs the F pilus, a long, thin appendage on some *E. coli* cells.",
       "One cell infected by Missy can burst with thousands of new copies of her.",
       "Missy's shell is only about 27 nanometers across, small even for a virus.",
-      "Missy bursts her cell with one tiny protein, L.",
-      "Missy's coat protein grabs a hairpin in her RNA, so scientists use it to tag RNA.",
-      "Missy is harmless to people, so she's used to test how well filters stop viruses.",
-      "Lined up side by side, about 2,500 Missys would stretch across one human hair.",
+      "Missy makes her host burst using one tiny protein called L.",
+      "Missy's coat protein binds an RNA hairpin, a trick scientists use to track RNA.",
+      "Missy infects bacteria, not people, so labs use her to test virus filters.",
+      "Missy packs her four genes into just 3,569 RNA letters.",
     ],
     scientific: 'Bacteriophage MS2',
     color: '#c2410c',
@@ -124,6 +115,11 @@ export const GAME = {
   HOST_ROD: 0.69,
   HOST_RADIUS: 0.05, // how close counts as touching one (dish radii)
   HOST_GAP: 0.17, // how far apart cells grow, if there's room (dish radii)
+  // Healthy cells glide very slowly (dish radii per second), turning a
+  // little as they go and never past HOST_EDGE from the middle. Infected
+  // ones stop.
+  HOST_SPEED: 0.025,
+  HOST_EDGE: 0.85,
   // A plaque, the clear hole a burst cell leaves in the lawn: its radius
   // (dish radii).
   PLAQUE_RADIUS: 0.1,
