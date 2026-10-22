@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// hosts.js grows the lawn of E. coli cells, infects them, bursts them and
+// hosts.js grows the lawn of host cells, infects them, bursts them and
 // grows new ones. It puts cells and plaques on the page, so these tests run
 // in jsdom, a simulated browser page.
 import { beforeEach, describe, expect, it } from 'vitest';
-import { GAME } from '../public/game/config.js';
+import { GAME, HOSTS } from '../public/game/config.js';
 import { growLawn } from '../public/game/hosts.js';
 
 beforeEach(() => {
@@ -16,9 +16,9 @@ const plaques = () => document.querySelectorAll('.agar .plaque');
 describe('growing the lawn', () => {
   it('puts the right number of cells on the agar', () => {
     growLawn();
-    expect(cells()).toHaveLength(GAME.HOSTS);
+    expect(cells()).toHaveLength(HOSTS.ecoli.count);
     growLawn({ count: 3 });
-    expect(cells()).toHaveLength(GAME.HOSTS + 3);
+    expect(cells()).toHaveLength(HOSTS.ecoli.count + 3);
   });
 
   it('keeps the first cells off the middle, where she starts, and off the rim', () => {
@@ -40,7 +40,7 @@ describe('growing the lawn', () => {
     const [cell] = cells();
     expect(cell.style.getPropertyValue('--angle')).toMatch(/^\d+deg$/);
     expect(cell.getAttribute('aria-hidden')).toBe('true');
-    expect(cell.style.width).toBe(`${GAME.HOST_SIZE * 100}%`);
+    expect(cell.style.width).toBe(`${HOSTS.ecoli.size * 100}%`);
   });
 
   it("draws each cell like Colette's offspring in PetriPals: a green rod with waving flagella and no face", () => {
@@ -92,6 +92,45 @@ describe('infecting', () => {
   });
 });
 
+describe('HeLa cells, for Polly', () => {
+  const hela = () => growLawn({ kind: HOSTS.hela });
+
+  it('grows HeLa cells instead: their own number, size and drawing', () => {
+    hela();
+    expect(cells()).toHaveLength(HOSTS.hela.count);
+    const [cell] = cells();
+    expect(cell.classList).toContain('hela');
+    expect(cell.style.width).toBe(`${HOSTS.hela.size * 100}%`);
+    // A flat cell with a nucleus, and no flagella to wave.
+    expect(cell.querySelectorAll('circle').length).toBeGreaterThan(2);
+    expect(cell.querySelector('animate')).toBeNull();
+  });
+
+  it("stay put, since they're stuck to the dish", () => {
+    const lawn = hela();
+    const before = lawn.positions();
+    const angle = cells()[0].style.getPropertyValue('--angle');
+    lawn.tick(5);
+    expect(lawn.positions()).toEqual(before);
+    expect(cells()[0].style.getPropertyValue('--angle')).toBe(angle);
+  });
+
+  it('leave a bigger plaque, since the cells are bigger', () => {
+    const lawn = hela();
+    const [cell] = lawn.positions();
+    lawn.infectNear(cell.fx, cell.fy, 0.01, 0);
+    lawn.tick(0);
+    expect(plaques()[0].style.width).toBe(`${HOSTS.hela.plaque * 100}%`);
+  });
+
+  it('count as touched from farther away, since they\'re wider', () => {
+    const lawn = hela();
+    const [cell] = lawn.positions();
+    const near = HOSTS.hela.radius - 0.01;
+    expect(lawn.infectOne(cell.fx + near, cell.fy, 0, 1000)).not.toBeNull();
+  });
+});
+
 describe('gliding', () => {
   it('moves healthy cells very slowly, pointing the way they go', () => {
     const lawn = growLawn({ count: 1 });
@@ -100,7 +139,7 @@ describe('gliding', () => {
     const [after] = lawn.positions();
     const moved = Math.hypot(after.fx - before.fx, after.fy - before.fy);
     expect(moved).toBeGreaterThan(0);
-    expect(moved).toBeLessThanOrEqual(GAME.HOST_SPEED + 1e-9);
+    expect(moved).toBeLessThanOrEqual(HOSTS.ecoli.speed + 1e-9);
     expect(cells()[0].style.left).toBe(`${50 + after.fx * 50}%`);
   });
 
@@ -170,7 +209,7 @@ describe('bursting', () => {
     expect(lawn.plaques()).toEqual([{ fx: cell.fx, fy: cell.fy }]);
     const [plaque] = plaques();
     expect(plaque).toBe(document.querySelector('.agar').firstElementChild);
-    expect(plaque.style.width).toBe(`${GAME.PLAQUE_RADIUS * 100}%`);
+    expect(plaque.style.width).toBe(`${HOSTS.ecoli.plaque * 100}%`);
     // Round-ish, with a slightly uneven edge of its own.
     const corners = plaque.style.borderRadius.match(/\d+%/g).map(parseFloat);
     expect(corners).toHaveLength(8);
@@ -193,7 +232,7 @@ describe('bursting', () => {
     expect(lawn.positions()).toHaveLength(0);
     lawn.tick(0.11);
     const [grown] = lawn.positions();
-    expect(Math.hypot(grown.fx - cell.fx, grown.fy - cell.fy)).toBeGreaterThan(GAME.PLAQUE_RADIUS);
+    expect(Math.hypot(grown.fx - cell.fx, grown.fy - cell.fy)).toBeGreaterThan(HOSTS.ecoli.plaque);
   });
 
   it('stops growing new cells once the game is over, but infected ones still burst', () => {

@@ -40,6 +40,16 @@ export function polygon(cx, cy, r, sides, start = 0) {
   }).join(' ');
 }
 
+// A five-pointed star centered on (cx, cy), its points `r` out, as SVG
+// points.
+export function star(cx, cy, r) {
+  return Array.from({ length: 10 }, (_, i) => {
+    const angle = ((-90 + i * 36) * Math.PI) / 180;
+    const d = i % 2 === 0 ? r : r * 0.45;
+    return `${(cx + d * Math.cos(angle)).toFixed(1)},${(cy + d * Math.sin(angle)).toFixed(1)}`;
+  }).join(' ');
+}
+
 // Phoebe's 12 spikes, one on each corner of her shell. Seen from the front,
 // six stick out around her edge.
 const PHOEBE_SPIKES = Array.from({ length: 6 }, (_, i) => {
@@ -58,6 +68,17 @@ const MISSY_BUMPS = Array.from({ length: 14 }, (_, i) => {
   const x = (100 + 46 * Math.cos(angle)).toFixed(1);
   const y = (108 + 46 * Math.sin(angle)).toFixed(1);
   return `<circle cx="${x}" cy="${y}" r="3.2" fill="#fff4ef" opacity="0.9" />`;
+}).join('\n      ');
+
+// Polly's surface: a star-shaped plateau (a mesa) on each corner of her
+// shell, ringed by a groove (the canyon) where she grabs a cell. Five show
+// around her face.
+const POLLY_MESAS = Array.from({ length: 5 }, (_, i) => {
+  const angle = ((-90 + i * 72) * Math.PI) / 180;
+  const x = (100 + 42 * Math.cos(angle)).toFixed(1);
+  const y = (106 + 42 * Math.sin(angle)).toFixed(1);
+  return `<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="#9fb4f2" stroke-width="2.5" />
+      <polygon points="${star(Number(x), Number(y), 9)}" fill="#f4f7ff" stroke="#9fb4f2" stroke-width="1.5" stroke-linejoin="round" />`;
 }).join('\n      ');
 
 export const MATES = [
@@ -127,10 +148,25 @@ export const MATES = [
       ${face(100, 110, '#7a2614')}
     `,
   },
+  // Polly: poliovirus, a small cornflower-blue twenty-sided shell with a
+  // star-shaped mesa ringed by a canyon on each corner, and no tail
+  {
+    id: 'polly',
+    name: 'Polly',
+    looks: 'a cornflower-blue poliovirus: a small, round, twenty-sided shell dotted with little stars',
+    motion: 'bob',
+    frames: { home: '0 0 200 200', picker: '24 26 152 152', dish: '28 28 148 148' },
+    art: `
+      <!-- her shell: a protein icosahedron around her RNA, with no envelope -->
+      <polygon points="${polygon(100, 106, 56, 12, -90)}" fill="#dbe5ff" stroke="#3b5bdb" stroke-width="4" stroke-linejoin="round" />
+      ${POLLY_MESAS}
+      ${face(100, 112, '#1e2f78')}
+    `,
+  },
 ];
 
 // The home page's order: the biggest in the middle.
-const HOME = ['phoebe', 'tia', 'missy'];
+const HOME = ['phoebe', 'tia', 'missy', 'polly'];
 export const HOME_MATES = HOME.map((id) => MATES.find((mate) => mate.id === id));
 
 export function mateById(id) {

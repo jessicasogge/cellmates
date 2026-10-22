@@ -1,7 +1,7 @@
 // Entry point for the petri dish page: find the mate and level picked in the
 // address and start the game with them:
 //   petri-dish.html?mate=tia&level=2
-import { LEVELS, SPECIES } from './config.js';
+import { HOSTS, LEVELS, SPECIES } from './config.js';
 import { playGame } from './game.js';
 import { growLawn } from './hosts.js';
 import { withItalics } from './italics.js';
@@ -44,5 +44,9 @@ function start() {
   title.textContent = mate.dataset.name;
   title.style.color = species.color;
   document.querySelector('.species-name').replaceChildren(...withItalics(species.scientific));
-  playGame(mate, species, growLawn(), { level: levelNumber, target: level.target });
+  // Her own host cells, on a lawn to match, named in the directions.
+  const kind = HOSTS[species.host];
+  document.querySelector('.agar').classList.add(`lawn-${kind.id}`);
+  for (const el of document.querySelectorAll('.host-name')) el.replaceChildren(...withItalics(kind.name));
+  playGame(mate, species, growLawn({ kind }), { level: levelNumber, target: level.target });
 }

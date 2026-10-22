@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GAME, LEVELS, SPECIES } from '../public/game/config.js';
+import { HOSTS, LEVELS, SPECIES } from '../public/game/config.js';
 
 // Don't run the real game loop; just record how the game was started.
 vi.mock('../public/game/game.js', () => ({ playGame: vi.fn() }));
@@ -73,9 +73,19 @@ describe('picking the mate', () => {
     expect(document.querySelectorAll('.agar .disk, .agar .zone')).toHaveLength(0);
   });
 
+  it("grows Polly's own host, HeLa cells, and names them in the directions", async () => {
+    await open('?mate=polly');
+    expect(document.querySelectorAll('.agar .host.hela')).toHaveLength(HOSTS.hela.count);
+    expect(document.querySelectorAll('.agar .host.ecoli')).toHaveLength(0);
+    expect(document.querySelector('.agar').classList).toContain('lawn-hela');
+    expect(document.querySelector('.host-name').textContent).toBe('HeLa');
+  });
+
   it('grows a lawn of cells to infect', async () => {
     await open('?mate=tia');
-    expect(document.querySelectorAll('.agar .host')).toHaveLength(GAME.HOSTS);
+    expect(document.querySelectorAll('.agar .host.ecoli')).toHaveLength(HOSTS.ecoli.count);
+    expect(document.querySelector('.agar').classList).toContain('lawn-ecoli');
+    expect(document.querySelector('.host-name').innerHTML).toBe('<i>E. coli</i>');
   });
 });
 
