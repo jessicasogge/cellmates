@@ -1,7 +1,9 @@
-// All mates are phages that infect and burst E. coli cells.
-// The lawn uses Colette's E. coli art.
+// Each mate infects one kind of cell (`host`, in HOSTS below): the phages
+// burst E. coli, drawn like Colette in PetriPals, and Polly, poliovirus,
+// bursts human HeLa cells.
 //
 // `scientific`: virus name above dish; only *marked parts* italicize.
+// `host`: the cells in her dish (HOSTS).
 // `color`: name color.
 // `colors`: drawing palette (mates.js).
 // `size`: width relative to dish; smaller than cells, T4 larger than the
@@ -26,6 +28,7 @@ export const SPECIES = {
       "Tia belongs to the phages, thought to be among Earth's most abundant biological entities.",
     ],
     scientific: 'Bacteriophage T4',
+    host: 'ecoli',
     color: '#5b3fb0',
     size: 0.052,
     burst: 3,
@@ -46,6 +49,7 @@ export const SPECIES = {
       "Phoebe infects *E. coli* C by binding to sugars on its outer surface.",
     ],
     scientific: 'Bacteriophage φX174',
+    host: 'ecoli',
     color: '#0f766e',
     size: 0.038,
     burst: 2,
@@ -66,11 +70,57 @@ export const SPECIES = {
       "Missy packs her four genes into just 3,569 RNA letters.",
     ],
     scientific: 'Bacteriophage MS2',
+    host: 'ecoli',
     color: '#c2410c',
     size: 0.036,
     burst: 4,
     latentMs: 2000,
     colors: { fill: '#ffdccf', stroke: '#d9573a', highlight: '#fff4ef', dark: '#7a2614' },
+  },
+  polly: {
+    facts: [
+      "Polly is poliovirus, which causes polio, a disease that can paralyze people.",
+      "Polly is one of the smallest viruses that infect people, about 30 nanometers across.",
+      "Polly has no envelope: just a 20-sided protein shell around her RNA.",
+      "Polly's genes are one strand of RNA, about 7,500 letters long.",
+      "Polly gets into human cells by grabbing a protein on their surface called CD155.",
+      "Polly spreads through contaminated food and water, and first grows in the throat and gut.",
+      "In 1949, Enders, Weller and Robbins grew Polly in lab cells, winning a Nobel Prize.",
+      "In 1954, Dulbecco and Vogt counted Polly with plaques, the way phages are counted.",
+      "Polly was grown in HeLa cells to test the first polio vaccine in the 1950s.",
+      "Jonas Salk's vaccine against Polly, given as a shot, was declared safe in 1955.",
+      "Albert Sabin's vaccine against Polly was given by mouth, often on a sugar cube.",
+      "In 2002, scientists built Polly from scratch, the first virus made that way.",
+      "Thanks to vaccines, cases of wild Polly have dropped by over 99% since 1988.",
+    ],
+    scientific: 'Poliovirus',
+    host: 'hela',
+    color: '#2f4fbf',
+    size: 0.036,
+    burst: 5,
+    latentMs: 1800,
+    colors: { fill: '#dbe5ff', stroke: '#3b5bdb', highlight: '#f4f7ff', dark: '#1e2f78' },
+  },
+};
+
+// The cells a mate infects. `name` is how the directions name them
+// (*asterisks* italicize). `size` is how wide each cell's drawing is, as a
+// fraction of the dish's width, and `body` how much of that the cell itself
+// is. `radius` is how close counts as touching one, `gap` how far apart
+// they grow if there's room, and `plaque` the radius of the hole one leaves
+// when it bursts, all in dish radii. `speed` is how fast healthy ones glide
+// (dish radii per second), and `count` how many are in the dish at a time.
+export const HOSTS = {
+  // Drawn and sized like Colette's offspring in PetriPals.
+  ecoli: {
+    id: 'ecoli', name: '*E. coli*', size: 0.105, body: 0.69,
+    radius: 0.05, gap: 0.17, plaque: 0.1, speed: 0.025, count: 12,
+  },
+  // Human cells grown flat on the bottom of the dish. They stick down and
+  // don't swim, so they stay put.
+  hela: {
+    id: 'hela', name: 'HeLa', size: 0.15, body: 0.8,
+    radius: 0.09, gap: 0.27, plaque: 0.16, speed: 0, count: 9,
   },
 };
 
@@ -105,22 +155,9 @@ export const GAME = {
   SETTLE_RATE: 3,
   DRIFT_SPEED: 0.09,
 
-  // Host cells: how many are on the lawn at a time, and how soon a new one
-  // turns up after one bursts.
-  HOSTS: 12,
+  // How soon a new host cell turns up after one bursts. Healthy cells that
+  // glide (HOSTS) turn a little as they go and never go past HOST_EDGE from
+  // the middle. Infected ones stop.
   HOST_RESPAWN_MS: 1200,
-  // How wide each cell's drawing is, as a fraction of the dish's width: the
-  // same as Colette's offspring in PetriPals. Her rod is HOST_ROD of that.
-  HOST_SIZE: 0.105,
-  HOST_ROD: 0.69,
-  HOST_RADIUS: 0.05, // how close counts as touching one (dish radii)
-  HOST_GAP: 0.17, // how far apart cells grow, if there's room (dish radii)
-  // Healthy cells glide very slowly (dish radii per second), turning a
-  // little as they go and never past HOST_EDGE from the middle. Infected
-  // ones stop.
-  HOST_SPEED: 0.025,
   HOST_EDGE: 0.85,
-  // A plaque, the clear hole a burst cell leaves in the lawn: its radius
-  // (dish radii).
-  PLAQUE_RADIUS: 0.1,
 };

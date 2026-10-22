@@ -3,8 +3,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { GAME, SPECIES } from '../public/game/config.js';
-import { dishMate, HOME_MATES, homeMate, mateById, MATES, mateTile, polygon } from '../public/game/mates.js';
+import { GAME, HOSTS, SPECIES } from '../public/game/config.js';
+import { dishMate, HOME_MATES, homeMate, mateById, MATES, mateTile, polygon, star } from '../public/game/mates.js';
 
 describe('every mate', () => {
   it('matches a species in config.js, and the other way round', () => {
@@ -30,10 +30,11 @@ describe('every mate', () => {
 });
 
 describe('sizes', () => {
-  it('draws every phage smaller than the E. coli cells she infects', () => {
-    for (const [mate, { size }] of Object.entries(SPECIES)) {
-      // Shorter than an E. coli rod.
-      expect(size, mate).toBeLessThan(GAME.HOST_SIZE * GAME.HOST_ROD * 0.75);
+  it('draws every mate smaller than the cells she infects', () => {
+    for (const [mate, { size, host }] of Object.entries(SPECIES)) {
+      const cell = HOSTS[host];
+      expect(cell, mate).toBeDefined();
+      expect(size, mate).toBeLessThan(cell.size * cell.body * 0.75);
       // Her copies, smaller still, are big enough to see.
       expect(size * GAME.COPY_SCALE, mate).toBeGreaterThanOrEqual(0.02);
     }
@@ -44,9 +45,9 @@ describe('sizes', () => {
     expect(SPECIES.tia.size).toBeGreaterThan(SPECIES.missy.size);
   });
 
-  it("makes a plaque bigger than the cell that burst", () => {
-    // Both in dish radii: a plaque's width, and a rod's length.
-    expect(GAME.PLAQUE_RADIUS * 2).toBeGreaterThan(GAME.HOST_SIZE * GAME.HOST_ROD * 2);
+  it.each(Object.values(HOSTS).map((kind) => [kind.id, kind]))('makes a plaque bigger than the %s cell that burst', (_, kind) => {
+    // Both in dish radii: a plaque's width, and a cell's length.
+    expect(kind.plaque * 2).toBeGreaterThan(kind.size * kind.body * 2);
   });
 });
 
@@ -82,5 +83,15 @@ describe('polygon', () => {
   it('puts the corners evenly around the center', () => {
     expect(polygon(0, 0, 10, 4)).toBe('10.0,0.0 0.0,10.0 -10.0,0.0 -0.0,-10.0');
     expect(polygon(0, 0, 10, 4, 90).split(' ')[0]).toBe('0.0,10.0');
+  });
+});
+
+describe('star', () => {
+  it('makes ten corners, alternating points and inner corners, with the top point straight up', () => {
+    const corners = star(0, 0, 10).split(' ').map((p) => p.split(',').map(Number));
+    expect(corners).toHaveLength(10);
+    expect(corners[0]).toEqual([0, -10]);
+    // Corners are written to one decimal place, so allow a little rounding.
+    expect(Math.abs(Math.hypot(...corners[1]) - 4.5)).toBeLessThan(0.1);
   });
 });

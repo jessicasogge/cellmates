@@ -1,5 +1,6 @@
-// The lawn: E. coli cells scattered over the agar for the mate to infect.
-// Healthy ones glide very slowly, wandering a little as they go.
+// The lawn: her host cells (HOSTS in config.js) scattered over the dish for
+// the mate to infect. Healthy E. coli glide very slowly, wandering a little
+// as they go; HeLa cells stick down and stay put.
 // A cell she (or a copy of her) touches gets infected, swells for her
 // latent period, then bursts, leaving a plaque: a clear hole in the lawn.
 // A new cell turns up somewhere else a moment later, never in a plaque
@@ -7,7 +8,7 @@
 //
 // Positions are kept relative to the dish center, as fractions of the dish
 // radius (-1 to 1), so they stay put when the window is resized.
-import { GAME } from './config.js';
+import { GAME, HOSTS } from './config.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const SPLINES = 'calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"';
@@ -41,19 +42,33 @@ export const ECOLI_ART = [
   <path d="M118 85 Q136 81 152 88" stroke="#effde0" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.95" />
   <circle cx="148" cy="113" r="2.8" fill="#effde0" />`;
 
-// One cell's drawing. Its flagella wave, unless someone has asked for less
-// motion (CSS can't pause <animate>).
-function ecoli() {
+// A HeLa cell: human cells grown flat on the bottom of the dish, so seen
+// from above each is a wide, uneven, pale peach blob with a big round
+// nucleus in the middle (with two dark nucleoli) and a few granules.
+export const HELA_ART = `
+  <path d="M38 112 C26 74 64 40 104 46 C142 38 174 66 166 100 C178 132 150 164 110 158 C76 168 44 150 38 112 Z" fill="#fde4d6" stroke="#c98a76" stroke-width="4" stroke-linejoin="round" />
+  <circle cx="104" cy="102" r="28" fill="#f1c3cf" stroke="#b77490" stroke-width="3.5" />
+  <circle cx="96" cy="96" r="5" fill="#a65a7c" />
+  <circle cx="113" cy="109" r="4" fill="#a65a7c" />
+  <circle cx="62" cy="96" r="3" fill="#e2a993" />
+  <circle cx="146" cy="84" r="2.5" fill="#e2a993" />
+  <circle cx="136" cy="138" r="3" fill="#e2a993" />
+  <circle cx="72" cy="140" r="2.5" fill="#e2a993" />`;
+
+// One cell's drawing. E. coli's flagella wave, unless someone has asked
+// for less motion (CSS can't pause <animate>).
+function cellArt(kind) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '4 4 192 192');
-  svg.innerHTML = ECOLI_ART;
+  svg.innerHTML = kind.id === 'hela' ? HELA_ART : ECOLI_ART;
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
     for (const wave of svg.querySelectorAll('animate')) wave.remove();
   }
   return svg;
 }
 
-export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
+// `kind` is which cells, from HOSTS, and `count` how many at a time.
+export function growLawn({ kind = HOSTS.ecoli, count = kind.count, random = Math.random } = {}) {
   const agar = document.querySelector('.agar');
   // { id, el, fx, fy, heading, infected, left }: heading is the way it's
   // going, in radians, and left the ms until it bursts.
@@ -75,8 +90,8 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
       const distance = Math.sqrt(random()) * 0.82;
       spot = { fx: Math.cos(angle) * distance, fy: Math.sin(angle) * distance };
       const near = (spots, gap) => spots.some((s) => Math.hypot(spot.fx - s.fx, spot.fy - s.fy) < gap);
-      if (!(clearOfMiddle && Math.hypot(spot.fx, spot.fy) < 0.3) && !near(hosts, GAME.HOST_GAP) &&
-          !near(plaques, GAME.PLAQUE_RADIUS + GAME.HOST_RADIUS)) return spot;
+      if (!(clearOfMiddle && Math.hypot(spot.fx, spot.fy) < 0.3) && !near(hosts, kind.gap) &&
+          !near(plaques, kind.plaque + kind.radius)) return spot;
     }
     return spot;
   }
@@ -85,9 +100,9 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
   function grow(clearOfMiddle = false) {
     const spot = randomSpot(clearOfMiddle);
     const el = document.createElement('div');
-    el.className = 'host';
-    el.style.width = `${GAME.HOST_SIZE * 100}%`;
-    el.append(ecoli());
+    el.className = `host ${kind.id}`;
+    el.style.width = `${kind.size * 100}%`;
+    el.append(cellArt(kind));
     el.setAttribute('aria-hidden', 'true');
     agar.appendChild(el);
     const host = { id: nextId++, el, ...spot, heading: random() * Math.PI * 2, infected: false, left: 0 };
@@ -106,8 +121,8 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
   // At the edge it turns back toward the middle.
   function glide(host, seconds) {
     host.heading += (random() - 0.5) * 1.5 * seconds;
-    host.fx += Math.cos(host.heading) * GAME.HOST_SPEED * seconds;
-    host.fy += Math.sin(host.heading) * GAME.HOST_SPEED * seconds;
+    host.fx += Math.cos(host.heading) * kind.speed * seconds;
+    host.fy += Math.sin(host.heading) * kind.speed * seconds;
     const fromCenter = Math.hypot(host.fx, host.fy);
     if (fromCenter > GAME.HOST_EDGE) {
       host.fx *= GAME.HOST_EDGE / fromCenter;
@@ -125,7 +140,7 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
     el.className = 'plaque';
     el.style.left = `${50 + fx * 50}%`;
     el.style.top = `${50 + fy * 50}%`;
-    el.style.width = `${GAME.PLAQUE_RADIUS * 100}%`;
+    el.style.width = `${kind.plaque * 100}%`;
     const wobble = () => `${44 + Math.floor(random() * 12)}%`;
     el.style.borderRadius =
       `${wobble()} ${wobble()} ${wobble()} ${wobble()} / ${wobble()} ${wobble()} ${wobble()} ${wobble()}`;
@@ -146,7 +161,7 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
   }
 
   const touching = (host, bx, by, reach) =>
-    !host.infected && Math.hypot(host.fx - bx, host.fy - by) <= reach + GAME.HOST_RADIUS;
+    !host.infected && Math.hypot(host.fx - bx, host.fy - by) <= reach + kind.radius;
 
   return {
     // Infect every healthy cell touching a circle of radius `reach` at
@@ -188,7 +203,7 @@ export function growLawn({ count = GAME.HOSTS, random = Math.random } = {}) {
       for (let i = hosts.length - 1; i >= 0; i--) {
         const host = hosts[i];
         if (!host.infected) {
-          glide(host, seconds);
+          if (kind.speed > 0) glide(host, seconds);
           continue;
         }
         host.left -= ms;

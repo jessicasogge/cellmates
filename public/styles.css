@@ -199,8 +199,8 @@ body {
   margin-top: 0;
 }
 
-/* Three cards across, each the same width. Flex instead of grid so a row
-   that isn't full keeps its cards in the middle. */
+/* Four cards across (two on a phone), each the same width. Flex instead of
+   grid so a row that isn't full keeps its cards in the middle. */
 .picker-grid {
   display: flex;
   flex-wrap: wrap;
@@ -214,20 +214,20 @@ body {
 }
 
 .picker-grid > .mate-card {
-  flex: 0 0 calc((100% - 1.5rem) / 3);
+  flex: 0 0 calc((100% - 2.25rem) / 4);
   box-sizing: border-box;
   min-width: 0;
 }
 
-/* On a phone, still three across: a little less room between cards, and
-   smaller pictures and names. */
+/* On a phone, two across: a little less room between cards, and smaller
+   pictures and names. */
 @media (max-width: 520px) {
   .picker-grid {
     gap: 0.5rem;
   }
 
   .picker-grid > .mate-card {
-    flex-basis: calc((100% - 1rem) / 3);
+    flex-basis: calc((100% - 0.5rem) / 2);
     padding: 1rem 0.4rem 0.7rem;
   }
 
@@ -339,6 +339,10 @@ a.mate-card:active {
 
 .missy {
   background: #ffe9e1;
+}
+
+.polly {
+  background: #e8eeff;
 }
 
 .pick-btn {
@@ -597,6 +601,20 @@ a.mate-card:active {
   }
 }
 
+/* An infected HeLa cell rounds up and goes shiny as it dies (virologists
+   call it the cytopathic effect), instead of swelling like E. coli. */
+.host.hela.infected {
+  animation-name: rounding;
+}
+
+@keyframes rounding {
+  to {
+    opacity: 0.95;
+    filter: saturate(0.7) brightness(1.15) drop-shadow(0 0 3px #ec4899) drop-shadow(0 0 2px #ec4899);
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(0.75);
+  }
+}
+
 /* A plaque (game/hosts.js): a clear hole in the lawn where a cell burst and
    the copies killed it. It opens up from nothing. */
 .plaque {
@@ -620,6 +638,27 @@ a.mate-card:active {
   filter: blur(0.6px);
   pointer-events: none;
   animation: plaque-open 1.2s ease-out both;
+}
+
+/* Polly's dish: a layer of HeLa cells grown flat over the bottom, under
+   pink cell-culture medium (it's pink from phenol red, a dye that shows
+   whether the medium has gone sour). A plaque is a gap in the layer of
+   cells, where the clear pink medium shows through. */
+.agar.lawn-hela {
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), transparent 32%),
+    radial-gradient(circle at 50% 50%, #fbe8de, #f1cfc3);
+}
+
+.lawn-hela .plaque {
+  background: radial-gradient(
+    closest-side,
+    rgba(232, 96, 124, 0.32) 0%,
+    rgba(232, 96, 124, 0.28) 55%,
+    rgba(232, 96, 124, 0.14) 80%,
+    rgba(232, 96, 124, 0) 100%
+  );
+  box-shadow: inset 0 1px 4px rgba(150, 40, 70, 0.15);
 }
 
 @keyframes plaque-open {
