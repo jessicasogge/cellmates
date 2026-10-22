@@ -80,18 +80,20 @@ export const SPECIES = {
   polly: {
     facts: [
       "Polly is poliovirus, which causes polio, a disease that can paralyze people.",
-      "Polly is one of the smallest viruses that infect people, about 30 nanometers across.",
-      "Polly has no envelope: just a 20-sided protein shell around her RNA.",
+      "Polly is tiny, about 30 nanometers across.",
+      "Polly has no envelope, just a 20-sided protein shell around her RNA.",
       "Polly's genes are one strand of RNA, about 7,500 letters long.",
-      "Polly gets into human cells by grabbing a protein on their surface called CD155.",
-      "Polly spreads through contaminated food and water, and first grows in the throat and gut.",
-      "In 1949, Enders, Weller and Robbins grew Polly in lab cells, winning a Nobel Prize.",
-      "In 1954, Dulbecco and Vogt counted Polly with plaques, the way phages are counted.",
-      "Polly was grown in HeLa cells to test the first polio vaccine in the 1950s.",
-      "Jonas Salk's vaccine against Polly, given as a shot, was declared safe in 1955.",
-      "Albert Sabin's vaccine against Polly was given by mouth, often on a sugar cube.",
-      "In 2002, scientists built Polly from scratch, the first virus made that way.",
-      "Thanks to vaccines, cases of wild Polly have dropped by over 99% since 1988.",
+      "Polly enters human cells by binding to a surface protein called CD155.",
+      "Polly spreads through tiny traces of infected poop, including in food and water.",
+      "Polly first multiplies in the throat and gut.",
+      "In 1949, Enders, Weller and Robbins grew Polly in tissue cultures.",
+      "Growing Polly in tissue cultures earned Enders, Weller and Robbins a 1954 Nobel Prize.",
+      "In 1954, Dulbecco and Vogt published a way to count Polly using plaques.",
+      "HeLa cells helped scientists test antibodies against Polly during vaccine trials.",
+      "Jonas Salk's injected vaccine against Polly was licensed in 1955.",
+      "Albert Sabin's oral vaccine against Polly could be given on a sugar cube.",
+      "In 2002, scientists made infectious Polly using a chemically synthesized DNA copy.",
+      "Vaccination has cut polio cases caused by wild Polly by over 99% since 1988.",
     ],
     scientific: 'Poliovirus',
     host: 'hela',
@@ -103,13 +105,10 @@ export const SPECIES = {
   },
 };
 
-// The cells a mate infects. `name` is how the directions name them
-// (*asterisks* italicize). `size` is how wide each cell's drawing is, as a
-// fraction of the dish's width, and `body` how much of that the cell itself
-// is. `radius` is how close counts as touching one, `gap` how far apart
-// they grow if there's room, and `plaque` the radius of the hole one leaves
-// when it bursts, all in dish radii. `speed` is how fast healthy ones glide
-// (dish radii per second), and `count` how many are in the dish at a time.
+// Host cells: `name` supports *italics*; `size` is width/dish width,
+// `body` the cell's share. In dish radii: `radius` = touch range,
+// `gap` = spacing when possible, `plaque` = burst-hole radius.
+// `speed` = healthy-cell radii/sec; `count` = cells in the dish.
 export const HOSTS = {
   // Drawn and sized like Colette's offspring in PetriPals.
   ecoli: {
