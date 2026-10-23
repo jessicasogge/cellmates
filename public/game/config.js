@@ -1,9 +1,11 @@
 // Each mate infects one kind of cell (`host`, in HOSTS below): the phages
-// burst E. coli, drawn like Colette in PetriPals, and Polly, poliovirus,
-// bursts human HeLa cells.
+// burst E. coli, drawn like Colette in PetriPals; Polly, poliovirus, bursts
+// human HeLa cells; and Flo, influenza A, buds out of dog MDCK cells.
 //
 // `scientific`: virus name above dish; only *marked parts* italicize.
 // `host`: the cells in her dish (HOSTS).
+// `budding`: her `burst` copies bud out one at a time over `latentMs`
+//   while she's inside, instead of all bursting out at the end.
 // `color`: name color.
 // `colors`: drawing palette (mates.js).
 // `size`: width relative to dish; smaller than cells, T4 larger than the
@@ -103,6 +105,35 @@ export const SPECIES = {
     latentMs: 1800,
     colors: { fill: '#dbe5ff', stroke: '#3b5bdb', highlight: '#f4f7ff', dark: '#1e2f78' },
   },
+  flo: {
+    facts: [
+      "Flo is influenza A, a flu virus that infects people, pigs, birds and more.",
+      "Wild water birds carry the most kinds of Flo.",
+      "Flo's spikes come in two kinds: hemagglutinin (H) and neuraminidase (N).",
+      "The H and N in names like H1N1 say which kinds of spikes Flo has.",
+      "Flo's H spikes grab sugars called sialic acids on cells lining the airways.",
+      "Flo's N spikes snip those sugars, cutting new copies of her free from the cell.",
+      "Flo buds out of her cell wrapped in a bit of its membrane, her envelope.",
+      "Flo's genes come in eight separate pieces of RNA.",
+      "Two kinds of Flo in one cell can swap gene pieces and make a new kind of flu.",
+      "Flo's spikes keep changing a little, so flu vaccines are updated every year.",
+      "Oseltamivir (Tamiflu) blocks Flo's N spikes, so new copies stay stuck to the cell.",
+      "Flo was first isolated in 1933, after scientists passed human flu to ferrets.",
+      "Many flu vaccines are still made by growing Flo in chicken eggs.",
+      "Labs count Flo with plaques in MDCK cells, first taken from a dog's kidney in 1958.",
+      "Flo's plaque assays need trypsin added, which switches on her H spikes.",
+    ],
+    scientific: 'Influenza A virus',
+    host: 'mdck',
+    color: '#a16207',
+    size: 0.044,
+    burst: 4,
+    // She buds: her copies bud out of the cell one at a time over her
+    // latent period, instead of all at once when it bursts. Then it dies.
+    budding: true,
+    latentMs: 2400,
+    colors: { fill: '#fff1c2', stroke: '#c98a0a', highlight: '#fffaeb', dark: '#5c4300' },
+  },
 };
 
 // Host cells: `name` supports *italics*; `size` is width/dish width,
@@ -120,6 +151,12 @@ export const HOSTS = {
   hela: {
     id: 'hela', name: 'HeLa', size: 0.15, body: 0.8,
     radius: 0.09, gap: 0.27, plaque: 0.16, speed: 0, count: 9,
+  },
+  // Dog kidney cells grown flat on the bottom of the dish, packed like
+  // cobblestones. Like HeLa cells, they stay put.
+  mdck: {
+    id: 'mdck', name: 'MDCK', size: 0.125, body: 0.8,
+    radius: 0.075, gap: 0.23, plaque: 0.14, speed: 0, count: 10,
   },
 };
 

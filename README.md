@@ -8,7 +8,7 @@ A cute virology game for the browser, and the sister game to [PetriPals](https:/
 
 ## How to play: Plaque Assay
 
-1. **Pick a mate.** Each one is a real virus, drawn as a cartoon. Three are bacteriophages, viruses that infect bacteria, and Polly infects human cells.
+1. **Pick a mate.** Each one is a real virus, drawn as a cartoon. Three are bacteriophages, viruses that infect bacteria, Polly infects human cells, and Flo infects dog kidney cells.
 2. **Move around the dish.** Use the arrow keys, or on a touch screen, drag like a trackpad, just like PetriPals and FunGals.
 3. **Touch one of her host cells to get inside it.** She's stuck in there while the cell swells (or, for Polly, rounds up) and blushes, then it bursts open and she comes out with new copies of her, leaving a clear hole in the lawn: a **plaque**. The copies drift off and get into cells they bump into on their own (a copy that does is used up), and those cells burst with more copies.
 
@@ -22,10 +22,13 @@ Make enough copies of her to finish the level, counting every copy that bursts o
 | **Phoebe** | Bacteriophage φX174 | Little teal twenty-sided gem with no tail and a knobby spike on every corner | Bursts fastest (1.1 seconds), with 2 copies |
 | **Missy** | Bacteriophage MS2 | Small, round, bumpy coral shell with one little tab on top | Bursts slowest (2 seconds), with 4 copies |
 | **Polly** | Poliovirus | Small, round cornflower-blue shell dotted with little stars | Infects HeLa cells, which burst after 1.8 seconds with 5 copies |
+| **Flo** | Influenza A virus | Round golden ball bristling with two kinds of spikes, little clubs and little squares | Infects MDCK cells and **buds**: 4 copies come out one at a time over 2.4 seconds, then the cell dies |
 
 The three phages infect *Escherichia coli*, so the cells in their dish are drawn and sized like Colette's offspring in PetriPals: pale green-apple rods with flagella all around. Healthy cells glide very slowly, wandering a little; an infected one stops.
 
-Polly infects human cells, so her dish is a layer of **HeLa cells** under pink medium: wide, flat, peach cells with a big nucleus. They stick to the dish, so they stay put.
+Polly infects human cells, so her dish is a layer of **HeLa cells** under pink medium: wide, flat, peach cells with a big nucleus. Flo's dish is the same, but with **MDCK cells**: smaller, six-sided lilac cells packed like cobblestones. Both kinds stick to the dish, so they stay put.
+
+Flo plays a little differently. Her cell doesn't burst: while she's inside, her copies bud out of it one at a time, and when the last one is out the cell dies and she comes out too. So her copies start spreading sooner, but she's stuck inside longer.
 
 ## The real science
 
@@ -37,6 +40,9 @@ Polly infects human cells, so her dish is a layer of **HeLa cells** under pink m
 - **HeLa cells** were the first human cells to keep growing in a lab. They came from Henrietta Lacks, a Black woman treated for cervical cancer at Johns Hopkins in 1951, and were taken without her knowledge or consent. In the 1950s, HeLa cells were grown in huge numbers to test the polio vaccine, and they're still used in labs everywhere.
 - **The pink in Polly's dish** is cell-culture medium, the liquid the cells live in. It's pink from phenol red, a dye that turns yellow if the medium goes sour.
 - **Polly is tiny next to a HeLa cell.** Poliovirus is about 30 nanometers across, and a HeLa cell is around 20 to 40 micrometers wide, roughly a thousand times bigger. One infected cell really releases thousands of copies, over about 6 to 8 hours.
+- **Flo buds instead of bursting.** Influenza has an envelope, a bubble of the cell's own membrane that each copy takes with it as it buds out. Her N spikes (neuraminidase) snip her free of the cell's sugars as she goes. A drug like oseltamivir (Tamiflu) blocks them, so new copies stay stuck to the cell. Her cell dies in the end, so she still leaves a plaque.
+- **MDCK cells** (Madin-Darby canine kidney cells) came from a cocker spaniel's kidney in 1958, and they're the standard cells for counting flu with a plaque assay. The dish needs a little trypsin, an enzyme that cuts Flo's H spikes into their working shape so each copy can infect the next cell.
+- **Flo's spikes** are her two proteins, H (hemagglutinin, drawn as clubs) and N (neuraminidase, drawn as squares). They're what the H and N stand for in names like H1N1.
 - **Polly's stars** are real: each corner of poliovirus's shell has a star-shaped plateau (a mesa), ringed by a groove (the canyon) where she grabs CD155, the protein she uses to get into a cell.
 - **Tia's legs** are her six long tail fibers. She lands on *E. coli* with them, then her tail squeezes down and drives a tube through the cell's wall, and she injects her DNA, leaving her empty head and tail outside.
 - **Phoebe's spikes** are on all 12 corners of her shell. φX174 was the first DNA genome ever read from end to end (Fred Sanger's lab, 1977), and in 2003 scientists built its genome from scratch in two weeks, and it worked.
@@ -74,8 +80,8 @@ CellMates started from the FunGals engine (steering, the loading card, the end-o
 | `public/game/config.js` | Every mate's settings and facts, the host cells (HOSTS), the levels, and the numbers the game is built on |
 | `public/game/mates.js` | Every mate's name and drawing, in one place. To add a mate, see the notes at the top. |
 | `public/game/game.js` | The game loop: steering and winning |
-| `public/game/swarm.js` | Her and her copies: infecting, bursting out and drifting |
-| `public/game/hosts.js` | The lawn: her host cells (*E. coli* or HeLa), infected cells bursting, and plaques |
+| `public/game/swarm.js` | Her and her copies: going into cells, bursting or budding out, and drifting |
+| `public/game/hosts.js` | The lawn: her host cells (*E. coli*, HeLa or MDCK), infected cells bursting or budding, and plaques |
 | `public/game/` | Also: steering with the arrow keys (`keyboard.js`) and by touch or mouse (`touch.js`), the end-of-level pop-up (`banner.js`), the fun-fact pop-up (`facts.js`, with italics from `italics.js`), the loading card (`loading.js`), visit counting (`track.js`) and the win confetti (`spores.js`, using canvas-confetti in `vendor/`) |
 | `test/` | Tests |
 | `src/index.ts` | Small Express server for local development |

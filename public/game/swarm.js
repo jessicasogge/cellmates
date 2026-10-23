@@ -6,6 +6,10 @@
 // it too (it's used up), and that cell bursts with more copies. Every copy
 // that bursts out, from her cells or her copies', counts toward the level.
 //
+// A mate who buds (`species.budding`, like Flo) is different: her copies
+// bud out of the cell one at a time while she's inside, and when the last
+// one is out the cell dies and she comes out too.
+//
 // Positions are in px from the dish center, like the steering in touch.js.
 import { GAME } from './config.js';
 
@@ -23,6 +27,8 @@ export function makeSwarm({
   const reach = species.size * GAME.REACH_SHARE;
   const copyReach = reach * GAME.COPY_SCALE;
   const copyWidth = `${species.size * GAME.COPY_SCALE * 100}%`;
+  // How many copies bud out of each cell, for a mate who buds.
+  const buds = species.budding ? species.burst : 0;
 
   const swarm = {
     player,
@@ -37,23 +43,25 @@ export function makeSwarm({
     // One frame. `infect` is false once the level is over: cells still
     // burst, but nothing new gets infected.
     step(seconds, radius, { infect = true } = {}) {
-      // Cells whose time is up burst with new copies of her. If she's in
-      // one, she comes out too.
-      const bursts = hosts.tick(seconds);
-      for (const { id, fx, fy } of bursts) {
-        for (let i = 0; i < species.burst && copies.length < GAME.MAX_COPIES; i++) {
+      // Cells whose time is up burst with new copies of her (or, if she
+      // buds, copies bud out one at a time and then the cell dies). If she's
+      // in one when it bursts or dies, she comes out too.
+      const events = hosts.tick(seconds);
+      for (const { id, fx, fy, bud } of events) {
+        const born = bud ? 1 : species.burst - buds;
+        for (let i = 0; i < born && copies.length < GAME.MAX_COPIES; i++) {
           copies.push(newCopy(fx * radius, fy * radius, radius));
         }
-        if (inside?.id === id) {
+        made += born;
+        if (!bud && inside?.id === id) {
           inside = null;
           player.mover.classList.remove('inside');
         }
       }
-      made += bursts.length * species.burst;
 
       // She goes into a cell she touches, and stays put until it bursts.
       if (infect && !inside) {
-        inside = hosts.infectOne(player.x / radius, player.y / radius, reach, species.latentMs);
+        inside = hosts.infectOne(player.x / radius, player.y / radius, reach, species.latentMs, buds);
         if (inside) {
           player.x = inside.fx * radius;
           player.y = inside.fy * radius;
@@ -65,7 +73,7 @@ export function makeSwarm({
         const copy = copies[i];
         drift(copy, seconds, radius);
         // A copy that infects a cell goes into it.
-        if (infect && hosts.infectNear(copy.x / radius, copy.y / radius, copyReach, species.latentMs) > 0) {
+        if (infect && hosts.infectNear(copy.x / radius, copy.y / radius, copyReach, species.latentMs, buds) > 0) {
           remove(i);
           continue;
         }
@@ -73,7 +81,7 @@ export function makeSwarm({
       }
 
       place(player);
-      if (bursts.length > 0) onChange(made);
+      if (events.length > 0) onChange(made);
     },
   };
 

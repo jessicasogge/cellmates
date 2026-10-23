@@ -131,6 +131,61 @@ describe('HeLa cells, for Polly', () => {
   });
 });
 
+describe('MDCK cells, for Flo', () => {
+  it('grow their own number of cells, which stay put', () => {
+    const lawn = growLawn({ kind: HOSTS.mdck });
+    expect(cells()).toHaveLength(HOSTS.mdck.count);
+    expect(cells()[0].classList).toContain('mdck');
+    const before = lawn.positions();
+    lawn.tick(5);
+    expect(lawn.positions()).toEqual(before);
+  });
+});
+
+describe('budding', () => {
+  // A one-cell lawn with its cell infected by a mate who buds `buds` copies
+  // over `latentMs`.
+  function budding(buds = 4, latentMs = 2500) {
+    const lawn = growLawn({ count: 1, kind: HOSTS.mdck });
+    const [cell] = lawn.positions();
+    const { id } = lawn.infectOne(cell.fx, cell.fy, 0.01, latentMs, buds);
+    return { lawn, id };
+  }
+  const buds = (events) => events.filter((e) => e.bud).length;
+
+  it('lets copies bud out one at a time, evenly spaced, before the cell dies', () => {
+    const { lawn, id } = budding(4, 2500);
+    // One bud every 500 ms: at 500, 1000, 1500 and 2000.
+    expect(lawn.tick(0.4)).toEqual([]);
+    expect(lawn.tick(0.2)).toEqual([{ id, fx: expect.any(Number), fy: expect.any(Number), bud: true }]);
+    expect(buds(lawn.tick(1.5))).toBe(3);
+    expect(lawn.positions()).toHaveLength(1); // still alive
+  });
+
+  it('dies when its time is up, after its last bud, leaving a plaque', () => {
+    const { lawn, id } = budding(4, 2500);
+    lawn.tick(2.2);
+    const last = lawn.tick(0.3);
+    expect(last).toEqual([{ id, fx: expect.any(Number), fy: expect.any(Number) }]);
+    expect(lawn.positions()).toHaveLength(0);
+    expect(plaques()).toHaveLength(1);
+  });
+
+  it('lets out any buds still to come when it dies, even after a long pause', () => {
+    const { lawn } = budding(4, 2500);
+    const events = lawn.tick(10);
+    expect(buds(events)).toBe(4);
+    expect(events.at(-1).bud).toBeUndefined();
+  });
+
+  it('lets copies infect a cell with buds too', () => {
+    const lawn = growLawn({ count: 1, kind: HOSTS.mdck });
+    const [cell] = lawn.positions();
+    lawn.infectNear(cell.fx, cell.fy, 0.01, 1000, 2);
+    expect(buds(lawn.tick(1))).toBe(2);
+  });
+});
+
 describe('gliding', () => {
   it('moves healthy cells very slowly, pointing the way they go', () => {
     const lawn = growLawn({ count: 1 });

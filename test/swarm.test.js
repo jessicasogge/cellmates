@@ -68,7 +68,7 @@ describe('going into a cell', () => {
     player.x = 40;
     player.y = -20;
     swarm.step(0.016, RADIUS);
-    expect(hosts.infectOne).toHaveBeenCalledWith(0.2, -0.1, REACH, SPECIES.tia.latentMs);
+    expect(hosts.infectOne).toHaveBeenCalledWith(0.2, -0.1, REACH, SPECIES.tia.latentMs, 0);
     expect(swarm.inside()).toBe(false); // there was no cell there
   });
 
@@ -116,6 +116,42 @@ describe('going into a cell', () => {
     const { swarm, hosts } = swarmWith();
     swarm.step(0.016, RADIUS, { infect: false });
     expect(hosts.infectOne).not.toHaveBeenCalled();
+  });
+});
+
+describe('a mate who buds, like Flo', () => {
+  const flo = () => swarmWith({ species: SPECIES.flo });
+
+  it('asks for her copies to bud out of the cells she and her copies infect', () => {
+    const { swarm, hosts } = flo();
+    hosts.cell = { id: 1, fx: 0, fy: 0 };
+    swarm.step(0.016, RADIUS);
+    expect(hosts.infectOne).toHaveBeenCalledWith(0, 0, expect.any(Number), SPECIES.flo.latentMs, SPECIES.flo.burst);
+  });
+
+  it('lets out one copy per bud, and keeps her inside until the cell dies', () => {
+    const { swarm, hosts, onChange } = flo();
+    hosts.cell = { id: 1, fx: 0.25, fy: 0 };
+    swarm.step(0.016, RADIUS);
+    hosts.cell = null;
+    hosts.bursts = [{ id: 1, fx: 0.25, fy: 0, bud: true }];
+    swarm.step(0.016, RADIUS);
+    expect(swarm.copies).toHaveLength(1);
+    expect(swarm.made()).toBe(1);
+    expect(onChange).toHaveBeenCalledWith(1);
+    expect(swarm.inside()).toBe(true);
+  });
+
+  it('adds no more copies when the cell dies, just lets her out', () => {
+    const { swarm, hosts } = flo();
+    hosts.cell = { id: 1, fx: 0.25, fy: 0 };
+    swarm.step(0.016, RADIUS);
+    hosts.cell = null;
+    hosts.bursts = [{ id: 1, fx: 0.25, fy: 0 }];
+    swarm.step(0.016, RADIUS);
+    expect(swarm.copies).toHaveLength(0);
+    expect(swarm.made()).toBe(0);
+    expect(swarm.inside()).toBe(false);
   });
 });
 
@@ -194,7 +230,7 @@ describe('copies infecting cells', () => {
     swarm.step(0.016, RADIUS);
     expect(swarm.copies).toHaveLength(0);
     expect(copies()).toHaveLength(0);
-    expect(hosts.infectNear).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), COPY_REACH, SPECIES.tia.latentMs);
+    expect(hosts.infectNear).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), COPY_REACH, SPECIES.tia.latentMs, 0);
   });
 
   it("copies don't infect anything once the level is over", () => {

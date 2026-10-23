@@ -1,6 +1,6 @@
 // The lawn: her host cells (HOSTS in config.js) scattered over the dish for
 // the mate to infect. Healthy E. coli glide very slowly, wandering a little
-// as they go; HeLa cells stick down and stay put.
+// as they go; HeLa and MDCK cells stick down and stay put.
 // A cell she (or a copy of her) touches gets infected, swells for her
 // latent period, then bursts, leaving a plaque: a clear hole in the lawn.
 // A new cell turns up somewhere else a moment later, never in a plaque
@@ -55,12 +55,25 @@ export const HELA_ART = `
   <circle cx="136" cy="138" r="3" fill="#e2a993" />
   <circle cx="72" cy="140" r="2.5" fill="#e2a993" />`;
 
+// An MDCK cell: dog kidney cells that grow flat on the dish packed together
+// like cobblestones, so each is a rounded six-sided, pale lilac cell with a
+// round nucleus and two dark nucleoli.
+export const MDCK_ART = `
+  <path d="M54 64 L104 44 L154 62 L160 124 L108 156 L48 136 Z" fill="#f3e6fb" stroke="#a383c2" stroke-width="4" stroke-linejoin="round" />
+  <circle cx="104" cy="100" r="25" fill="#dcc6ef" stroke="#8c64b4" stroke-width="3.5" />
+  <circle cx="97" cy="95" r="4.5" fill="#7a4ea6" />
+  <circle cx="112" cy="106" r="3.5" fill="#7a4ea6" />
+  <circle cx="70" cy="80" r="2.5" fill="#cdb3e3" />
+  <circle cx="140" cy="128" r="2.5" fill="#cdb3e3" />`;
+
+const ART = { ecoli: ECOLI_ART, hela: HELA_ART, mdck: MDCK_ART };
+
 // One cell's drawing. E. coli's flagella wave, unless someone has asked
 // for less motion (CSS can't pause <animate>).
 function cellArt(kind) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '4 4 192 192');
-  svg.innerHTML = kind.id === 'hela' ? HELA_ART : ECOLI_ART;
+  svg.innerHTML = ART[kind.id];
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
     for (const wave of svg.querySelectorAll('animate')) wave.remove();
   }
@@ -153,9 +166,14 @@ export function growLawn({ kind = HOSTS.ecoli, count = kind.count, random = Math
   // The mate starts in the middle, so the first cells keep away from it.
   for (let i = 0; i < count; i++) grow(true);
 
-  function infect(host, latentMs) {
+  // `buds` is how many copies bud out of it, spread over `latentMs`, for a
+  // mate who buds (0 for one whose cells burst).
+  function infect(host, latentMs, buds) {
     host.infected = true;
+    host.latent = latentMs;
     host.left = latentMs;
+    host.buds = buds;
+    host.budded = 0;
     host.el.classList.add('infected');
     host.el.style.setProperty('--latent', `${latentMs}ms`);
   }
@@ -166,12 +184,13 @@ export function growLawn({ kind = HOSTS.ecoli, count = kind.count, random = Math
   return {
     // Infect every healthy cell touching a circle of radius `reach` at
     // (bx, by), all in fractions of the dish radius. Each bursts
-    // `latentMs` from now. Returns how many were infected.
-    infectNear(bx, by, reach, latentMs) {
+    // `latentMs` from now, after `buds` copies have budded out of it (see
+    // infect). Returns how many were infected.
+    infectNear(bx, by, reach, latentMs, buds = 0) {
       let infected = 0;
       for (const host of hosts) {
         if (!touching(host, bx, by, reach)) continue;
-        infect(host, latentMs);
+        infect(host, latentMs, buds);
         infected++;
       }
       return infected;
@@ -179,17 +198,19 @@ export function growLawn({ kind = HOSTS.ecoli, count = kind.count, random = Math
 
     // Infect just one healthy cell touching that circle, the nearest, for
     // her to go into. Returns it as { id, fx, fy }, or null if there's none.
-    infectOne(bx, by, reach, latentMs) {
+    infectOne(bx, by, reach, latentMs, buds = 0) {
       const distance = (host) => Math.hypot(host.fx - bx, host.fy - by);
       const host = hosts.filter((h) => touching(h, bx, by, reach)).sort((a, b) => distance(a) - distance(b))[0];
       if (!host) return null;
-      infect(host, latentMs);
+      infect(host, latentMs, buds);
       return { id: host.id, fx: host.fx, fy: host.fy };
     },
 
-    // Move time on by `seconds`: healthy cells glide, infected cells whose
-    // time is up burst, and missing cells grow back. Returns each cell that burst, as
-    // { id, fx, fy }.
+    // Move time on by `seconds`: healthy cells glide, infected cells bud
+    // copies or burst when their time is up, and missing cells grow back.
+    // Returns what happened, in order: { id, fx, fy, bud: true } for each
+    // copy that budded, and { id, fx, fy } for each cell that burst (or,
+    // for a mate who buds, died).
     tick(seconds) {
       const ms = seconds * 1000;
       if (!stopped) {
@@ -207,6 +228,12 @@ export function growLawn({ kind = HOSTS.ecoli, count = kind.count, random = Math
           continue;
         }
         host.left -= ms;
+        // Buds come out evenly spaced, the last a moment before the cell
+        // dies, and any still to come all come out when it does.
+        const due = host.left > 0
+          ? Math.min(host.buds, Math.floor(((host.latent - host.left) * (host.buds + 1)) / host.latent))
+          : host.buds;
+        for (; host.budded < due; host.budded++) bursts.push({ id: host.id, fx: host.fx, fy: host.fy, bud: true });
         if (host.left > 0) continue;
         hosts.splice(i, 1);
         host.el.remove();
