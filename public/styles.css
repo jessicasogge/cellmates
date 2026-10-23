@@ -345,6 +345,10 @@ a.mate-card:active {
   background: #e8eeff;
 }
 
+.flo {
+  background: #fff5d6;
+}
+
 .pick-btn {
   margin-top: 0.75rem;
   padding: 0.7rem 1rem;
@@ -603,7 +607,8 @@ a.mate-card:active {
 
 /* An infected HeLa cell rounds up and goes shiny as it dies (virologists
    call it the cytopathic effect), instead of swelling like E. coli. */
-.host.hela.infected {
+.host.hela.infected,
+.host.mdck.infected {
   animation-name: rounding;
 }
 
@@ -640,17 +645,19 @@ a.mate-card:active {
   animation: plaque-open 1.2s ease-out both;
 }
 
-/* Polly's dish: a layer of HeLa cells grown flat over the bottom, under
-   pink cell-culture medium (it's pink from phenol red, a dye that shows
-   whether the medium has gone sour). A plaque is a gap in the layer of
-   cells, where the clear pink medium shows through. */
-.agar.lawn-hela {
+/* Polly's and Flo's dishes: a layer of HeLa or MDCK cells grown flat over
+   the bottom, under pink cell-culture medium (it's pink from phenol red, a
+   dye that shows whether the medium has gone sour). A plaque is a gap in
+   the layer of cells, where the clear pink medium shows through. */
+.agar.lawn-hela,
+.agar.lawn-mdck {
   background:
     radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), transparent 32%),
     radial-gradient(circle at 50% 50%, #fbe8de, #f1cfc3);
 }
 
-.lawn-hela .plaque {
+.lawn-hela .plaque,
+.lawn-mdck .plaque {
   background: radial-gradient(
     closest-side,
     rgba(232, 96, 124, 0.32) 0%,

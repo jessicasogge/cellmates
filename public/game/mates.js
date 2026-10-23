@@ -81,6 +81,24 @@ const POLLY_MESAS = Array.from({ length: 5 }, (_, i) => {
       <polygon points="${star(Number(x), Number(y), 9)}" fill="#f4f7ff" stroke="#9fb4f2" stroke-width="1.5" stroke-linejoin="round" />`;
 }).join('\n      ');
 
+// Flo's two kinds of spike, alternating all around her envelope: H
+// (hemagglutinin), a thick stalk with a round club on the end, and N
+// (neuraminidase), a thin stalk with a square head.
+const FLO_SPIKES = Array.from({ length: 16 }, (_, i) => {
+  const degrees = i * 22.5 - 90;
+  const angle = (degrees * Math.PI) / 180;
+  const at = (r) => [100 + r * Math.cos(angle), 104 + r * Math.sin(angle)].map((n) => n.toFixed(1));
+  const [x1, y1] = at(46);
+  const [x2, y2] = at(64);
+  if (i % 2 === 0) {
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#c98a0a" stroke-width="5" stroke-linecap="round" />
+      <circle cx="${x2}" cy="${y2}" r="5.5" fill="#fff1c2" stroke="#c98a0a" stroke-width="3" />`;
+  }
+  const [hx, hy] = at(66);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#c98a0a" stroke-width="3" stroke-linecap="round" />
+      <rect x="${(hx - 4.5).toFixed(1)}" y="${(hy - 4.5).toFixed(1)}" width="9" height="9" rx="1.5" fill="#fde68a" stroke="#c98a0a" stroke-width="2.5" transform="rotate(${degrees} ${hx} ${hy})" />`;
+}).join('\n      ');
+
 export const MATES = [
   // Tia: phage T4, a lavender lunar lander: a gem-shaped head full of DNA on
   // a striped tail, standing on bendy tail fibers
@@ -163,10 +181,26 @@ export const MATES = [
       ${face(100, 112, '#1e2f78')}
     `,
   },
+  // Flo: influenza A, a round golden envelope bristling with two kinds of
+  // spike, H clubs and N squares
+  {
+    id: 'flo',
+    name: 'Flo',
+    looks: 'a golden influenza A virus: a round, fuzzy ball bristling with two kinds of spikes, little clubs and little squares',
+    motion: 'squish',
+    frames: { home: '0 0 200 200', picker: '18 20 164 164', dish: '22 22 156 156' },
+    art: `
+      ${FLO_SPIKES}
+      <!-- her envelope: a bubble of the last cell's membrane, around eight pieces of RNA -->
+      <circle cx="100" cy="104" r="48" fill="#fff1c2" stroke="#c98a0a" stroke-width="4" />
+      <ellipse cx="80" cy="80" rx="9" ry="5" fill="#fffaeb" transform="rotate(-30 80 80)" />
+      ${face(100, 108, '#5c4300')}
+    `,
+  },
 ];
 
 // The home page's order: the biggest in the middle.
-const HOME = ['phoebe', 'tia', 'missy', 'polly'];
+const HOME = ['phoebe', 'flo', 'tia', 'missy', 'polly'];
 export const HOME_MATES = HOME.map((id) => MATES.find((mate) => mate.id === id));
 
 export function mateById(id) {
